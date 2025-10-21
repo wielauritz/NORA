@@ -1,0 +1,156 @@
+NORA PROPRIETARY SOURCE-AVAILABLE LICENSE
+Version 1.0, January 2025
+
+Copyright (c) 2025 NORA Development Team
+All rights reserved.
+
+Core Developers:
+- wielauritz (https://github.com/wielauritz)
+- FinnK04 (https://github.com/FinnK04)
+- aylinbmp (https://github.com/aylinbmp)
+- V3rkz (https://github.com/V3rkz)
+
+================================================================================
+
+TERMS AND CONDITIONS
+
+1. DEFINITIONS
+
+"Software" refers to the NORA (Nordakademie Organizer & Room Assistant)
+application, including all source code, documentation, and associated files
+contained in this repository.
+
+"Copyright Holders" refers to the individuals and entities listed above as
+Core Developers.
+
+"You" or "Your" refers to any individual or legal entity exercising rights
+under this License.
+
+"Contribution" refers to any work of authorship, including modifications or
+additions to the Software, that is intentionally submitted to the Copyright
+Holders for inclusion in the Software.
+
+2. GRANT OF RIGHTS
+
+Subject to the terms and conditions of this License, the Copyright Holders
+hereby grant You a limited, worldwide, non-exclusive, non-transferable,
+non-sublicensable license to:
+
+a) View and study the source code of the Software for educational purposes
+b) Create copies of the Software for personal, non-commercial use only
+c) Submit Contributions to the Software via Pull Requests on GitHub
+
+3. RESTRICTIONS
+
+You may NOT, without prior written permission from ALL Copyright Holders:
+
+a) Use the Software or any portion thereof for commercial purposes
+b) Distribute, publish, or make available the Software or any derivative works
+c) Modify the Software for use in other projects or products
+d) Use the Software or any portion thereof in any other software, product, or
+   service, whether commercial or non-commercial
+e) Sublicense, sell, rent, lease, or otherwise transfer rights to the Software
+f) Remove or alter any copyright, trademark, or other proprietary notices
+g) Use the names, trademarks, service marks, or product names of the Copyright
+   Holders for endorsement or promotion without written permission
+h) Create derivative works based on the Software, except for Contributions
+   intended to be merged into the original Software
+
+4. CONTRIBUTIONS
+
+a) By submitting a Contribution, You grant the Copyright Holders a perpetual,
+   worldwide, non-exclusive, royalty-free, irrevocable license to use,
+   reproduce, modify, and incorporate Your Contribution into the Software.
+
+b) You represent that You are legally entitled to grant the above license and
+   that Your Contribution is Your original creation or You have sufficient
+   rights to submit it.
+
+c) All Contributions are subject to review by the Copyright Holders. The
+   Copyright Holders reserve the right to accept or reject any Contribution
+   at their sole discretion.
+
+d) Accepted Contributions will be merged into the Software and will be subject
+   to the terms of this License.
+
+5. ATTRIBUTION
+
+If You are granted permission to use the Software or any portion thereof, You
+must:
+
+a) Retain all copyright, patent, trademark, and attribution notices
+b) Provide clear attribution to the NORA Development Team and the Copyright
+   Holders
+c) Include a copy of this License with any permitted distribution
+
+6. NO WARRANTY
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+
+IN NO EVENT SHALL THE COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE,
+ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+
+7. LIMITATION OF LIABILITY
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT WILL THE
+COPYRIGHT HOLDERS BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL,
+CONSEQUENTIAL, OR PUNITIVE DAMAGES, OR ANY LOSS OF PROFITS, REVENUE, DATA,
+OR DATA USE, ARISING OUT OF OR RELATING TO THIS LICENSE OR THE SOFTWARE,
+EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+8. TERMINATION
+
+a) This License and the rights granted hereunder will terminate automatically
+   if You fail to comply with any of its terms and conditions.
+
+b) Upon termination, You must immediately cease all use of the Software and
+   destroy all copies in Your possession or control.
+
+c) The Copyright Holders reserve the right to terminate this License at any
+   time for any reason, with or without notice.
+
+9. GENERAL
+
+a) This License constitutes the entire agreement between You and the Copyright
+   Holders regarding the Software.
+
+b) If any provision of this License is held to be unenforceable, such
+   provision shall be reformed only to the extent necessary to make it
+   enforceable.
+
+c) This License shall be governed by the laws of Germany, without regard to
+   its conflict of law provisions.
+
+d) Any dispute arising out of or relating to this License shall be subject to
+   the exclusive jurisdiction of the courts of Germany.
+
+10. REQUESTS FOR COMMERCIAL USE OR SPECIAL LICENSING
+
+For inquiries regarding commercial use, special licensing arrangements, or
+permissions beyond the scope of this License, please contact the Copyright
+Holders through the GitHub repository:
+
+https://github.com/wielauritz/nora
+
+================================================================================
+
+ADDITIONAL NOTES
+
+This is a proprietary, source-available license. While the source code is
+publicly viewable on GitHub, it does NOT grant the rights typically associated
+with open-source licenses (such as MIT, Apache, or GPL).
+
+The Software remains the exclusive property of the Copyright Holders, and all
+rights not explicitly granted in this License are reserved.
+
+By viewing, downloading, or otherwise accessing the Software, You acknowledge
+that You have read, understood, and agree to be bound by the terms of this
+License.
+
+================================================================================
+
+END OF LICENSE

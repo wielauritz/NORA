@@ -1,0 +1,81 @@
+# Backend Go
+backend/nora
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+
+# Backend Environment
+backend/.env
+backend/*.env
+*.env.local
+
+# Backend Logs
+backend/*.log
+
+# Frontend Node
+nora-ionic/node_modules/
+nora-ionic/dist/
+nora-ionic/.DS_Store
+nora-ionic/.vscode/
+nora-ionic/.idea/
+
+# Frontend Build
+nora-ionic/build/
+nora-ionic/www/
+
+# Frontend Environment
+nora-ionic/.env
+nora-ionic/.env.local
+nora-ionic/.env.production
+
+# Frontend Logs
+nora-ionic/npm-debug.log*
+nora-ionic/yarn-debug.log*
+nora-ionic/yarn-error.log*
+
+# Capacitor
+nora-ionic/ios/
+nora-ionic/android/
+nora-ionic/capacitor.config.ts
+
+# System Files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Temporary files
+*.tmp
+*.temp
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# SSL Certificates (should not be in repo)
+*.pem
+*.key
+*.crt
+*.cer
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+.AppleDouble
+.LSOverride
