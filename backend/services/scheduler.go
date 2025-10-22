@@ -37,19 +37,19 @@ func StartScheduler(runImmediately bool) error {
 	// Create new cron scheduler
 	scheduler = cron.New(cron.WithLocation(time.UTC))
 
-	// Add hourly job (every hour at minute 0)
-	_, err := scheduler.AddFunc("0 * * * *", func() {
+	// Add job every 30 minutes (at :00 and :30)
+	_, err := scheduler.AddFunc("*/30 * * * *", func() {
 		log.Println("=============================================================")
-		log.Println("HOURLY TIMETABLE UPDATE STARTED")
-		log.Printf("Time: %s", time.Now().Format(time.RFC3339))
+		log.Println("TIMETABLE UPDATE STARTED (Every 30 minutes)")
+		log.Printf("Time (UTC): %s", time.Now().UTC().Format(time.RFC3339))
 		log.Println("=============================================================")
 
 		if err := FetchAndImportTimetables(); err != nil {
-			log.Printf("ERROR during hourly update: %v", err)
-			log.Println("Scheduler will retry in one hour")
+			log.Printf("ERROR during timetable update: %v", err)
+			log.Println("Scheduler will retry in 30 minutes")
 		} else {
 			log.Println("=============================================================")
-			log.Println("HOURLY TIMETABLE UPDATE COMPLETED")
+			log.Println("TIMETABLE UPDATE COMPLETED")
 			log.Println("=============================================================")
 		}
 	})
@@ -62,7 +62,7 @@ func StartScheduler(runImmediately bool) error {
 	scheduler.Start()
 	isRunning = true
 
-	log.Println("Scheduler started - Hourly updates activated")
+	log.Println("Scheduler started - Running every 30 minutes")
 
 	// Optionally run immediately
 	if runImmediately {
@@ -108,15 +108,20 @@ func GetSchedulerStatus() SchedulerStatus {
 		}
 	}
 
-	// Get next run time (approximate based on hourly schedule)
+	// Get next run time (approximate based on 30-minute schedule)
 	now := time.Now()
-	nextRun := time.Date(now.Year(), now.Month(), now.Day(), now.Hour()+1, 0, 0, 0, now.Location())
+	var nextRun time.Time
+	if now.Minute() < 30 {
+		nextRun = time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), 30, 0, 0, now.Location())
+	} else {
+		nextRun = time.Date(now.Year(), now.Month(), now.Day(), now.Hour()+1, 0, 0, 0, now.Location())
+	}
 
 	return SchedulerStatus{
 		Status:  "running",
 		Running: true,
 		NextRun: &nextRun,
-		JobName: "Hourly Timetable Update",
+		JobName: "Timetable Update (Every 30 minutes)",
 	}
 }
 

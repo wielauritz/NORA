@@ -75,12 +75,12 @@ type RoomResponse struct {
 
 // CustomHourCreateRequest for creating custom hours
 type CustomHourCreateRequest struct {
-	Title          string     `json:"title" validate:"required"`
-	Description    *string    `json:"description"`
-	StartTime      time.Time  `json:"start_time" validate:"required"`
-	EndTime        time.Time  `json:"end_time" validate:"required"`
-	Room           *string    `json:"room"`
-	CustomLocation *string    `json:"custom_location"`
+	Title          string    `json:"title" validate:"required"`
+	Description    *string   `json:"description"`
+	StartTime      time.Time `json:"start_time" validate:"required"`
+	EndTime        time.Time `json:"end_time" validate:"required"`
+	Room           *string   `json:"room"`
+	CustomLocation *string   `json:"custom_location"`
 }
 
 // ExamCreateRequest for adding exams
@@ -206,7 +206,7 @@ func GetEvents(c *fiber.Ctx) error {
 		})
 	}
 
-	// Parse date
+	// Parse date in UTC
 	eventDate, err := time.Parse("2006-01-02", dateStr)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -214,9 +214,9 @@ func GetEvents(c *fiber.Ctx) error {
 		})
 	}
 
-	// Start and end of day
-	startOfDay := time.Date(eventDate.Year(), eventDate.Month(), eventDate.Day(), 0, 0, 0, 0, eventDate.Location())
-	endOfDay := time.Date(eventDate.Year(), eventDate.Month(), eventDate.Day(), 23, 59, 59, 999999999, eventDate.Location())
+	// Start and end of day in UTC
+	startOfDay := time.Date(eventDate.Year(), eventDate.Month(), eventDate.Day(), 0, 0, 0, 0, time.UTC)
+	endOfDay := time.Date(eventDate.Year(), eventDate.Month(), eventDate.Day(), 23, 59, 59, 999999999, time.UTC)
 
 	var events []map[string]interface{}
 
@@ -230,8 +230,8 @@ func GetEvents(c *fiber.Ctx) error {
 			events = append(events, map[string]interface{}{
 				"event_type":   "timetable",
 				"title":        tt.Summary,
-				"start_time":   tt.StartTime.Format(time.RFC3339),
-				"end_time":     tt.EndTime.Format(time.RFC3339),
+				"start_time":   tt.StartTime.UTC().Format(time.RFC3339),
+				"end_time":     tt.EndTime.UTC().Format(time.RFC3339),
 				"location":     tt.Location,
 				"description":  tt.Description,
 				"uid":          tt.UID,
@@ -260,8 +260,8 @@ func GetEvents(c *fiber.Ctx) error {
 		events = append(events, map[string]interface{}{
 			"event_type":      "custom_hour",
 			"title":           ch.Title,
-			"start_time":      ch.StartTime.Format(time.RFC3339),
-			"end_time":        ch.EndTime.Format(time.RFC3339),
+			"start_time":      ch.StartTime.UTC().Format(time.RFC3339),
+			"end_time":        ch.EndTime.UTC().Format(time.RFC3339),
 			"description":     ch.Description,
 			"id":              ch.ID,
 			"room":            roomStr,
@@ -282,7 +282,7 @@ func GetExams(c *fiber.Ctx) error {
 
 	var exams []models.Exam
 	config.DB.Preload("Course").Preload("Room").
-		Where("user_id = ? AND start_time >= ?", user.ID, time.Now()).
+		Where("user_id = ? AND start_time >= ?", user.ID, time.Now().UTC()).
 		Order("start_time").Find(&exams)
 
 	response := make([]ExamResponse, len(exams))
@@ -296,7 +296,7 @@ func GetExams(c *fiber.Ctx) error {
 			ID:           exam.ID,
 			CourseName:   exam.Course.Name,
 			ModuleNumber: exam.Course.ModuleNumber,
-			StartTime:    exam.StartTime,
+			StartTime:    exam.StartTime.UTC(),
 			Duration:     exam.Duration,
 			IsVerified:   exam.IsVerified,
 			Room:         roomStr,
@@ -453,7 +453,7 @@ func ViewZenturieTimetable(c *fiber.Ctx) error {
 		})
 	}
 
-	// Parse date
+	// Parse date in UTC
 	eventDate, err := time.Parse("2006-01-02", dateStr)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -469,9 +469,9 @@ func ViewZenturieTimetable(c *fiber.Ctx) error {
 		})
 	}
 
-	// Time range
-	startOfDay := time.Date(eventDate.Year(), eventDate.Month(), eventDate.Day(), 0, 0, 0, 0, eventDate.Location())
-	endOfDay := time.Date(eventDate.Year(), eventDate.Month(), eventDate.Day(), 23, 59, 59, 999999999, eventDate.Location())
+	// Time range in UTC
+	startOfDay := time.Date(eventDate.Year(), eventDate.Month(), eventDate.Day(), 0, 0, 0, 0, time.UTC)
+	endOfDay := time.Date(eventDate.Year(), eventDate.Month(), eventDate.Day(), 23, 59, 59, 999999999, time.UTC)
 
 	// Get timetables
 	var timetables []models.Timetable
@@ -483,8 +483,8 @@ func ViewZenturieTimetable(c *fiber.Ctx) error {
 		events = append(events, map[string]interface{}{
 			"event_type":   "timetable",
 			"title":        tt.Summary,
-			"start_time":   tt.StartTime.Format(time.RFC3339),
-			"end_time":     tt.EndTime.Format(time.RFC3339),
+			"start_time":   tt.StartTime.UTC().Format(time.RFC3339),
+			"end_time":     tt.EndTime.UTC().Format(time.RFC3339),
 			"location":     tt.Location,
 			"description":  tt.Description,
 			"uid":          tt.UID,
