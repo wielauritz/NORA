@@ -38,8 +38,8 @@ func main() {
 		log.Fatal("Failed to run migrations:", err)
 	}
 
-	// Start scheduler
-	if err := services.StartScheduler(false); err != nil {
+	// Start scheduler (run immediately on startup)
+	if err := services.StartScheduler(true); err != nil {
 		log.Printf("WARNING: Failed to start scheduler: %v", err)
 	}
 	defer services.StopScheduler()
