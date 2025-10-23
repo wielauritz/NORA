@@ -6,8 +6,8 @@
   **Eine moderne, studentenzentrierte Plattform für die Nordakademie**
 
   [![License](https://img.shields.io/badge/License-Proprietary-red.svg)](LICENSE)
-  [![TypeScript](https://img.shields.io/badge/TypeScript-5.2-blue.svg)](https://www.typescriptlang.org/)
-  [![React](https://img.shields.io/badge/React-18.2-61dafb.svg)](https://reactjs.org/)
+  [![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E.svg)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
+  [![Capacitor](https://img.shields.io/badge/Capacitor-7.4-119EFF.svg)](https://capacitorjs.com/)
   [![Go](https://img.shields.io/badge/Go-1.21-00ADD8.svg)](https://golang.org/)
 </div>
 
@@ -127,22 +127,18 @@ NORA entstand aus dem Bedürfnis heraus, die verschiedenen organisatorischen Asp
 
 ### Frontend
 
-#### Framework & Core
-- **React 18.2** - Moderne UI-Bibliothek
-- **TypeScript 5.2** - Typsicheres JavaScript
-- **Ionic Framework 7.x** - Cross-Platform UI Components
-- **Capacitor 5.x** - Native App Capabilities
-- **React Router 5.x** - Client-Side Routing
-
-#### Build & Development
-- **Vite 5.x** - Schneller Build-Tool und Dev-Server
-- **TailwindCSS 3.x** - Utility-First CSS Framework
-- **ESLint & Prettier** - Code Quality und Formatting
+#### Core Technologies
+- **HTML5** - Strukturierung der Anwendung
+- **CSS3** - Modernes Styling mit Glassmorphism
+- **JavaScript ES6+** - Clientseitige Logik und Interaktivität
+- **TailwindCSS 3.x** - Utility-First CSS Framework via CDN
+- **Capacitor 7.x** - Native Mobile App Wrapper (iOS & Android)
 
 #### Features & Utilities
-- **React Hooks** - State Management und Lifecycle
-- **Fetch API** - HTTP-Requests
-- **LocalStorage** - Client-Side Persistence
+- **Fetch API** - HTTP-Requests und API-Kommunikation
+- **LocalStorage API** - Client-Side Session Persistence
+- **DOM API** - Dynamische UI-Updates
+- **Native Modules** - Zugriff auf Device-Features via Capacitor
 
 ### Backend
 
@@ -199,7 +195,7 @@ NORA entstand aus dem Bedürfnis heraus, die verschiedenen organisatorischen Asp
                              │
                              ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                    Frontend (React/Ionic)                   │
+│                 Frontend (HTML/JS/Capacitor)                │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐          │
 │  │  Dashboard  │  │ Stundenplan │  │  Raumplan   │          │
 │  └─────────────┘  └─────────────┘  └─────────────┘          │

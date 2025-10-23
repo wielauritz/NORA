@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raumplan - Stundenplan Dashboard</title>
+    <link rel="stylesheet" href="css/common.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3cd2ff',
+                        secondary: '#003a79',
+                        accent: '#ffa064',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #3cd2ff 0%, #003a79 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .room-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .room-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .room-occupied {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .room-available {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+
+        .room-mine {
+            background: linear-gradient(135deg, #3cd2ff 0%, #003a79 100%);
+        }
+
+        .building-filter {
+            transition: all 0.2s ease;
+        }
+
+        .building-filter.active {
+            background: linear-gradient(135deg, #3cd2ff 0%, #003a79 100%);
+            color: white;
+        }
+
+        /* Mobile rotation for floor plans */
+        @media (max-width: 768px) {
+            /* Hide desktop container on mobile */
+            #floorPlanWrapper > div:first-child {
+                display: none !important;
+            }
+
+            /* Show mobile container */
+            #floorPlanMobileContainer {
+                display: block !important;
+                width: 100%;
+                max-width: 100vw;
+                overflow: hidden;
+                padding: 0.5rem;
+            }
+
+            .floor-plan-mobile-inner {
+                width: 100%;
+                height: 70vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: linear-gradient(to bottom right, rgb(239 246 255), rgb(255 255 255), rgba(60, 210, 255, 0.05));
+                border-radius: 0.75rem;
+                position: relative;
+                overflow: hidden;
+            }
+
+            .floor-plan-mobile-inner img {
+                transform: rotate(90deg);
+                max-width: 70vh;
+                max-height: 100vw;
+                width: auto;
+                height: auto;
+                object-fit: contain;
+            }
+
+            /* Remove side padding from map view on mobile */
+            #mapView {
+                padding-left: 0.5rem !important;
+                padding-right: 0.5rem !important;
+            }
+        }
+
+        /* Desktop: hide mobile container */
+        #floorPlanMobileContainer {
+            display: none;
+        }
+
+        /* Custom select arrow styling */
+        select {
+            background-image: none;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+
+<!-- Navigation Placeholder -->
+<div id="navbar-placeholder"></div>
+
+<!-- Main Content -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Raumplan</h1>
+            <p class="text-gray-600">Finde deine Unterrichtsräume</p>
+        </div>
+        <div class="flex items-center space-x-3 mt-4 md:mt-0">
+            <!-- View Toggle with Labels -->
+            <div class="flex bg-white rounded-lg shadow p-1 gap-1">
+                <button onclick="switchView('list')" id="listViewBtn" class="px-4 py-2 rounded-lg font-medium transition-colors bg-gradient-to-r from-primary to-secondary text-white flex items-center space-x-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                    </svg>
+                    <span class="text-sm">Liste</span>
+                </button>
+                <button onclick="switchView('map')" id="mapViewBtn" class="px-4 py-2 rounded-lg font-medium transition-colors text-gray-600 hover:bg-gray-100 flex items-center space-x-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/>
+                    </svg>
+                    <span class="text-sm">Karte</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Time & Location Info -->
+    <div class="glass-effect rounded-2xl p-6 mb-6" id="currentTimeInfo">
+        <!-- Will be filled dynamically -->
+    </div>
+
+    <!-- Building Filters (only visible in list view) -->
+    <div id="buildingFilters" class="glass-effect rounded-2xl p-4 mb-6">
+        <div class="flex items-center space-x-3 overflow-x-auto">
+            <button class="building-filter active px-4 py-2 rounded-lg font-medium whitespace-nowrap" data-building="all">
+                Alle Gebäude
+            </button>
+            <button class="building-filter px-4 py-2 rounded-lg font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 whitespace-nowrap" data-building="A">
+                Gebäude A
+            </button>
+            <button class="building-filter px-4 py-2 rounded-lg font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 whitespace-nowrap" data-building="B">
+                Gebäude B
+            </button>
+            <button class="building-filter px-4 py-2 rounded-lg font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 whitespace-nowrap" data-building="C">
+                Gebäude C
+            </button>
+            <button class="building-filter px-4 py-2 rounded-lg font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 whitespace-nowrap" data-building="D">
+                Gebäude D
+            </button>
+            <button class="building-filter px-4 py-2 rounded-lg font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 whitespace-nowrap" data-building="F">
+                Gebäude F
+            </button>
+            <button class="building-filter px-4 py-2 rounded-lg font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 whitespace-nowrap" data-building="H">
+                Gebäude H
+            </button>
+        </div>
+    </div>
+
+    <!-- Map View (Interactive Building Layout) -->
+    <div id="mapView" class="glass-effect rounded-2xl p-6 mb-6" style="display: none;">
+        <div class="mb-4">
+            <div class="mb-4">
+                <h2 class="text-xl font-bold text-gray-900">Raumplan</h2>
+            </div>
+
+            <!-- Building and Floor Selector -->
+            <div class="flex items-center space-x-4">
+                <div class="relative">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Gebäude</label>
+                    <select id="mapBuildingSelect" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-white appearance-none cursor-pointer pr-10">
+                        <option value="XX">Übersicht (Campus)</option>
+                        <option value="A">Gebäude A</option>
+                        <option value="B">Gebäude B</option>
+                        <option value="C">Gebäude C</option>
+                        <option value="D">Gebäude D</option>
+                        <option value="F">Gebäude F</option>
+                        <option value="H">Gebäude H</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 pt-8">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="relative" id="floorSelectContainer">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Stockwerk</label>
+                    <select id="mapFloorSelect" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary bg-white appearance-none cursor-pointer pr-10">
+                        <option value="X">Alle</option>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 pt-8">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floor Plan Container -->
+        <div id="floorPlanWrapper" class="space-y-4">
+            <!-- Desktop Container -->
+            <div class="relative rounded-xl p-4 md:p-8 overflow-x-auto bg-gradient-to-br from-blue-50 via-white to-primary/5">
+                <!-- Decorative Background Elements -->
+                <div class="absolute inset-0 opacity-30 pointer-events-none">
+                    <div class="absolute top-0 left-0 w-32 h-32 bg-primary/10 rounded-full blur-3xl"></div>
+                    <div class="absolute bottom-0 right-0 w-40 h-40 bg-secondary/10 rounded-full blur-3xl"></div>
+                </div>
+
+                <div id="floorPlanContainer" class="relative min-w-[800px]">
+                    <!-- Floor plan will be loaded here dynamically -->
+                    <div class="text-center py-12">
+                        <div class="inline-block p-4 bg-white rounded-lg shadow">
+                            <p class="text-gray-600">Lade Raumplan...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Container (hidden on desktop) -->
+            <div id="floorPlanMobileContainer">
+                <div class="floor-plan-mobile-inner">
+                    <!-- Mobile floor plan will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Room list will be inserted here by JavaScript -->
+        </div>
+
+        <!-- Map Info -->
+        <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+            <div class="flex items-start space-x-3">
+                <svg class="w-6 h-6 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <div class="text-sm text-blue-800">
+                    <strong>Tipp:</strong> Klicke auf einen Raum, um Details zur Belegung und Ausstattung anzuzeigen. Deine heutigen Räume sind blau markiert.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- List View -->
+
+    <!-- List View -->
+    <div id="listView">
+
+        <!-- My Rooms Today -->
+        <div class="glass-effect rounded-2xl p-6 mb-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Deine Räume heute</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="myRoomsTodayContainer">
+                <!-- Will be filled dynamically -->
+            </div>
+        </div>
+
+        <!-- All Rooms -->
+        <div class="glass-effect rounded-2xl p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-6">Alle Räume</h2>
+
+            <div id="roomsGrid">
+            <!-- Gebäude A -->
+            <div class="mb-8" data-building="A">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <span class="w-8 h-8 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mr-3 font-bold">A</span>
+                    Gebäude A
+                </h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+
+                    <div class="room-card room-mine rounded-xl p-4 text-white" onclick="showRoomDetails('A.101')">
+                        <div class="text-xl font-bold mb-1">A.101</div>
+                        <div class="text-xs opacity-90">Dein Kurs</div>
+                        <div class="text-xs opacity-75 mt-2">08:00 - 10:00</div>
+                    </div>
+
+                    <div class="room-card room-available rounded-xl p-4 text-white" onclick="showRoomDetails('A.102')">
+                        <div class="text-xl font-bold mb-1">A.102</div>
+                        <div class="text-xs opacity-90">Verfügbar</div>
+                        <div class="text-xs opacity-75 mt-2">30 Plätze</div>
+                    </div>
+
+                    <div class="room-card room-occupied rounded-xl p-4 text-white" onclick="showRoomDetails('A.103')">
+                        <div class="text-xl font-bold mb-1">A.103</div>
+                        <div class="text-xs opacity-90">Belegt</div>
+                        <div class="text-xs opacity-75 mt-2">bis 10:00</div>
+                    </div>
+
+                    <div class="room-card room-available rounded-xl p-4 text-white" onclick="showRoomDetails('A.104')">
+                        <div class="text-xl font-bold mb-1">A.104</div>
+                        <div class="text-xs opacity-90">Verfügbar</div>
+                        <div class="text-xs opacity-75 mt-2">25 Plätze</div>
+                    </div>
+
+                    <div class="room-card room-occupied rounded-xl p-4 text-white" onclick="showRoomDetails('A.105')">
+                        <div class="text-xl font-bold mb-1">A.105</div>
+                        <div class="text-xs opacity-90">Belegt</div>
+                        <div class="text-xs opacity-75 mt-2">bis 12:00</div>
+                    </div>
+
+                    <div class="room-card room-available rounded-xl p-4 text-white" onclick="showRoomDetails('A.201')">
+                        <div class="text-xl font-bold mb-1">A.201</div>
+                        <div class="text-xs opacity-90">Verfügbar</div>
+                        <div class="text-xs opacity-75 mt-2">40 Plätze</div>
+                    </div>
+
+                    <div class="room-card room-occupied rounded-xl p-4 text-white" onclick="showRoomDetails('A.202')">
+                        <div class="text-xl font-bold mb-1">A.202</div>
+                        <div class="text-xs opacity-90">Belegt</div>
+                        <div class="text-xs opacity-75 mt-2">bis 14:00</div>
+                    </div>
+
+                    <div class="room-card room-available rounded-xl p-4 text-white" onclick="showRoomDetails('A.203')">
+                        <div class="text-xl font-bold mb-1">A.203</div>
+                        <div class="text-xs opacity-90">Verfügbar</div>
+                        <div class="text-xs opacity-75 mt-2">35 Plätze</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Gebäude B -->
+            <div class="mb-8" data-building="B">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <span class="w-8 h-8 bg-green-100 text-green-600 rounded-lg flex items-center justify-center mr-3 font-bold">B</span>
+                    Gebäude B
+                </h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+
+                    <div class="room-card room-occupied rounded-xl p-4 text-white" onclick="showRoomDetails('B.101')">
+                        <div class="text-xl font-bold mb-1">B.101</div>
+                        <div class="text-xs opacity-90">Belegt</div>
+                        <div class="text-xs opacity-75 mt-2">bis 11:00</div>
+                    </div>
+
+                    <div class="room-card room-available rounded-xl p-4 text-white" onclick="showRoomDetails('B.102')">
+                        <div class="text-xl font-bold mb-1">B.102</div>
+                        <div class="text-xs opacity-90">Verfügbar</div>
+                        <div class="text-xs opacity-75 mt-2">20 Plätze</div>
+                    </div>
+
+                    <div class="room-card room-mine rounded-xl p-4 text-white" onclick="showRoomDetails('B.203')">
+                        <div class="text-xl font-bold mb-1">B.203</div>
+                        <div class="text-xs opacity-90">Dein Kurs</div>
+                        <div class="text-xs opacity-75 mt-2">10:00 - 12:00</div>
+                    </div>
+
+                    <div class="room-card room-available rounded-xl p-4 text-white" onclick="showRoomDetails('B.204')">
+                        <div class="text-xl font-bold mb-1">B.204</div>
+                        <div class="text-xs opacity-90">Verfügbar</div>
+                        <div class="text-xs opacity-75 mt-2">30 Plätze</div>
+                    </div>
+
+                    <div class="room-card room-occupied rounded-xl p-4 text-white" onclick="showRoomDetails('B.205')">
+                        <div class="text-xl font-bold mb-1">B.205</div>
+                        <div class="text-xs opacity-90">Belegt</div>
+                        <div class="text-xs opacity-75 mt-2">bis 13:00</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Gebäude C -->
+            <div data-building="C">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <span class="w-8 h-8 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center mr-3 font-bold">C</span>
+                    Gebäude C
+                </h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+
+                    <div class="room-card room-available rounded-xl p-4 text-white" onclick="showRoomDetails('C.101')">
+                        <div class="text-xl font-bold mb-1">C.101</div>
+                        <div class="text-xs opacity-90">Verfügbar</div>
+                        <div class="text-xs opacity-75 mt-2">50 Plätze</div>
+                    </div>
+
+                    <div class="room-card room-occupied rounded-xl p-4 text-white" onclick="showRoomDetails('C.201')">
+                        <div class="text-xl font-bold mb-1">C.201</div>
+                        <div class="text-xs opacity-90">Belegt</div>
+                        <div class="text-xs opacity-75 mt-2">bis 15:00</div>
+                    </div>
+
+                    <div class="room-card room-mine rounded-xl p-4 text-white" onclick="showRoomDetails('C.301')">
+                        <div class="text-xl font-bold mb-1">C.301</div>
+                        <div class="text-xs opacity-90">Dein Kurs</div>
+                        <div class="text-xs opacity-75 mt-2">13:00 - 15:00</div>
+                    </div>
+
+                    <div class="room-card room-available rounded-xl p-4 text-white" onclick="showRoomDetails('C.302')">
+                        <div class="text-xl font-bold mb-1">C.302</div>
+                        <div class="text-xs opacity-90">Verfügbar</div>
+                        <div class="text-xs opacity-75 mt-2">45 Plätze</div>
+                    </div>
+
+                </div>
+            </div>
+
+            </div><!-- End roomsGrid -->
+
+        </div>
+
+    </div><!-- End listView -->
+
+    <!-- Legend -->
+    <div class="glass-effect rounded-2xl p-6 mt-6">
+        <h3 class="font-semibold text-gray-900 mb-4">Legende</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 room-mine rounded-lg"></div>
+                <div>
+                    <div class="font-medium text-gray-900">Deine Räume</div>
+                    <div class="text-sm text-gray-600">Kurse, die du besuchst</div>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 room-available rounded-lg"></div>
+                <div>
+                    <div class="font-medium text-gray-900">Verfügbar</div>
+                    <div class="text-sm text-gray-600">Aktuell frei</div>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 room-occupied rounded-lg"></div>
+                <div>
+                    <div class="font-medium text-gray-900">Belegt</div>
+                    <div class="text-sm text-gray-600">Derzeit in Benutzung</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<script>
+    function logout() {
+        if (confirm('Möchtest du dich wirklich abmelden?')) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = 'index.html';
+        }
+    }
+
+    // Check authentication
+    function checkAuth() {
+        const token = localStorage.getItem('token');
+        if (!token) {
+            console.log('❌ Kein Token gefunden - Weiterleitung zum Login');
+            window.location.href = 'index.html';
+            return false;
+        }
+
+        // Prüfe ob Test-Token
+        if (token.startsWith('test-jwt-token-')) {
+            console.log('✅ Test-Token gefunden - Auth OK');
+            return true;
+        }
+
+        console.log('✅ Token gefunden - Auth OK');
+        return true;
+    }
+
+    function filterBuilding(building) {
+        const allBuildings = document.querySelectorAll('[data-building]');
+        const buttons = document.querySelectorAll('.building-filter');
+
+        // Update button styles
+        buttons.forEach(btn => {
+            btn.classList.remove('active');
+            btn.classList.add('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+        });
+        event.target.classList.add('active');
+        event.target.classList.remove('bg-gray-100', 'text-gray-700', 'hover:bg-gray-200');
+
+        // Filter buildings
+        if (building === 'all') {
+            allBuildings.forEach(b => b.style.display = 'block');
+        } else if (building === 'mine') {
+            allBuildings.forEach(b => b.style.display = 'none');
+            // Show only rooms with "room-mine" class (implement logic as needed)
+        } else {
+            allBuildings.forEach(b => {
+                b.style.display = b.dataset.building === building ? 'block' : 'none';
+            });
+        }
+    }
+
+    function showRoomDetails(roomId) {
+        // Sample room data - in production from API
+        const roomsData = {
+            'A.101': {
+                id: 'A.101',
+                building: 'Gebäude A',
+                floor: '1. Stock',
+                capacity: 50,
+                type: 'Hörsaal',
+                equipment: ['Beamer', 'Tafel', 'Sound-System', 'WLAN'],
+                status: 'mine',
+                currentCourse: 'Web Development',
+                currentTime: '08:00 - 10:00',
+                nextAvailable: '10:00',
+                schedule: [
+                    { time: '08:00 - 10:00', course: 'Web Development', professor: 'Prof. Schmidt' },
+                    { time: '10:00 - 12:00', course: 'Frei', professor: '-' },
+                    { time: '13:00 - 15:00', course: 'Programmierung', professor: 'Dr. Klein' }
+                ]
+            },
+            'B.203': {
+                id: 'B.203',
+                building: 'Gebäude B',
+                floor: '2. Stock',
+                capacity: 40,
+                type: 'Seminarraum',
+                equipment: ['Beamer', 'Whiteboard', 'PC-Pool', 'WLAN'],
+                status: 'mine',
+                currentCourse: 'Datenbanken',
+                currentTime: '10:00 - 12:00',
+                nextAvailable: '12:00',
+                schedule: [
+                    { time: '08:00 - 10:00', course: 'Frei', professor: '-' },
+                    { time: '10:00 - 12:00', course: 'Datenbanken', professor: 'Dr. Müller' },
+                    { time: '13:00 - 15:00', course: 'Frei', professor: '-' }
+                ]
+            },
+            'C.301': {
+                id: 'C.301',
+                building: 'Gebäude C',
+                floor: '3. Stock',
+                capacity: 30,
+                type: 'Projektraum',
+                equipment: ['Beamer', 'Flipchart', 'Gruppen-Tische', 'WLAN'],
+                status: 'mine',
+                currentCourse: 'Projekt Workshop',
+                currentTime: '13:00 - 15:00',
+                nextAvailable: '15:00',
+                schedule: [
+                    { time: '08:00 - 10:00', course: 'Frei', professor: '-' },
+                    { time: '10:00 - 12:00', course: 'Design Thinking', professor: 'Prof. Weber' },
+                    { time: '13:00 - 15:00', course: 'Projekt Workshop', professor: 'Team' }
+                ]
+            }
+        };
+
+        const room = roomsData[roomId] || {
+            id: roomId,
+            building: 'Unbekannt',
+            capacity: 0,
+            type: 'Raum',
+            equipment: [],
+            status: 'available',
+            schedule: []
+        };
+
+        const statusText = room.status === 'mine' ? 'Dein Kurs' :
+            room.status === 'occupied' ? 'Belegt' : 'Verfügbar';
+        const statusColor = room.status === 'mine' ? 'from-primary to-secondary' :
+            room.status === 'occupied' ? 'from-red-400 to-red-600' :
+                'from-green-400 to-green-600';
+
+        const modal = `
+                <div id="roomModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-[100] flex items-center justify-center p-4" onclick="closeRoomModal(event)">
+                    <div class="glass-effect rounded-3xl w-full max-w-3xl p-8 max-h-[90vh] overflow-y-auto relative" onclick="event.stopPropagation()">
+
+                        <!-- Close Button -->
+                        <button onclick="closeRoomModal()" class="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-lg transition-colors">
+                            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+
+                        <!-- Header -->
+                        <div class="mb-6">
+                            <div class="inline-block px-4 py-1 bg-gradient-to-r ${statusColor} text-white rounded-full text-sm font-medium mb-3">
+                                ${statusText}
+                            </div>
+                            <h2 class="text-3xl font-bold text-gray-900 mb-2">Raum ${room.id}</h2>
+                            <p class="text-gray-600">${room.building} • ${room.floor || ''}</p>
+                        </div>
+
+                        <!-- Info Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <div class="bg-gray-50 rounded-xl p-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="p-3 bg-primary/10 rounded-lg">
+                                        <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm text-gray-500">Kapazität</div>
+                                        <div class="font-semibold text-gray-900">${room.capacity} Personen</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-gray-50 rounded-xl p-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="p-3 bg-secondary/10 rounded-lg">
+                                        <svg class="w-6 h-6 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <div class="text-sm text-gray-500">Raumtyp</div>
+                                        <div class="font-semibold text-gray-900">${room.type}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        ${room.currentCourse ? `
+                        <!-- Current Status -->
+                        <div class="bg-gradient-to-r ${statusColor} bg-opacity-10 rounded-xl p-4 mb-6 border border-current">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-sm font-medium mb-1">Aktuell</div>
+                                    <div class="text-lg font-bold">${room.currentCourse}</div>
+                                    <div class="text-sm opacity-75">${room.currentTime}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-sm font-medium mb-1">Nächste Verfügbarkeit</div>
+                                    <div class="text-lg font-bold">${room.nextAvailable} Uhr</div>
+                                </div>
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        <!-- Equipment -->
+                        <div class="bg-gray-50 rounded-xl p-4 mb-6">
+                            <h3 class="font-semibold text-gray-900 mb-3">Ausstattung</h3>
+                            <div class="flex flex-wrap gap-2">
+                                ${room.equipment.map(eq => `
+                                    <span class="px-3 py-1 bg-white rounded-lg text-sm font-medium text-gray-700 border border-gray-200">
+                                        ${eq}
+                                    </span>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        ${room.schedule && room.schedule.length > 0 ? `
+                        <!-- Today's Schedule -->
+                        <div class="bg-gray-50 rounded-xl p-4 mb-6">
+                            <h3 class="font-semibold text-gray-900 mb-3">Belegung heute</h3>
+                            <div class="space-y-2">
+                                ${room.schedule.map(slot => `
+                                    <div class="flex items-center justify-between p-3 bg-white rounded-lg ${slot.course !== 'Frei' ? 'border-l-4 border-primary' : ''}">
+                                        <div>
+                                            <div class="font-medium text-gray-900">${slot.time}</div>
+                                            <div class="text-sm text-gray-600">${slot.course}</div>
+                                        </div>
+                                        <div class="text-sm text-gray-600">${slot.professor}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        <!-- Actions -->
+                        <div class="flex flex-col sm:flex-row gap-3">
+                            <button class="flex-1 px-4 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl font-medium hover:shadow-lg transition-shadow flex items-center justify-center space-x-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                                <span>Navigation starten</span>
+                            </button>
+                            <button class="px-4 py-3 bg-white border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors flex items-center justify-center space-x-2">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                <span>Raum buchen</span>
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            `;
+
+        // Remove existing modal if any
+        const existingModal = document.getElementById('roomModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        // Add modal to body
+        document.body.insertAdjacentHTML('beforeend', modal);
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeRoomModal(event) {
+        const modal = document.getElementById('roomModal');
+        if (!event || event.target === modal || !event.target.closest('.glass-effect')) {
+            if (modal) {
+                modal.remove();
+                document.body.style.overflow = 'auto';
+            }
+        }
+    }
+
+    // Close with ESC key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeRoomModal();
+        }
+    });
+
+    // Initialize is now handled by raumplan.js via initRaumplan()
+
+    // View Switching
+    function switchView(view) {
+        const listView = document.getElementById('listView');
+        const mapView = document.getElementById('mapView');
+        const buildingFilters = document.getElementById('buildingFilters');
+        const listBtn = document.getElementById('listViewBtn');
+        const mapBtn = document.getElementById('mapViewBtn');
+        const buildingSelect = document.getElementById('mapBuildingSelect');
+        const floorSelect = document.getElementById('mapFloorSelect');
+
+        if (view === 'map') {
+            listView.style.display = 'none';
+            mapView.style.display = 'block';
+            buildingFilters.style.display = 'none';
+
+            // Always reset to Campus overview when switching to map view
+            if (buildingSelect) {
+                buildingSelect.value = 'XX';
+                if (typeof updateFloorOptions === 'function') {
+                    updateFloorOptions('XX');
+                }
+                if (typeof loadFloorPlan === 'function') {
+                    loadFloorPlan('XX', 'X');
+                }
+            }
+
+            // Update buttons
+            listBtn.classList.remove('bg-gradient-to-r', 'from-primary', 'to-secondary', 'text-white');
+            listBtn.classList.add('text-gray-600', 'hover:bg-gray-100');
+            mapBtn.classList.add('bg-gradient-to-r', 'from-primary', 'to-secondary', 'text-white');
+            mapBtn.classList.remove('text-gray-600', 'hover:bg-gray-100');
+        } else {
+            listView.style.display = 'block';
+            mapView.style.display = 'none';
+            buildingFilters.style.display = 'block';
+
+            // Update buttons
+            mapBtn.classList.remove('bg-gradient-to-r', 'from-primary', 'to-secondary', 'text-white');
+            mapBtn.classList.add('text-gray-600', 'hover:bg-gray-100');
+            listBtn.classList.add('bg-gradient-to-r', 'from-primary', 'to-secondary', 'text-white');
+            listBtn.classList.remove('text-gray-600', 'hover:bg-gray-100');
+        }
+    }
+
+    // Show room details from map
+    function showRoomOnMap(roomId) {
+        showRoomDetails(roomId);
+    }
+</script>
+
+<!-- API Helper -->
+<script src="js/api-helper.js"></script>
+<!-- Auth Helper -->
+<script src="js/auth.js"></script>
+    <script src="js/app-updater.js"></script>
+<!-- Navbar Component -->
+<script src="js/navbar.js"></script>
+<!-- Search -->
+<script src="js/search.js"></script>
+<!-- Raumplan Script -->
+<script src="js/raumplan.js"></script>
+
+<!-- Initialize Navbar -->
+<script>
+    initNavbar('raumplan');
+</script>
+
+</body>
+</html>

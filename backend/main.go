@@ -108,6 +108,16 @@ func setupPublicRoutes(app *fiber.App) {
 		})
 	})
 
+	// App version for mobile apps
+	app.Get("/v1/app-version", func(c *fiber.Ctx) error {
+		return c.JSON(fiber.Map{
+			"version": "1.0.0",
+			"required_version": "1.0.0",
+			"update_url_android": "https://play.google.com/store/apps/details?id=de.nora.nak",
+			"update_url_ios": "https://apps.apple.com/app/nora-stundenplan/id123456789",
+		})
+	})
+
 	// Login Service
 	app.Post("/v1/login", handlers.Login)
 	app.Get("/v1/verify", handlers.VerifyEmail)
@@ -145,6 +155,7 @@ func setupProtectedRoutes(app *fiber.App) {
 
 	// Custom Hours
 	protected.Post("/create", handlers.CreateCustomHour)
+	protected.Post("/update", handlers.UpdateCustomHour)
 	protected.Delete("/delete", handlers.DeleteCustomHour)
 
 	// Exams

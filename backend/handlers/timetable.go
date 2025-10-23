@@ -83,6 +83,17 @@ type CustomHourCreateRequest struct {
 	CustomLocation *string   `json:"custom_location"`
 }
 
+// CustomHourUpdateRequest for updating custom hours
+type CustomHourUpdateRequest struct {
+	CustomHourID   uint       `json:"custom_hour_id" validate:"required"`
+	Title          *string    `json:"title"`
+	Description    *string    `json:"description"`
+	StartTime      *time.Time `json:"start_time"`
+	EndTime        *time.Time `json:"end_time"`
+	Room           *string    `json:"room"`
+	CustomLocation *string    `json:"custom_location"`
+}
+
 // ExamCreateRequest for adding exams
 type ExamCreateRequest struct {
 	Course    string    `json:"course" validate:"required"`
@@ -546,6 +557,65 @@ func CreateCustomHour(c *fiber.Ctx) error {
 
 	return c.JSON(MessageResponse{
 		Message: "Custom Hour erfolgreich erstellt",
+	})
+}
+
+// UpdateCustomHour updates an existing custom hour
+// POST /v1/update?session_id=...
+func UpdateCustomHour(c *fiber.Ctx) error {
+	user := middleware.GetCurrentUser(c)
+
+	var req CustomHourUpdateRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"detail": "Invalid request body",
+		})
+	}
+
+	// Find custom hour
+	var customHour models.CustomHour
+	if err := config.DB.Where("id = ? AND user_id = ?", req.CustomHourID, user.ID).First(&customHour).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"detail": "Custom Hour nicht gefunden oder Sie haben keine Berechtigung",
+		})
+	}
+
+	// Update fields if provided
+	if req.Title != nil {
+		customHour.Title = *req.Title
+	}
+	if req.Description != nil {
+		customHour.Description = req.Description
+	}
+	if req.StartTime != nil {
+		customHour.StartTime = *req.StartTime
+	}
+	if req.EndTime != nil {
+		customHour.EndTime = *req.EndTime
+	}
+	if req.CustomLocation != nil {
+		customHour.CustomLocation = req.CustomLocation
+		customHour.RoomID = nil // Clear room if custom location is set
+	}
+	if req.Room != nil {
+		var room models.Room
+		if err := config.DB.Where("room_number = ?", *req.Room).First(&room).Error; err != nil {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"detail": "Raum nicht gefunden",
+			})
+		}
+		customHour.RoomID = &room.ID
+		customHour.CustomLocation = nil // Clear custom location if room is set
+	}
+
+	if err := config.DB.Save(&customHour).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"detail": "Failed to update custom hour",
+		})
+	}
+
+	return c.JSON(MessageResponse{
+		Message: "Custom Hour erfolgreich aktualisiert",
 	})
 }
 

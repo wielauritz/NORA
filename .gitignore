@@ -91,6 +91,12 @@ deploy.sh
 webhook-server.js
 WEBHOOK_SETUP.md
 
+# Documentation
+frontend/MOBILE_APP_BUILD.md
+
+# Old Frontend
+frontend-DONOTUSE/
+
 # OS
 .DS_Store
 .AppleDouble

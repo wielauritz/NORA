@@ -1,0 +1,12 @@
+{
+  "appId": "de.nora.nak",
+  "appName": "NORA Stundenplan",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#667eea"
+    }
+  }
+}
