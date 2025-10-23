@@ -18,30 +18,30 @@ backend/*.env
 backend/*.log
 
 # Frontend Node
-nora-ionic/node_modules/
-nora-ionic/dist/
-nora-ionic/.DS_Store
-nora-ionic/.vscode/
-nora-ionic/.idea/
+frontend/node_modules/
+frontend/dist/
+frontend/.DS_Store
+frontend/.vscode/
+frontend/.idea/
 
 # Frontend Build
-nora-ionic/build/
-nora-ionic/www/
+frontend/build/
+frontend/www/
 
 # Frontend Environment
-nora-ionic/.env
-nora-ionic/.env.local
-nora-ionic/.env.production
+frontend/.env
+frontend/.env.local
+frontend/.env.production
 
 # Frontend Logs
-nora-ionic/npm-debug.log*
-nora-ionic/yarn-debug.log*
-nora-ionic/yarn-error.log*
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
 
 # Capacitor
-nora-ionic/ios/
-nora-ionic/android/
-nora-ionic/capacitor.config.ts
+frontend/ios/
+frontend/android/
+frontend/capacitor.config.ts
 
 # System Files
 .DS_Store
