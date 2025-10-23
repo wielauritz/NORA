@@ -133,9 +133,10 @@ func FetchAndImportTimetables() error {
 	// Step 1: Fetch ICS files
 	icsData, err := FetchICSFiles()
 	if err != nil {
-		// Send error notification
-		emailService := utils.NewEmailService()
-		emailService.SendICSImportNotification(0, 0, 0, 1)
+		// Log error
+		if logErr := utils.LogICSImportStatistics(0, 0, 0, 1); logErr != nil {
+			log.Printf("WARNING: Failed to write to log file: %v", logErr)
+		}
 		return err
 	}
 
@@ -146,9 +147,10 @@ func FetchAndImportTimetables() error {
 	// Step 2: Parse ICS to events
 	events, err := ParseICSFiles(icsData)
 	if err != nil {
-		// Send error notification
-		emailService := utils.NewEmailService()
-		emailService.SendICSImportNotification(filesDownloaded, 0, 0, 1)
+		// Log error
+		if logErr := utils.LogICSImportStatistics(filesDownloaded, 0, 0, 1); logErr != nil {
+			log.Printf("WARNING: Failed to write to log file: %v", logErr)
+		}
 		return err
 	}
 
@@ -158,26 +160,26 @@ func FetchAndImportTimetables() error {
 	// Step 3: Import to database
 	stats, err := ImportEventsToDatabase(events)
 	if err != nil {
-		// Send error notification
-		emailService := utils.NewEmailService()
-		emailService.SendICSImportNotification(filesDownloaded, 0, 0, 1)
+		// Log error
+		if logErr := utils.LogICSImportStatistics(filesDownloaded, 0, 0, 1); logErr != nil {
+			log.Printf("WARNING: Failed to write to log file: %v", logErr)
+		}
 		return err
 	}
 
 	log.Println("[3/3] Events imported successfully")
 
-	// Step 4: Send success notification email to team
-	emailService := utils.NewEmailService()
-	if err := emailService.SendICSImportNotification(
+	// Step 4: Log import statistics to file
+	if err := utils.LogICSImportStatistics(
 		filesDownloaded,
 		stats.EventsCreated,
 		stats.EventsUpdated,
 		stats.Errors,
 	); err != nil {
-		log.Printf("WARNING: Failed to send notification email: %v", err)
-		// Don't fail the import if email fails
+		log.Printf("WARNING: Failed to write to log file: %v", err)
+		// Don't fail the import if logging fails
 	} else {
-		log.Println("Successfully sent import notification email to team")
+		log.Println("Successfully logged import statistics to ics_data_imports.log")
 	}
 
 	return nil
