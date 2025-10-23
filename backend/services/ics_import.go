@@ -304,6 +304,7 @@ func ImportEventsToDatabase(eventsMap map[string][]TimetableEvent) (*ImportStati
 	totalCreated := 0
 	totalUpdated := 0
 	totalErrors := 0
+	debugLogCount := 0 // Only log first 5 changes for debugging
 
 	for zenturieName, events := range eventsMap {
 		log.Printf("Importing events for zenturie: %s (%d events)", zenturieName, len(events))
@@ -414,7 +415,16 @@ func ImportEventsToDatabase(eventsMap map[string][]TimetableEvent) (*ImportStati
 				}
 			} else {
 				// Check if anything actually changed
-				if hasChanges(&existing, &timetable) {
+				hasChanged := false
+				if debugLogCount < 5 {
+					// Enable detailed logging for first 5 comparisons
+					hasChanged = hasChangesDetailed(&existing, &timetable, true)
+					debugLogCount++
+				} else {
+					hasChanged = hasChangesDetailed(&existing, &timetable, false)
+				}
+
+				if hasChanged {
 					// Update existing event only if there are changes
 					if err := config.DB.Model(&existing).Updates(timetable).Error; err != nil {
 						log.Printf("ERROR updating timetable event %s: %v", event.UID, err)
@@ -677,19 +687,25 @@ func cleanupSummary(summary string) string {
 	return summary
 }
 
-// hasChanges compares two Timetable objects and returns true if any field has changed
-func hasChanges(existing, new *models.Timetable) bool {
+// hasChangesDetailed compares two Timetable objects with optional detailed logging
+func hasChangesDetailed(existing, new *models.Timetable, enableLogging bool) bool {
 	changed := false
 	var reasons []string
 
 	// Compare times (most important for updates)
-	if !existing.StartTime.Equal(new.StartTime) {
+	// Truncate to seconds to avoid nanosecond differences
+	existingStart := existing.StartTime.Truncate(time.Second)
+	newStart := new.StartTime.Truncate(time.Second)
+	existingEnd := existing.EndTime.Truncate(time.Second)
+	newEnd := new.EndTime.Truncate(time.Second)
+
+	if !existingStart.Equal(newStart) {
 		changed = true
-		reasons = append(reasons, fmt.Sprintf("StartTime: %v -> %v", existing.StartTime, new.StartTime))
+		reasons = append(reasons, fmt.Sprintf("StartTime: %v -> %v (diff: %v)", existingStart, newStart, newStart.Sub(existingStart)))
 	}
-	if !existing.EndTime.Equal(new.EndTime) {
+	if !existingEnd.Equal(newEnd) {
 		changed = true
-		reasons = append(reasons, fmt.Sprintf("EndTime: %v -> %v", existing.EndTime, new.EndTime))
+		reasons = append(reasons, fmt.Sprintf("EndTime: %v -> %v (diff: %v)", existingEnd, newEnd, newEnd.Sub(existingEnd)))
 	}
 
 	// Compare basic fields
@@ -705,41 +721,63 @@ func hasChanges(existing, new *models.Timetable) bool {
 	// Compare nullable uint pointers (CourseID, RoomID)
 	if !compareNullableUint(existing.CourseID, new.CourseID) {
 		changed = true
-		reasons = append(reasons, fmt.Sprintf("CourseID: %v -> %v", existing.CourseID, new.CourseID))
+		reasons = append(reasons, fmt.Sprintf("CourseID: %v -> %v", ptrToString(existing.CourseID), ptrToString(new.CourseID)))
 	}
 	if !compareNullableUint(existing.RoomID, new.RoomID) {
 		changed = true
-		reasons = append(reasons, fmt.Sprintf("RoomID: %v -> %v", existing.RoomID, new.RoomID))
+		reasons = append(reasons, fmt.Sprintf("RoomID: %v -> %v", ptrToString(existing.RoomID), ptrToString(new.RoomID)))
 	}
 
 	// Compare nullable string pointers
 	if !compareNullableString(existing.Description, new.Description) {
 		changed = true
-		reasons = append(reasons, fmt.Sprintf("Description changed"))
+		reasons = append(reasons, fmt.Sprintf("Description: '%s' -> '%s'", ptrToStringStr(existing.Description), ptrToStringStr(new.Description)))
 	}
 	if !compareNullableString(existing.Location, new.Location) {
 		changed = true
-		reasons = append(reasons, fmt.Sprintf("Location: %v -> %v", existing.Location, new.Location))
+		reasons = append(reasons, fmt.Sprintf("Location: '%s' -> '%s'", ptrToStringStr(existing.Location), ptrToStringStr(new.Location)))
 	}
 	if !compareNullableString(existing.Professor, new.Professor) {
 		changed = true
-		reasons = append(reasons, fmt.Sprintf("Professor: %v -> %v", existing.Professor, new.Professor))
+		reasons = append(reasons, fmt.Sprintf("Professor: '%s' -> '%s'", ptrToStringStr(existing.Professor), ptrToStringStr(new.Professor)))
 	}
 	if !compareNullableString(existing.CourseType, new.CourseType) {
 		changed = true
-		reasons = append(reasons, fmt.Sprintf("CourseType: %v -> %v", existing.CourseType, new.CourseType))
+		reasons = append(reasons, fmt.Sprintf("CourseType: '%s' -> '%s'", ptrToStringStr(existing.CourseType), ptrToStringStr(new.CourseType)))
 	}
 	if !compareNullableString(existing.CourseCode, new.CourseCode) {
 		changed = true
-		reasons = append(reasons, fmt.Sprintf("CourseCode: %v -> %v", existing.CourseCode, new.CourseCode))
+		reasons = append(reasons, fmt.Sprintf("CourseCode: '%s' -> '%s'", ptrToStringStr(existing.CourseCode), ptrToStringStr(new.CourseCode)))
 	}
 
-	// Log changes for debugging (only log first few to avoid spam)
-	if changed && len(reasons) > 0 {
-		log.Printf("  Changes detected for UID %s: %s", existing.UID, strings.Join(reasons, ", "))
+	// Log changes if requested
+	if enableLogging {
+		if changed && len(reasons) > 0 {
+			log.Printf("  ⚠️ CHANGE DETECTED for UID %s:", existing.UID)
+			for _, reason := range reasons {
+				log.Printf("    - %s", reason)
+			}
+		} else {
+			log.Printf("  ✓ No changes for UID %s", existing.UID)
+		}
 	}
 
 	return changed
+}
+
+// Helper functions to convert pointers to readable strings
+func ptrToString(p *uint) string {
+	if p == nil {
+		return "nil"
+	}
+	return fmt.Sprintf("%d", *p)
+}
+
+func ptrToStringStr(p *string) string {
+	if p == nil {
+		return "nil"
+	}
+	return *p
 }
 
 // compareNullableUint compares two nullable uint pointers
