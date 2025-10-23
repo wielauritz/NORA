@@ -38,16 +38,16 @@ func StartScheduler(runImmediately bool) error {
 	// Create new cron scheduler
 	scheduler = cron.New(cron.WithLocation(time.UTC))
 
-	// Add job every 15 minutes (at :00, :15, :30, :45)
-	_, err := scheduler.AddFunc("*/15 * * * *", func() {
+	// Add job every 3 minutes
+	_, err := scheduler.AddFunc("*/3 * * * *", func() {
 		log.Println("=============================================================")
-		log.Println("TIMETABLE UPDATE STARTED (Every 15 minutes)")
+		log.Println("TIMETABLE UPDATE STARTED (Every 3 minutes)")
 		log.Printf("Time (UTC): %s", time.Now().UTC().Format(time.RFC3339))
 		log.Println("=============================================================")
 
 		if err := FetchAndImportTimetables(); err != nil {
 			log.Printf("ERROR during timetable update: %v", err)
-			log.Println("Scheduler will retry in 15 minutes")
+			log.Println("Scheduler will retry in 3 minutes")
 		} else {
 			log.Println("=============================================================")
 			log.Println("TIMETABLE UPDATE COMPLETED")
@@ -63,7 +63,7 @@ func StartScheduler(runImmediately bool) error {
 	scheduler.Start()
 	isRunning = true
 
-	log.Println("Scheduler started - Running every 15 minutes")
+	log.Println("Scheduler started - Running every 3 minutes")
 
 	// Optionally run immediately
 	if runImmediately {
@@ -109,27 +109,26 @@ func GetSchedulerStatus() SchedulerStatus {
 		}
 	}
 
-	// Get next run time (approximate based on 15-minute schedule)
+	// Get next run time (approximate based on 3-minute schedule)
 	now := time.Now()
-	var nextRun time.Time
 	minute := now.Minute()
 
-	// Calculate next 15-minute mark (00, 15, 30, 45)
-	if minute < 15 {
-		nextRun = time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), 15, 0, 0, now.Location())
-	} else if minute < 30 {
-		nextRun = time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), 30, 0, 0, now.Location())
-	} else if minute < 45 {
-		nextRun = time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), 45, 0, 0, now.Location())
-	} else {
+	// Calculate next 3-minute mark (00, 03, 06, 09, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48, 51, 54, 57)
+	nextMinute := ((minute / 3) + 1) * 3
+	var nextRun time.Time
+
+	if nextMinute >= 60 {
+		// Next hour
 		nextRun = time.Date(now.Year(), now.Month(), now.Day(), now.Hour()+1, 0, 0, 0, now.Location())
+	} else {
+		nextRun = time.Date(now.Year(), now.Month(), now.Day(), now.Hour(), nextMinute, 0, 0, now.Location())
 	}
 
 	return SchedulerStatus{
 		Status:  "running",
 		Running: true,
 		NextRun: &nextRun,
-		JobName: "Timetable Update (Every 15 minutes)",
+		JobName: "Timetable Update (Every 3 minutes)",
 	}
 }
 
