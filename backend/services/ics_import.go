@@ -27,6 +27,7 @@ type ImportStatistics struct {
 	FilesDownloaded int
 	EventsCreated   int
 	EventsUpdated   int
+	EventsUnchanged int
 	Errors          int
 }
 
@@ -303,6 +304,7 @@ func ImportEventsToDatabase(eventsMap map[string][]TimetableEvent) (*ImportStati
 
 	totalCreated := 0
 	totalUpdated := 0
+	totalUnchanged := 0
 	totalErrors := 0
 	debugLogCount := 0 // Only log first 5 changes for debugging
 
@@ -330,6 +332,7 @@ func ImportEventsToDatabase(eventsMap map[string][]TimetableEvent) (*ImportStati
 
 		createdCount := 0
 		updatedCount := 0
+		unchangedCount := 0
 		errorCount := 0
 
 		// Import events
@@ -433,26 +436,30 @@ func ImportEventsToDatabase(eventsMap map[string][]TimetableEvent) (*ImportStati
 					} else {
 						updatedCount++
 					}
+				} else {
+					// No changes, count as unchanged
+					unchangedCount++
 				}
-				// If no changes, don't count as updated
 			}
 		}
 
-		log.Printf("Zenturie %s: %d created, %d updated, %d errors",
-			zenturieName, createdCount, updatedCount, errorCount)
+		log.Printf("Zenturie %s: %d created, %d updated, %d unchanged, %d errors",
+			zenturieName, createdCount, updatedCount, unchangedCount, errorCount)
 
 		totalCreated += createdCount
 		totalUpdated += updatedCount
+		totalUnchanged += unchangedCount
 		totalErrors += errorCount
 	}
 
-	log.Printf("Import summary: %d created, %d updated, %d errors",
-		totalCreated, totalUpdated, totalErrors)
+	log.Printf("Import summary: %d created, %d updated, %d unchanged, %d errors",
+		totalCreated, totalUpdated, totalUnchanged, totalErrors)
 
 	stats := &ImportStatistics{
-		EventsCreated: totalCreated,
-		EventsUpdated: totalUpdated,
-		Errors:        totalErrors,
+		EventsCreated:   totalCreated,
+		EventsUpdated:   totalUpdated,
+		EventsUnchanged: totalUnchanged,
+		Errors:          totalErrors,
 	}
 
 	return stats, nil

@@ -8,7 +8,7 @@ import (
 )
 
 // LogICSImportStatistics logs ICS import statistics to a file
-func LogICSImportStatistics(filesDownloaded, eventsCreated, eventsUpdated, errors int) error {
+func LogICSImportStatistics(filesDownloaded, eventsCreated, eventsUpdated, eventsUnchanged, errors int) error {
 	// Define log file path
 	logDir := "logs"
 	logFile := filepath.Join(logDir, "ics_data_imports.log")
@@ -26,17 +26,18 @@ func LogICSImportStatistics(filesDownloaded, eventsCreated, eventsUpdated, error
 	defer f.Close()
 
 	// Calculate totals
-	totalRecords := eventsCreated + eventsUpdated
+	totalRecords := eventsCreated + eventsUpdated + eventsUnchanged
 
 	// Format log entry
 	timestamp := time.Now().Format("2006-01-02 15:04:05")
 	logEntry := fmt.Sprintf(
-		"[%s] ICS-Import abgeschlossen - Dateien heruntergeladen: %d | Datensätze insgesamt: %d | Neu hinzugefügt: %d | Geändert: %d | Fehler: %d\n",
+		"[%s] ICS-Import abgeschlossen - Dateien heruntergeladen: %d | Datensätze gesamt: %d | Neu hinzugefügt: %d | Geändert: %d | Bereits vorhanden: %d | Fehler: %d\n",
 		timestamp,
 		filesDownloaded,
 		totalRecords,
 		eventsCreated,
 		eventsUpdated,
+		eventsUnchanged,
 		errors,
 	)
 

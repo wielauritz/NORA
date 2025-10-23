@@ -140,7 +140,7 @@ func FetchAndImportTimetables() error {
 	icsData, err := FetchICSFiles()
 	if err != nil {
 		// Log error
-		if logErr := utils.LogICSImportStatistics(0, 0, 0, 1); logErr != nil {
+		if logErr := utils.LogICSImportStatistics(0, 0, 0, 0, 1); logErr != nil {
 			log.Printf("WARNING: Failed to write to log file: %v", logErr)
 		}
 		return err
@@ -154,7 +154,7 @@ func FetchAndImportTimetables() error {
 	events, err := ParseICSFiles(icsData)
 	if err != nil {
 		// Log error
-		if logErr := utils.LogICSImportStatistics(filesDownloaded, 0, 0, 1); logErr != nil {
+		if logErr := utils.LogICSImportStatistics(filesDownloaded, 0, 0, 0, 1); logErr != nil {
 			log.Printf("WARNING: Failed to write to log file: %v", logErr)
 		}
 		return err
@@ -167,7 +167,7 @@ func FetchAndImportTimetables() error {
 	stats, err := ImportEventsToDatabase(events)
 	if err != nil {
 		// Log error
-		if logErr := utils.LogICSImportStatistics(filesDownloaded, 0, 0, 1); logErr != nil {
+		if logErr := utils.LogICSImportStatistics(filesDownloaded, 0, 0, 0, 1); logErr != nil {
 			log.Printf("WARNING: Failed to write to log file: %v", logErr)
 		}
 		return err
@@ -180,6 +180,7 @@ func FetchAndImportTimetables() error {
 		filesDownloaded,
 		stats.EventsCreated,
 		stats.EventsUpdated,
+		stats.EventsUnchanged,
 		stats.Errors,
 	); err != nil {
 		log.Printf("WARNING: Failed to write to log file: %v", err)
