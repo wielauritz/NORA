@@ -62,10 +62,9 @@ function renderNavbar(activePage = '') {
         <nav class="fixed md:hidden bottom-0 left-0 right-0 glass-effect border-t border-gray-200 z-50" style="padding-bottom: calc(env(safe-area-inset-bottom) * 0.25);">
             <div class="flex items-stretch w-full">
                 <a href="dashboard.html" class="flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-colors ${activePage === 'dashboard' ? 'text-primary' : 'text-gray-600 hover:text-gray-900'}">
-                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7A1 1 0 003 11h1v7a2 2 0 002 2h10a2 2 0 002-2v-7h1a1 1 0 00.707-1.707l-7-7z"/>
-                        <path d="M9 16a1 1 0 11-2 0 1 1 0 012 0z"/>
-                        <path d="M15 16a1 1 0 11-2 0 1 1 0 012 0z"/>
+                    <svg class="w-6 h-6" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5,10 L5,19 C5,19.5523 5.44772,20 6,20 L18,20 C18.5523,20 19,19.5523 19,19 L19,10" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"></path>
+                        <path d="M21,11 L12.307,4.23875 C12.1264,4.09832 11.8736,4.09832 11.693,4.23875 L3,11" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"></path>
                     </svg>
                     <span class="text-xs font-medium whitespace-nowrap">Start</span>
                 </a>

@@ -22,23 +22,20 @@ html, body {
     padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
 }
 
-/* Main content padding for fixed header and mobile bottom navigation */
-body {
-    background: linear-gradient(to bottom right, #f9fafb, #f3f4f6);
+/* Fixed header and tabbar spacing */
+html, body {
+    margin: 0;
+    padding: 0;
+    background: #f9fafb;
 }
 
+/* Ensure main has proper spacing for fixed header and bottom nav */
 main {
-    padding-top: max(4rem, calc(4rem + env(safe-area-inset-top))) !important;
-    padding-bottom: calc(7.5rem + max(0.5rem, env(safe-area-inset-bottom))) !important;
-    margin-top: 0 !important;
-    margin-bottom: 0 !important;
-}
-
-@media (max-width: 768px) {
-    main {
-        padding-top: max(4rem, calc(4rem + env(safe-area-inset-top))) !important;
-        padding-bottom: calc(7.5rem + max(0.5rem, env(safe-area-inset-bottom))) !important;
-    }
+    display: block;
+    width: 100%;
+    padding-top: 4.5rem !important;
+    padding-bottom: 8.5rem !important;
+    margin: 0 !important;
 }
 
 /* Glass Effect */

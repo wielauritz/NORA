@@ -3,10 +3,12 @@
  * Zeigt wöchentlichen Stundenplan mit Events vom NORA Backend
  */
 
-// Check authentication
-if (!checkAuth()) {
-    // Redirects to login
-}
+// Check authentication (wrapped in async IIFE)
+(async () => {
+    if (!(await checkAuth())) {
+        // Redirects to login
+    }
+})();
 
 // Global state
 let currentDate = new Date();
@@ -1503,8 +1505,8 @@ function updatePageTitle(title) {
  * Logout function
  */
 function logout() {
-    showConfirmDialog('Möchtest du dich wirklich abmelden?', () => {
-        AuthAPI.logout();
+    showConfirmDialog('Möchtest du dich wirklich abmelden?', async () => {
+        await AuthAPI.logout();
     });
 }
 
