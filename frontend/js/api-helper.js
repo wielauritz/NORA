@@ -12,17 +12,18 @@ const API_BASE_URL = 'https://api.new.nora-nak.de/v1';
  * Helper: Detect if running in Capacitor
  */
 function isCapacitor() {
+    // Check if Capacitor is available and we're on native platform
     return typeof window !== 'undefined' &&
-           window.Capacitor &&
-           window.Capacitor.isNativePlatform &&
-           window.Capacitor.isNativePlatform();
+           typeof Capacitor !== 'undefined' &&
+           Capacitor.isNativePlatform &&
+           Capacitor.isNativePlatform() === true;
 }
 
 /**
  * Helper: API Request mit Authentication (Capacitor & Browser compatible)
  */
 async function apiRequest(endpoint, options = {}) {
-    const token = localStorage.getItem('token');
+    const token = storage.getItem('token');
 
     const headers = {
         'Content-Type': 'application/json',
@@ -77,8 +78,8 @@ async function apiRequest(endpoint, options = {}) {
                                        endpoint === '/reset' || endpoint === '/reset-confirm';
 
                 if (!isAuthEndpoint) {
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
+                    storage.removeItem('token');
+                    storage.removeItem('user');
                     window.location.href = '/index.html';
                     return null;
                 }
@@ -119,8 +120,8 @@ async function apiRequest(endpoint, options = {}) {
                                        endpoint === '/reset' || endpoint === '/reset-confirm';
 
                 if (!isAuthEndpoint) {
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
+                    storage.removeItem('token');
+                    storage.removeItem('user');
                     window.location.href = '/index.html';
                     return null;
                 }
@@ -203,8 +204,8 @@ const AuthAPI = {
 
     // Logout (clear local storage)
     logout() {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        storage.removeItem('token');
+        storage.removeItem('user');
         window.location.href = '/index.html';
     },
 
@@ -222,7 +223,7 @@ const AuthAPI = {
 const UserAPI = {
     // Get user profile
     async getProfile() {
-        const sessionId = localStorage.getItem('token');
+        const sessionId = storage.getItem('token');
         if (!sessionId) throw new Error('Nicht eingeloggt');
         return await apiRequest(`/user?session_id=${sessionId}`);
     },
@@ -234,7 +235,7 @@ const UserAPI = {
 
     // Set user's Zenturie
     async setZenturie(zenturie) {
-        const sessionId = localStorage.getItem('token');
+        const sessionId = storage.getItem('token');
         if (!sessionId) throw new Error('Nicht eingeloggt');
         return await apiRequest(`/zenturie?session_id=${sessionId}`, {
             method: 'POST',
@@ -249,7 +250,7 @@ const UserAPI = {
 const ScheduleAPI = {
     // Get events for a specific date (timetables + custom_hours)
     async getEvents(date) {
-        const sessionId = localStorage.getItem('token');
+        const sessionId = storage.getItem('token');
         if (!sessionId) throw new Error('Nicht eingeloggt');
         return await apiRequest(`/events?session_id=${sessionId}&date=${date}`);
     },
@@ -266,14 +267,14 @@ const ScheduleAPI = {
 const ExamsAPI = {
     // Get all upcoming exams
     async getUpcomingExams() {
-        const sessionId = localStorage.getItem('token');
+        const sessionId = storage.getItem('token');
         if (!sessionId) throw new Error('Nicht eingeloggt');
         return await apiRequest(`/exams?session_id=${sessionId}`);
     },
 
     // Add new exam
     async addExam(course, start_time, duration, room = null) {
-        const sessionId = localStorage.getItem('token');
+        const sessionId = storage.getItem('token');
         if (!sessionId) throw new Error('Nicht eingeloggt');
         return await apiRequest(`/add?session_id=${sessionId}`, {
             method: 'POST',
@@ -308,14 +309,14 @@ const RoomAPI = {
 const FriendsAPI = {
     // Get friends list
     async getFriends() {
-        const sessionId = localStorage.getItem('token');
+        const sessionId = storage.getItem('token');
         if (!sessionId) throw new Error('Nicht eingeloggt');
         return await apiRequest(`/friends?session_id=${sessionId}`);
     },
 
     // Add friend by email
     async addFriend(friendMail) {
-        const sessionId = localStorage.getItem('token');
+        const sessionId = storage.getItem('token');
         if (!sessionId) throw new Error('Nicht eingeloggt');
         return await apiRequest(`/friends?session_id=${sessionId}`, {
             method: 'POST',
@@ -325,7 +326,7 @@ const FriendsAPI = {
 
     // Remove friend by user ID
     async removeFriend(friendUserId) {
-        const sessionId = localStorage.getItem('token');
+        const sessionId = storage.getItem('token');
         if (!sessionId) throw new Error('Nicht eingeloggt');
         return await apiRequest(`/friends?session_id=${sessionId}&friend_user_id=${friendUserId}`, {
             method: 'DELETE',
@@ -339,7 +340,7 @@ const FriendsAPI = {
 const CustomHoursAPI = {
     // Create custom hour
     async createCustomHour(title, description, start_time, end_time, room = null, custom_location = null) {
-        const sessionId = localStorage.getItem('token');
+        const sessionId = storage.getItem('token');
         if (!sessionId) throw new Error('Nicht eingeloggt');
         return await apiRequest(`/create?session_id=${sessionId}`, {
             method: 'POST',
@@ -356,7 +357,7 @@ const CustomHoursAPI = {
 
     // Update custom hour
     async updateCustomHour(custom_hour_id, updates) {
-        const sessionId = localStorage.getItem('token');
+        const sessionId = storage.getItem('token');
         if (!sessionId) throw new Error('Nicht eingeloggt');
         return await apiRequest(`/update?session_id=${sessionId}`, {
             method: 'POST',
@@ -369,7 +370,7 @@ const CustomHoursAPI = {
 
     // Delete custom hour
     async deleteCustomHour(custom_hour_id) {
-        const sessionId = localStorage.getItem('token');
+        const sessionId = storage.getItem('token');
         if (!sessionId) throw new Error('Nicht eingeloggt');
         return await apiRequest(`/delete?session_id=${sessionId}&custom_hour_id=${custom_hour_id}`, {
             method: 'DELETE',
@@ -383,7 +384,7 @@ const CustomHoursAPI = {
 const CoursesAPI = {
     // Get all courses related to the user
     async getAllCourses() {
-        const sessionId = localStorage.getItem('token');
+        const sessionId = storage.getItem('token');
         if (!sessionId) throw new Error('Nicht eingeloggt');
         return await apiRequest(`/courses?session_id=${sessionId}`);
     },
@@ -395,7 +396,7 @@ const CoursesAPI = {
 const SearchAPI = {
     // Global search
     async search(parameter) {
-        const sessionId = localStorage.getItem('token');
+        const sessionId = storage.getItem('token');
         if (!sessionId) throw new Error('Nicht eingeloggt');
         return await apiRequest(`/search?session_id=${sessionId}&parameter=${encodeURIComponent(parameter)}`);
     },

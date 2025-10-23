@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Suche - Stundenplan Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3cd2ff',
+                        secondary: '#003a79',
+                        accent: '#ffa064',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="css/common.css">
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+
+<!-- Navigation Placeholder -->
+<div id="navbar-placeholder"></div>
+
+<!-- Main Content -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+
+    <!-- Search Container -->
+    <div class="space-y-6">
+        <!-- Search Header -->
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">Suche</h1>
+            <p class="text-gray-600">Finde Events, Klausuren, Räume und Freunde</p>
+        </div>
+
+        <!-- Search Input -->
+        <div class="relative">
+            <svg class="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <input
+                type="text"
+                id="globalSearchInput"
+                placeholder="Suche nach Events, Klausuren, Räumen oder Freunden..."
+                class="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary text-lg"
+                autocomplete="off"
+                oninput="handleSearchInput(event)"
+                autofocus
+            >
+        </div>
+
+        <!-- Search Results -->
+        <div id="searchResultsContainer" class="space-y-4">
+            <div class="text-center text-gray-500 py-12">
+                <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <p class="text-gray-500">Gib einen Suchbegriff ein, um zu suchen</p>
+            </div>
+        </div>
+    </div>
+
+</main>
+
+<!-- Scripts -->
+<script src="js/storage-manager.js"></script>
+    <script src="js/api-helper.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/navbar.js"></script>
+<script src="js/search.js"></script>
+<script src="js/app-updater.js"></script>
+
+<script>
+    // Initialize page
+    if (!checkAuth()) {
+        // Already redirects
+    } else {
+        // Initialize navbar
+        initNavbar('search');
+
+        // Focus search input
+        setTimeout(() => {
+            const input = document.getElementById('globalSearchInput');
+            if (input) input.focus();
+        }, 100);
+
+        // Hide loader when ready
+        pageContentReady();
+    }
+</script>
+
+</body>
+</html>

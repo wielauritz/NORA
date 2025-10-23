@@ -8,9 +8,16 @@ let searchResults = [];
 let searchDebounceTimer = null;
 
 /**
- * Show the global search modal
+ * Show the global search - navigate to search page on mobile
  */
 function showGlobalSearch() {
+    // On mobile, navigate to search page
+    if (window.innerWidth < 768) {
+        window.location.href = 'search.html';
+        return;
+    }
+
+    // On desktop, show modal
     const modal = `
         <div id="searchModal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onclick="closeSearchModal(event)">
             <div class="glass-effect rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-hidden" onclick="event.stopPropagation()">

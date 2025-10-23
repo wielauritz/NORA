@@ -10,13 +10,13 @@
 function renderNavbar(activePage = '') {
     const navbarHTML = `
         <!-- Navigation -->
-        <nav class="glass-effect shadow-lg sticky top-0 z-50">
+        <nav class="glass-effect shadow-lg fixed top-0 left-0 right-0 z-50 w-full" style="padding-top: max(0.5rem, env(safe-area-inset-top));">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div class="flex justify-between items-center h-16">
+                <div class="flex justify-between items-center h-12">
 
                     <!-- Logo -->
                     <div class="flex items-center space-x-3">
-                        <a href="/dashboard" class="hover:cursor-pointer"><img src="https://cdn.nora-nak.de/img/logo.png" alt="NORA Logo" class="h-10"></a>
+                        <a href="/dashboard" class="hover:cursor-pointer"><img src="https://cdn.nora-nak.de/img/logo.png" alt="NORA Logo" class="h-8"></a>
                     </div>
 
                     <!-- Desktop Navigation Links -->
@@ -54,50 +54,45 @@ function renderNavbar(activePage = '') {
                         </div>
                     </div>
 
-                    <!-- Mobile menu button -->
-                    <div class="md:hidden flex items-center">
-                        <button onclick="toggleMobileMenu()" class="p-2 rounded-lg hover:bg-gray-100 transition-colors" aria-label="Menu">
-                            <svg id="hamburger-icon" class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                            </svg>
-                            <svg id="close-icon" class="w-6 h-6 text-gray-600 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                        </button>
-                    </div>
-
                 </div>
             </div>
+        </nav>
 
-            <!-- Mobile menu -->
-            <div id="mobile-menu" class="hidden md:hidden border-t border-gray-200">
-                <div class="px-2 pt-2 pb-3 space-y-1">
-                    <a href="dashboard.html" class="block px-3 py-2 rounded-lg ${activePage === 'dashboard' ? 'bg-primary/10 text-primary font-medium' : 'text-gray-600 hover:bg-gray-100'} transition-colors">
-                        Dashboard
-                    </a>
-                    <a href="stundenplan.html" class="block px-3 py-2 rounded-lg ${activePage === 'stundenplan' ? 'bg-primary/10 text-primary font-medium' : 'text-gray-600 hover:bg-gray-100'} transition-colors">
-                        Stundenplan
-                    </a>
-                    <a href="raumplan.html" class="block px-3 py-2 rounded-lg ${activePage === 'raumplan' ? 'bg-primary/10 text-primary font-medium' : 'text-gray-600 hover:bg-gray-100'} transition-colors">
-                        Raumplan
-                    </a>
-                </div>
-
-                <!-- Mobile User Section -->
-                <div class="border-t border-gray-200 px-2 py-3 space-y-2">
-                    <button onclick="showGlobalSearch(); toggleMobileMenu();" class="w-full flex items-center px-3 py-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                        </svg>
-                        Suche
-                    </button>
-                    <button onclick="logout()" class="w-full flex items-center px-3 py-2 rounded-lg text-red-600 hover:bg-red-50 transition-colors">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                        </svg>
-                        Abmelden
-                    </button>
-                </div>
+        <!-- Bottom Navigation Bar (Mobile only) -->
+        <nav class="fixed md:hidden bottom-0 left-0 right-0 glass-effect border-t border-gray-200 z-50" style="padding-bottom: calc(env(safe-area-inset-bottom) * 0.25);">
+            <div class="flex items-stretch w-full">
+                <a href="dashboard.html" class="flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-colors ${activePage === 'dashboard' ? 'text-primary' : 'text-gray-600 hover:text-gray-900'}">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7A1 1 0 003 11h1v7a2 2 0 002 2h10a2 2 0 002-2v-7h1a1 1 0 00.707-1.707l-7-7z"/>
+                        <path d="M9 16a1 1 0 11-2 0 1 1 0 012 0z"/>
+                        <path d="M15 16a1 1 0 11-2 0 1 1 0 012 0z"/>
+                    </svg>
+                    <span class="text-xs font-medium whitespace-nowrap">Start</span>
+                </a>
+                <a href="stundenplan.html" class="flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-colors ${activePage === 'stundenplan' ? 'text-primary' : 'text-gray-600 hover:text-gray-900'}">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                    <span class="text-xs font-medium whitespace-nowrap">Stundenplan</span>
+                </a>
+                <a href="raumplan.html" class="flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-colors ${activePage === 'raumplan' ? 'text-primary' : 'text-gray-600 hover:text-gray-900'}">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4 0h1m-1 4h1"/>
+                    </svg>
+                    <span class="text-xs font-medium whitespace-nowrap">Raumplan</span>
+                </a>
+                <button onclick="showGlobalSearch()" class="flex-1 flex flex-col items-center justify-center py-3 gap-1 text-gray-600 hover:text-gray-900 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <span class="text-xs font-medium whitespace-nowrap">Suche</span>
+                </button>
+                <button onclick="logout()" class="flex-1 flex flex-col items-center justify-center py-3 gap-1 text-gray-600 hover:text-red-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                    </svg>
+                    <span class="text-xs font-medium whitespace-nowrap">Logout</span>
+                </button>
             </div>
         </nav>
     `;
@@ -112,16 +107,16 @@ function renderNavbar(activePage = '') {
 }
 
 /**
- * Show content preloader
+ * Show content preloader (behind navbar) - hidden by default to prevent layout shift
  */
 function showContentLoader() {
     const loaderHTML = `
-        <div id="content-loader" class="fixed inset-0 bg-gradient-to-br from-gray-50 to-gray-100 z-40 flex items-center justify-center">
+        <div id="content-loader" class="hidden fixed top-12 left-0 right-0 bottom-0 bg-transparent z-30 flex items-center justify-center pointer-events-none">
             <div class="text-center">
                 <div class="inline-block">
                     <div class="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
                 </div>
-                <p class="mt-4 text-gray-600 font-medium">Lädt...</p>
+                <p class="mt-4 text-gray-600 font-medium text-sm">Lädt...</p>
             </div>
         </div>
     `;
@@ -135,9 +130,7 @@ function showContentLoader() {
 function hideContentLoader() {
     const loader = document.getElementById('content-loader');
     if (loader) {
-        loader.style.opacity = '0';
-        loader.style.transition = 'opacity 0.3s ease';
-        setTimeout(() => loader.remove(), 300);
+        loader.remove();
     }
 }
 
@@ -163,40 +156,4 @@ function pageContentReady() {
     hideContentLoader();
 }
 
-/**
- * Toggle mobile menu
- */
-function toggleMobileMenu() {
-    const mobileMenu = document.getElementById('mobile-menu');
-    const hamburgerIcon = document.getElementById('hamburger-icon');
-    const closeIcon = document.getElementById('close-icon');
-
-    if (mobileMenu && hamburgerIcon && closeIcon) {
-        // Toggle menu visibility
-        mobileMenu.classList.toggle('hidden');
-
-        // Toggle icons
-        hamburgerIcon.classList.toggle('hidden');
-        closeIcon.classList.toggle('hidden');
-
-        // Prevent body scroll when menu is open
-        if (!mobileMenu.classList.contains('hidden')) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = 'auto';
-        }
-    }
-}
-
-/**
- * Close mobile menu when clicking outside
- */
-document.addEventListener('click', function(event) {
-    const mobileMenu = document.getElementById('mobile-menu');
-    const mobileMenuButton = event.target.closest('button[onclick="toggleMobileMenu()"]');
-
-    // If menu is open and click is outside menu and button
-    if (mobileMenu && !mobileMenu.classList.contains('hidden') && !mobileMenuButton && !mobileMenu.contains(event.target)) {
-        toggleMobileMenu();
-    }
-});
+// Mobile menu functions are no longer needed with bottom navigation bar
