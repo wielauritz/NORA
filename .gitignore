@@ -88,6 +88,8 @@ claude_desktop_config.json
 
 # Deployment
 deploy.sh
+webhook-server.js
+WEBHOOK_SETUP.md
 
 # OS
 .DS_Store
