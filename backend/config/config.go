@@ -20,6 +20,7 @@ type Config struct {
 	SMTPUser     string
 	SMTPPassword string
 	SMTPFrom     string
+	TeamEmail    string
 
 	// Frontend URL for email links
 	FrontendURL string
@@ -46,6 +47,7 @@ func LoadConfig() *Config {
 		SMTPUser:              getEnvConfig("SMTP_USER", ""),
 		SMTPPassword:          getEnvConfig("SMTP_PASSWORD", ""),
 		SMTPFrom:              getEnvConfig("SMTP_FROM", "nora@nora-nak.de"),
+		TeamEmail:             getEnvConfig("TEAM_EMAIL", "team@nora-nak.de"),
 		FrontendURL:           getEnvConfig("FRONTEND_URL", "https://nora-nak.de"),
 		ICSBaseURL:            getEnvConfig("ICS_BASE_URL", "https://cis.nordakademie.de/fileadmin/Infos/Stundenplaene"),
 		SessionExpirationDays: 7,

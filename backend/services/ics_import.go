@@ -22,6 +22,14 @@ type ICSData struct {
 	Content  string
 }
 
+// ImportStatistics represents import statistics
+type ImportStatistics struct {
+	FilesDownloaded int
+	EventsCreated   int
+	EventsUpdated   int
+	Errors          int
+}
+
 // TimetableEvent represents a parsed event
 type TimetableEvent struct {
 	UID         string
@@ -287,10 +295,10 @@ func extractMetadata(event *TimetableEvent) {
 }
 
 // ImportEventsToDatabase imports parsed events to database
-func ImportEventsToDatabase(eventsMap map[string][]TimetableEvent) error {
+func ImportEventsToDatabase(eventsMap map[string][]TimetableEvent) (*ImportStatistics, error) {
 	if len(eventsMap) == 0 {
 		log.Println("WARNING: No events to import")
-		return nil
+		return &ImportStatistics{}, nil
 	}
 
 	totalCreated := 0
@@ -405,7 +413,13 @@ func ImportEventsToDatabase(eventsMap map[string][]TimetableEvent) error {
 	log.Printf("Import summary: %d created, %d updated, %d errors",
 		totalCreated, totalUpdated, totalErrors)
 
-	return nil
+	stats := &ImportStatistics{
+		EventsCreated: totalCreated,
+		EventsUpdated: totalUpdated,
+		Errors:        totalErrors,
+	}
+
+	return stats, nil
 }
 
 // extractYear extracts year from zenturie name (e.g., "I24c" -> "24")

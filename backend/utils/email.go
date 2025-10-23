@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+	"time"
 
 	"github.com/nora-nak/backend/config"
 	"gopkg.in/gomail.v2"
@@ -119,6 +120,92 @@ func (e *EmailService) SendPasswordResetEmail(toEmail, firstName, resetUUID stri
 `, firstName, resetLink, resetLink, resetLink)
 
 	return e.sendEmail(toEmail, subject, htmlBody)
+}
+
+// SendICSImportNotification sends a notification about ICS import to the team
+func (e *EmailService) SendICSImportNotification(filesDownloaded, eventsCreated, eventsUpdated, errors int) error {
+	subject := "NORA - ICS Import Benachrichtigung"
+
+	// Determine status
+	status := "Erfolgreich"
+	statusColor := "#4CAF50" // green
+	if errors > 0 {
+		status = "Mit Fehlern abgeschlossen"
+		statusColor = "#FF9800" // orange
+	}
+	if filesDownloaded == 0 {
+		status = "Fehlgeschlagen"
+		statusColor = "#F44336" // red
+	}
+
+	htmlBody := fmt.Sprintf(`
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>ICS Import Benachrichtigung</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div style="background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+        <h1 style="color: white; margin: 0;">NORA</h1>
+        <p style="color: white; margin: 5px 0 0 0;">ICS Import Benachrichtigung</p>
+    </div>
+
+    <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
+        <h2 style="color: #667eea;">ICS-Dateien wurden abgerufen</h2>
+
+        <div style="background: %s; color: white; padding: 15px; border-radius: 5px; text-align: center; margin: 20px 0;">
+            <strong style="font-size: 18px;">Status: %s</strong>
+        </div>
+
+        <table style="width: 100%%; border-collapse: collapse; margin: 20px 0;">
+            <tr style="background: #f0f0f0;">
+                <td style="padding: 12px; border: 1px solid #ddd;"><strong>Heruntergeladene Dateien</strong></td>
+                <td style="padding: 12px; border: 1px solid #ddd; text-align: right;">%d</td>
+            </tr>
+            <tr>
+                <td style="padding: 12px; border: 1px solid #ddd;"><strong>Neu hinzugefügte Events</strong></td>
+                <td style="padding: 12px; border: 1px solid #ddd; text-align: right; color: #4CAF50; font-weight: bold;">%d</td>
+            </tr>
+            <tr style="background: #f0f0f0;">
+                <td style="padding: 12px; border: 1px solid #ddd;"><strong>Aktualisierte Events</strong></td>
+                <td style="padding: 12px; border: 1px solid #ddd; text-align: right; color: #2196F3; font-weight: bold;">%d</td>
+            </tr>
+            <tr>
+                <td style="padding: 12px; border: 1px solid #ddd;"><strong>Fehler</strong></td>
+                <td style="padding: 12px; border: 1px solid #ddd; text-align: right; color: %s; font-weight: bold;">%d</td>
+            </tr>
+        </table>
+
+        <p style="color: #666; font-size: 14px; margin-top: 30px;">
+            <strong>Zeitpunkt:</strong> %s
+        </p>
+
+        <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+
+        <p style="color: #999; font-size: 12px; text-align: center;">
+            Diese E-Mail wurde automatisch vom NORA-System generiert.
+        </p>
+    </div>
+</body>
+</html>
+`,
+		statusColor,
+		status,
+		filesDownloaded,
+		eventsCreated,
+		eventsUpdated,
+		func() string {
+			if errors > 0 {
+				return "#F44336"
+			}
+			return "#4CAF50"
+		}(),
+		errors,
+		time.Now().Format("02.01.2006 15:04:05"),
+	)
+
+	return e.sendEmail(config.AppConfig.TeamEmail, subject, htmlBody)
 }
 
 // sendEmail sends an email via SMTP

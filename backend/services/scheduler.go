@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/nora-nak/backend/utils"
 	"github.com/robfig/cron/v3"
 )
 
@@ -132,15 +133,22 @@ func FetchAndImportTimetables() error {
 	// Step 1: Fetch ICS files
 	icsData, err := FetchICSFiles()
 	if err != nil {
+		// Send error notification
+		emailService := utils.NewEmailService()
+		emailService.SendICSImportNotification(0, 0, 0, 1)
 		return err
 	}
 
-	log.Printf("[1/3] Fetched %d ICS files", len(icsData))
+	filesDownloaded := len(icsData)
+	log.Printf("[1/3] Fetched %d ICS files", filesDownloaded)
 	log.Println("[2/3] Parsing ICS files...")
 
 	// Step 2: Parse ICS to events
 	events, err := ParseICSFiles(icsData)
 	if err != nil {
+		// Send error notification
+		emailService := utils.NewEmailService()
+		emailService.SendICSImportNotification(filesDownloaded, 0, 0, 1)
 		return err
 	}
 
@@ -148,10 +156,29 @@ func FetchAndImportTimetables() error {
 	log.Println("[3/3] Importing events to database...")
 
 	// Step 3: Import to database
-	if err := ImportEventsToDatabase(events); err != nil {
+	stats, err := ImportEventsToDatabase(events)
+	if err != nil {
+		// Send error notification
+		emailService := utils.NewEmailService()
+		emailService.SendICSImportNotification(filesDownloaded, 0, 0, 1)
 		return err
 	}
 
 	log.Println("[3/3] Events imported successfully")
+
+	// Step 4: Send success notification email to team
+	emailService := utils.NewEmailService()
+	if err := emailService.SendICSImportNotification(
+		filesDownloaded,
+		stats.EventsCreated,
+		stats.EventsUpdated,
+		stats.Errors,
+	); err != nil {
+		log.Printf("WARNING: Failed to send notification email: %v", err)
+		// Don't fail the import if email fails
+	} else {
+		log.Println("Successfully sent import notification email to team")
+	}
+
 	return nil
 }
