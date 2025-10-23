@@ -368,19 +368,40 @@ func ImportEventsToDatabase(eventsMap map[string][]TimetableEvent) (*ImportStati
 				locationPtr = nil
 			}
 
+			// Create pointers only if strings are not empty
+			var descriptionPtr *string
+			if event.Description != "" {
+				descriptionPtr = &event.Description
+			}
+
+			var professorPtr *string
+			if event.Professor != "" {
+				professorPtr = &event.Professor
+			}
+
+			var courseTypePtr *string
+			if event.CourseType != "" {
+				courseTypePtr = &event.CourseType
+			}
+
+			var courseCodePtr *string
+			if event.CourseCode != "" {
+				courseCodePtr = &event.CourseCode
+			}
+
 			timetable := models.Timetable{
 				ZenturienID: zenturie.ID,
 				CourseID:    courseID,
 				RoomID:      roomID,
 				UID:         event.UID,
 				Summary:     cleanSummary,
-				Description: &event.Description,
+				Description: descriptionPtr,
 				Location:    locationPtr,
 				StartTime:   event.StartTime,
 				EndTime:     event.EndTime,
-				Professor:   &event.Professor,
-				CourseType:  &event.CourseType,
-				CourseCode:  &event.CourseCode,
+				Professor:   professorPtr,
+				CourseType:  courseTypePtr,
+				CourseCode:  courseCodePtr,
 			}
 
 			if result.Error != nil {
@@ -658,42 +679,67 @@ func cleanupSummary(summary string) string {
 
 // hasChanges compares two Timetable objects and returns true if any field has changed
 func hasChanges(existing, new *models.Timetable) bool {
+	changed := false
+	var reasons []string
+
 	// Compare times (most important for updates)
-	if !existing.StartTime.Equal(new.StartTime) || !existing.EndTime.Equal(new.EndTime) {
-		return true
+	if !existing.StartTime.Equal(new.StartTime) {
+		changed = true
+		reasons = append(reasons, fmt.Sprintf("StartTime: %v -> %v", existing.StartTime, new.StartTime))
+	}
+	if !existing.EndTime.Equal(new.EndTime) {
+		changed = true
+		reasons = append(reasons, fmt.Sprintf("EndTime: %v -> %v", existing.EndTime, new.EndTime))
 	}
 
 	// Compare basic fields
-	if existing.ZenturienID != new.ZenturienID || existing.Summary != new.Summary {
-		return true
+	if existing.ZenturienID != new.ZenturienID {
+		changed = true
+		reasons = append(reasons, fmt.Sprintf("ZenturienID: %d -> %d", existing.ZenturienID, new.ZenturienID))
+	}
+	if existing.Summary != new.Summary {
+		changed = true
+		reasons = append(reasons, fmt.Sprintf("Summary: '%s' -> '%s'", existing.Summary, new.Summary))
 	}
 
 	// Compare nullable uint pointers (CourseID, RoomID)
 	if !compareNullableUint(existing.CourseID, new.CourseID) {
-		return true
+		changed = true
+		reasons = append(reasons, fmt.Sprintf("CourseID: %v -> %v", existing.CourseID, new.CourseID))
 	}
 	if !compareNullableUint(existing.RoomID, new.RoomID) {
-		return true
+		changed = true
+		reasons = append(reasons, fmt.Sprintf("RoomID: %v -> %v", existing.RoomID, new.RoomID))
 	}
 
 	// Compare nullable string pointers
 	if !compareNullableString(existing.Description, new.Description) {
-		return true
+		changed = true
+		reasons = append(reasons, fmt.Sprintf("Description changed"))
 	}
 	if !compareNullableString(existing.Location, new.Location) {
-		return true
+		changed = true
+		reasons = append(reasons, fmt.Sprintf("Location: %v -> %v", existing.Location, new.Location))
 	}
 	if !compareNullableString(existing.Professor, new.Professor) {
-		return true
+		changed = true
+		reasons = append(reasons, fmt.Sprintf("Professor: %v -> %v", existing.Professor, new.Professor))
 	}
 	if !compareNullableString(existing.CourseType, new.CourseType) {
-		return true
+		changed = true
+		reasons = append(reasons, fmt.Sprintf("CourseType: %v -> %v", existing.CourseType, new.CourseType))
 	}
 	if !compareNullableString(existing.CourseCode, new.CourseCode) {
-		return true
+		changed = true
+		reasons = append(reasons, fmt.Sprintf("CourseCode: %v -> %v", existing.CourseCode, new.CourseCode))
 	}
 
-	return false
+	// Log changes for debugging (only log first few to avoid spam)
+	if changed && len(reasons) > 0 {
+		log.Printf("  Changes detected for UID %s: %s", existing.UID, strings.Join(reasons, ", "))
+	}
+
+	return changed
 }
 
 // compareNullableUint compares two nullable uint pointers
