@@ -1,5 +1,6 @@
 # Backend Go
 backend/nora
+backend/nora-backend
 *.exe
 *.exe~
 *.dll
