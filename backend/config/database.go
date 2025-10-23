@@ -86,6 +86,13 @@ func AutoMigrate() error {
 	// Add unique constraint for friends table
 	DB.Exec("CREATE UNIQUE INDEX IF NOT EXISTS unique_friendship ON friends(LEAST(user_id1, user_id2), GREATEST(user_id1, user_id2))")
 
+	// Migration: Drop old UID unique index and create composite index
+	// This allows Wahlpflichtmodule (same UID) for different zenturien
+	log.Println("Migrating timetable indexes for Wahlpflichtmodule support...")
+	DB.Exec("DROP INDEX IF EXISTS idx_timetables_uid")
+	DB.Exec("DROP INDEX IF EXISTS timetables_uid_key")
+	DB.Exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_uid_zenturie ON timetables(uid, zenturien_id)")
+
 	log.Println("Database migrations completed successfully")
 	return nil
 }

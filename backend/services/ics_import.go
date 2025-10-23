@@ -360,15 +360,10 @@ func ImportEventsToDatabase(eventsMap map[string][]TimetableEvent) (*ImportStati
 				roomID, extraLocation = findOrCreateRoom(event.Location)
 			}
 
-			// Check if event already exists (by UID)
+			// Check if event already exists (by UID AND ZenturienID)
+			// This allows the same UID to exist for different zenturien (Wahlpflichtmodule)
 			var existing models.Timetable
-			result := config.DB.Where("uid = ?", event.UID).First(&existing)
-
-			// Debug: Log if event exists but zenturie differs
-			if result.Error == nil && existing.ZenturienID != zenturie.ID && debugLogCount < 10 {
-				log.Printf("  ⚠️ WARNING: Event %s exists in DB with ZenturienID %d but is now being imported for zenturie %s (ID: %d)",
-					event.UID, existing.ZenturienID, zenturieName, zenturie.ID)
-			}
+			result := config.DB.Where("uid = ? AND zenturien_id = ?", event.UID, zenturie.ID).First(&existing)
 
 			locationPtr := &extraLocation
 			if extraLocation == "" {

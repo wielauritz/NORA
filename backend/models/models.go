@@ -9,10 +9,10 @@ import (
 
 // Zenturie represents a class/cohort (e.g., I24c, A24b)
 type Zenturie struct {
-	ID        uint   `gorm:"primaryKey;autoIncrement" json:"id"`
-	Name      string `gorm:"uniqueIndex;not null" json:"name"`
-	Year      string `gorm:"not null" json:"year"`
-	Users     []User `gorm:"foreignKey:ZenturienID" json:"-"`
+	ID         uint        `gorm:"primaryKey;autoIncrement" json:"id"`
+	Name       string      `gorm:"uniqueIndex;not null" json:"name"`
+	Year       string      `gorm:"not null" json:"year"`
+	Users      []User      `gorm:"foreignKey:ZenturienID" json:"-"`
 	Timetables []Timetable `gorm:"foreignKey:ZenturienID" json:"-"`
 }
 
@@ -78,18 +78,18 @@ type Room struct {
 
 // Timetable represents a timetable entry
 type Timetable struct {
-	ID          uint       `gorm:"primaryKey;autoIncrement" json:"id"`
-	ZenturienID uint       `gorm:"index;not null" json:"zenturien_id"`
-	CourseID    *uint      `gorm:"index" json:"course_id,omitempty"`
-	RoomID      *uint      `gorm:"index" json:"room_id,omitempty"`
+	ID          uint  `gorm:"primaryKey;autoIncrement" json:"id"`
+	ZenturienID uint  `gorm:"index;not null;uniqueIndex:idx_uid_zenturie" json:"zenturien_id"`
+	CourseID    *uint `gorm:"index" json:"course_id,omitempty"`
+	RoomID      *uint `gorm:"index" json:"room_id,omitempty"`
 
 	// ICS/JSON Import Fields
-	UID         string     `gorm:"uniqueIndex;not null" json:"uid"`
-	Summary     string     `gorm:"not null" json:"summary"`
-	Description *string    `gorm:"type:text" json:"description,omitempty"`
-	Location    *string    `json:"location,omitempty"`
-	StartTime   time.Time  `gorm:"index;not null" json:"start_time"`
-	EndTime     time.Time  `gorm:"not null" json:"end_time"`
+	UID         string    `gorm:"not null;uniqueIndex:idx_uid_zenturie" json:"uid"`
+	Summary     string    `gorm:"not null" json:"summary"`
+	Description *string   `gorm:"type:text" json:"description,omitempty"`
+	Location    *string   `json:"location,omitempty"`
+	StartTime   time.Time `gorm:"index;not null" json:"start_time"`
+	EndTime     time.Time `gorm:"not null" json:"end_time"`
 
 	// Extracted/Additional Fields
 	Professor  *string `json:"professor,omitempty"`
@@ -113,14 +113,14 @@ type Timetable struct {
 
 // CustomHour represents a user-defined appointment
 type CustomHour struct {
-	ID             uint       `gorm:"primaryKey;autoIncrement" json:"id"`
-	UserID         uint       `gorm:"index;not null" json:"user_id"`
-	Title          string     `gorm:"not null" json:"title"`
-	Description    *string    `gorm:"type:text" json:"description,omitempty"`
-	StartTime      time.Time  `gorm:"index;not null" json:"start_time"`
-	EndTime        time.Time  `gorm:"not null" json:"end_time"`
-	RoomID         *uint      `gorm:"index" json:"room_id,omitempty"`
-	CustomLocation *string    `json:"custom_location,omitempty"`
+	ID             uint      `gorm:"primaryKey;autoIncrement" json:"id"`
+	UserID         uint      `gorm:"index;not null" json:"user_id"`
+	Title          string    `gorm:"not null" json:"title"`
+	Description    *string   `gorm:"type:text" json:"description,omitempty"`
+	StartTime      time.Time `gorm:"index;not null" json:"start_time"`
+	EndTime        time.Time `gorm:"not null" json:"end_time"`
+	RoomID         *uint     `gorm:"index" json:"room_id,omitempty"`
+	CustomLocation *string   `json:"custom_location,omitempty"`
 
 	// Relationships
 	User *User `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"user,omitempty"`
