@@ -38,11 +38,20 @@ async function apiRequest(endpoint, options = {}) {
         let response;
         let data;
 
+        // Debug Capacitor availability
+        console.log('[API] Capacitor check:', {
+            hasWindow: typeof window !== 'undefined',
+            hasCapacitor: typeof window.Capacitor !== 'undefined',
+            hasPlugins: window.Capacitor && typeof window.Capacitor.Plugins !== 'undefined',
+            pluginsList: window.Capacitor && window.Capacitor.Plugins ? Object.keys(window.Capacitor.Plugins) : [],
+            isNative: isCapacitor()
+        });
+
         // Use Capacitor HTTP for native apps
-        if (isCapacitor() && window.Capacitor.Plugins && window.Capacitor.Plugins.Http) {
+        // In Capacitor 6+/7+, it's CapacitorHttp
+        if (isCapacitor() && window.Capacitor.Plugins && window.Capacitor.Plugins.CapacitorHttp) {
             console.log('[API] Using Capacitor HTTP for native request');
-            // In Capacitor 5+, Http is available in Plugins
-            const Http = window.Capacitor.Plugins.Http;
+            const { CapacitorHttp } = window.Capacitor.Plugins;
 
             const requestOptions = {
                 url: url,
@@ -55,7 +64,7 @@ async function apiRequest(endpoint, options = {}) {
             }
 
             console.log('[API] Request:', requestOptions);
-            response = await Http.request(requestOptions);
+            response = await CapacitorHttp.request(requestOptions);
             console.log('[API] Response:', response);
 
             // CapacitorHttp response format: { status, data, headers }
@@ -139,7 +148,12 @@ async function apiRequest(endpoint, options = {}) {
             return data;
         }
     } catch (error) {
-        console.error('API Error:', error);
+        console.error('[API] Error details:', {
+            name: error.name,
+            message: error.message,
+            stack: error.stack,
+            error: error
+        });
         throw error;
     }
 }
