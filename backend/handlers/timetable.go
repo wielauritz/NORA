@@ -229,7 +229,7 @@ func GetEvents(c *fiber.Ctx) error {
 	startOfDay := time.Date(eventDate.Year(), eventDate.Month(), eventDate.Day(), 0, 0, 0, 0, time.UTC)
 	endOfDay := time.Date(eventDate.Year(), eventDate.Month(), eventDate.Day(), 23, 59, 59, 999999999, time.UTC)
 
-	var events []map[string]interface{}
+	events := make([]map[string]interface{}, 0)
 
 	// Timetable events for user's zenturie
 	if user.ZenturienID != nil {
@@ -325,7 +325,7 @@ func GetFriends(c *fiber.Ctx) error {
 	var friendships []models.Friend
 	config.DB.Where("user_id1 = ? OR user_id2 = ?", user.ID, user.ID).Find(&friendships)
 
-	var friends []FriendResponse
+	friends := make([]FriendResponse, 0)
 
 	for _, friendship := range friendships {
 		friendID := friendship.UserID2
@@ -489,7 +489,7 @@ func ViewZenturieTimetable(c *fiber.Ctx) error {
 	config.DB.Where("zenturien_id = ? AND start_time >= ? AND start_time <= ?",
 		zenturie.ID, startOfDay, endOfDay).Find(&timetables)
 
-	var events []map[string]interface{}
+	events := make([]map[string]interface{}, 0)
 	for _, tt := range timetables {
 		events = append(events, map[string]interface{}{
 			"event_type":   "timetable",

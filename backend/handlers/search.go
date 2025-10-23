@@ -43,11 +43,11 @@ func Search(c *fiber.Ctx) error {
 
 	minScore := 0.3 // Lowered from 0.6 for better results
 
-	var timetableResults []SearchResult
-	var customHourResults []SearchResult
-	var examResults []SearchResult
-	var roomResults []SearchResult
-	var friendResults []SearchResult
+	timetableResults := make([]SearchResult, 0)
+	customHourResults := make([]SearchResult, 0)
+	examResults := make([]SearchResult, 0)
+	roomResults := make([]SearchResult, 0)
+	friendResults := make([]SearchResult, 0)
 
 	// 1. Search in Timetables (user's zenturie)
 	if user.ZenturienID != nil {

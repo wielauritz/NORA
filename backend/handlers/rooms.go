@@ -12,10 +12,10 @@ import (
 
 // RoomOccupancyEvent represents a room occupancy event
 type RoomOccupancyEvent struct {
-	EventType string     `json:"event_type"`
-	StartTime time.Time  `json:"start_time"`
-	EndTime   time.Time  `json:"end_time"`
-	Details   *string    `json:"details,omitempty"`
+	EventType string    `json:"event_type"`
+	StartTime time.Time `json:"start_time"`
+	EndTime   time.Time `json:"end_time"`
+	Details   *string   `json:"details,omitempty"`
 }
 
 // RoomDetailResponse represents room details with occupancy
@@ -79,7 +79,7 @@ func GetRoomDetails(c *fiber.Ctx) error {
 	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 	endOfWeek := startOfDay.AddDate(0, 0, 7)
 
-	var occupancy []RoomOccupancyEvent
+	occupancy := make([]RoomOccupancyEvent, 0)
 
 	// Timetable events for this room
 	var timetables []models.Timetable
@@ -159,7 +159,7 @@ func GetFreeRooms(c *fiber.Ctx) error {
 	var allRooms []models.Room
 	config.DB.Find(&allRooms)
 
-	var freeRooms []RoomResponse
+	freeRooms := make([]RoomResponse, 0)
 
 	for _, room := range allRooms {
 		// Check for timetable conflicts
