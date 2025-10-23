@@ -364,6 +364,12 @@ func ImportEventsToDatabase(eventsMap map[string][]TimetableEvent) (*ImportStati
 			var existing models.Timetable
 			result := config.DB.Where("uid = ?", event.UID).First(&existing)
 
+			// Debug: Log if event exists but zenturie differs
+			if result.Error == nil && existing.ZenturienID != zenturie.ID && debugLogCount < 10 {
+				log.Printf("  ⚠️ WARNING: Event %s exists in DB with ZenturienID %d but is now being imported for zenturie %s (ID: %d)",
+					event.UID, existing.ZenturienID, zenturieName, zenturie.ID)
+			}
+
 			locationPtr := &extraLocation
 			if extraLocation == "" {
 				locationPtr = nil
@@ -792,12 +798,19 @@ func compareNullableUint(a, b *uint) bool {
 }
 
 // compareNullableString compares two nullable string pointers
+// Treats empty strings ("") as equivalent to nil
 func compareNullableString(a, b *string) bool {
-	if a == nil && b == nil {
-		return true
+	// Get actual values, treating nil and empty string as equivalent
+	aVal := ""
+	bVal := ""
+
+	if a != nil {
+		aVal = *a
 	}
-	if a == nil || b == nil {
-		return false
+	if b != nil {
+		bVal = *b
 	}
-	return *a == *b
+
+	// Compare the values (both nil and "" are now "")
+	return aVal == bVal
 }
