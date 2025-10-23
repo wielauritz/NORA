@@ -4,7 +4,7 @@
  */
 
 const APP_VERSION = '1.0.0';
-const UPDATE_CHECK_INTERVAL = 3600000; // 1 Stunde
+const UPDATE_CHECK_INTERVAL = 60000; // 1 Minute (für Development - in Production auf 3600000 setzen)
 const VERSION_STORAGE_KEY = 'app_version';
 const LAST_CHECK_KEY = 'last_update_check';
 
@@ -17,19 +17,19 @@ class AppUpdater {
     /**
      * Prüft, ob App-Updates verfügbar sind
      */
-    async checkForUpdates() {
+    async checkForUpdates(force = false) {
         // Nur in Capacitor-Apps
         if (!this.isCapacitor) {
-            console.log('Not running in Capacitor, skipping update check');
+            console.log('[AppUpdater] Not running in Capacitor, skipping update check');
             return;
         }
 
         const lastCheck = localStorage.getItem(LAST_CHECK_KEY);
         const now = Date.now();
 
-        // Prüfe nur einmal pro Stunde
-        if (lastCheck && (now - parseInt(lastCheck)) < UPDATE_CHECK_INTERVAL) {
-            console.log('Update check skipped (checked recently)');
+        // Prüfe nur einmal pro Interval (außer wenn force=true)
+        if (!force && lastCheck && (now - parseInt(lastCheck)) < UPDATE_CHECK_INTERVAL) {
+            console.log('[AppUpdater] Update check skipped (checked recently)');
             return;
         }
 
@@ -46,16 +46,16 @@ class AppUpdater {
 
             // Vergleiche Versionen
             if (this.compareVersions(serverVersion, this.currentVersion) > 0) {
-                console.log(`New version available: ${serverVersion} (current: ${this.currentVersion})`);
+                console.log(`[AppUpdater] New version available: ${serverVersion} (current: ${this.currentVersion})`);
                 await this.showUpdateNotification(serverVersion);
             } else {
-                console.log(`App is up to date (${this.currentVersion})`);
+                console.log(`[AppUpdater] App is up to date (${this.currentVersion})`);
             }
 
             // Speichere aktuelle Version
             localStorage.setItem(VERSION_STORAGE_KEY, this.currentVersion);
         } catch (error) {
-            console.error('Update check failed:', error);
+            console.error('[AppUpdater] Update check failed:', error);
         }
     }
 
@@ -108,11 +108,12 @@ const appUpdater = new AppUpdater();
 document.addEventListener('DOMContentLoaded', () => {
     // Verzögert starten, damit andere Initialisierungen zuerst laufen
     setTimeout(() => {
-        appUpdater.checkForUpdates();
+        // Force beim ersten Laden, um Interval zu umgehen
+        appUpdater.checkForUpdates(true);
     }, 2000);
 });
 
 // Periodischer Check alle 10 Minuten (wenn App offen)
 setInterval(() => {
-    appUpdater.checkForUpdates();
+    appUpdater.checkForUpdates(false);
 }, 600000);
