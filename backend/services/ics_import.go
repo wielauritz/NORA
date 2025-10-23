@@ -392,13 +392,17 @@ func ImportEventsToDatabase(eventsMap map[string][]TimetableEvent) (*ImportStati
 					createdCount++
 				}
 			} else {
-				// Update existing event
-				if err := config.DB.Model(&existing).Updates(timetable).Error; err != nil {
-					log.Printf("ERROR updating timetable event %s: %v", event.UID, err)
-					errorCount++
-				} else {
-					updatedCount++
+				// Check if anything actually changed
+				if hasChanges(&existing, &timetable) {
+					// Update existing event only if there are changes
+					if err := config.DB.Model(&existing).Updates(timetable).Error; err != nil {
+						log.Printf("ERROR updating timetable event %s: %v", event.UID, err)
+						errorCount++
+					} else {
+						updatedCount++
+					}
 				}
+				// If no changes, don't count as updated
 			}
 		}
 
@@ -650,4 +654,66 @@ func cleanupSummary(summary string) string {
 	summary = strings.ReplaceAll(summary, "\\", "")
 
 	return summary
+}
+
+// hasChanges compares two Timetable objects and returns true if any field has changed
+func hasChanges(existing, new *models.Timetable) bool {
+	// Compare times (most important for updates)
+	if !existing.StartTime.Equal(new.StartTime) || !existing.EndTime.Equal(new.EndTime) {
+		return true
+	}
+
+	// Compare basic fields
+	if existing.ZenturienID != new.ZenturienID || existing.Summary != new.Summary {
+		return true
+	}
+
+	// Compare nullable uint pointers (CourseID, RoomID)
+	if !compareNullableUint(existing.CourseID, new.CourseID) {
+		return true
+	}
+	if !compareNullableUint(existing.RoomID, new.RoomID) {
+		return true
+	}
+
+	// Compare nullable string pointers
+	if !compareNullableString(existing.Description, new.Description) {
+		return true
+	}
+	if !compareNullableString(existing.Location, new.Location) {
+		return true
+	}
+	if !compareNullableString(existing.Professor, new.Professor) {
+		return true
+	}
+	if !compareNullableString(existing.CourseType, new.CourseType) {
+		return true
+	}
+	if !compareNullableString(existing.CourseCode, new.CourseCode) {
+		return true
+	}
+
+	return false
+}
+
+// compareNullableUint compares two nullable uint pointers
+func compareNullableUint(a, b *uint) bool {
+	if a == nil && b == nil {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
+	return *a == *b
+}
+
+// compareNullableString compares two nullable string pointers
+func compareNullableString(a, b *string) bool {
+	if a == nil && b == nil {
+		return true
+	}
+	if a == nil || b == nil {
+		return false
+	}
+	return *a == *b
 }
