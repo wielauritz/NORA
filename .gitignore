@@ -75,6 +75,19 @@ Thumbs.db
 logs/
 *.log
 
+# AI Development Tools
+.claude/
+.claude_history
+claude_desktop_config.json
+*.claude
+.cursor/
+.cursorignore
+.chatgpt/
+.codex/
+
+# Deployment
+deploy.sh
+
 # OS
 .DS_Store
 .AppleDouble
