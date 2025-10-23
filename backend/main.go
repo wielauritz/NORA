@@ -1,9 +1,11 @@
 package main
 
 import (
+	"io"
 	"log"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 
 	"github.com/gofiber/fiber/v2"
@@ -19,6 +21,11 @@ import (
 )
 
 func main() {
+	// Setup logging to file and console
+	if err := setupLogging(); err != nil {
+		log.Printf("WARNING: Failed to setup file logging: %v", err)
+	}
+
 	// Load .env file
 	if err := godotenv.Load(); err != nil {
 		log.Println("No .env file found, using environment variables")
@@ -111,10 +118,10 @@ func setupPublicRoutes(app *fiber.App) {
 	// App version for mobile apps
 	app.Get("/v1/app-version", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
-			"version": "1.0.0",
-			"required_version": "1.0.0",
+			"version":            "1.0.0",
+			"required_version":   "1.0.0",
 			"update_url_android": "https://play.google.com/store/apps/details?id=de.nora.nak",
-			"update_url_ios": "https://apps.apple.com/app/nora-stundenplan/id123456789",
+			"update_url_ios":     "https://apps.apple.com/app/nora-stundenplan/id123456789",
 		})
 	})
 
@@ -178,4 +185,33 @@ func customErrorHandler(c *fiber.Ctx, err error) error {
 	return c.Status(code).JSON(fiber.Map{
 		"detail": err.Error(),
 	})
+}
+
+// setupLogging configures logging to write to both console and file
+func setupLogging() error {
+	// Create logs directory if it doesn't exist
+	logDir := "logs"
+	if err := os.MkdirAll(logDir, 0755); err != nil {
+		return err
+	}
+
+	// Open log file
+	logFile := filepath.Join(logDir, "backend_logs.log")
+	file, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+
+	// Create multi-writer to write to both console and file
+	multiWriter := io.MultiWriter(os.Stdout, file)
+	log.SetOutput(multiWriter)
+
+	// Set log flags to include date and time
+	log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+
+	log.Println("=============================================================")
+	log.Println("Logging initialized - Writing to console and logs/backend_logs.log")
+	log.Println("=============================================================")
+
+	return nil
 }
