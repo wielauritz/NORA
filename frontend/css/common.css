@@ -9,6 +9,38 @@
     font-family: 'Inter', sans-serif;
 }
 
+/* iOS Safe Area Support */
+html, body {
+    width: 100%;
+}
+
+.pt-safe {
+    padding-top: max(0.5rem, env(safe-area-inset-top));
+}
+
+.pb-safe {
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+/* Main content padding for fixed header and mobile bottom navigation */
+body {
+    background: linear-gradient(to bottom right, #f9fafb, #f3f4f6);
+}
+
+main {
+    padding-top: max(4rem, calc(4rem + env(safe-area-inset-top))) !important;
+    padding-bottom: calc(7.5rem + max(0.5rem, env(safe-area-inset-bottom))) !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+}
+
+@media (max-width: 768px) {
+    main {
+        padding-top: max(4rem, calc(4rem + env(safe-area-inset-top))) !important;
+        padding-bottom: calc(7.5rem + max(0.5rem, env(safe-area-inset-bottom))) !important;
+    }
+}
+
 /* Glass Effect */
 .glass-effect {
     background: rgba(255, 255, 255, 0.7);

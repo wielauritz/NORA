@@ -349,7 +349,7 @@ function setupPasswordToggle(inputId, toggleButtonId) {
  * Check if user is authenticated
  */
 function checkAuth() {
-    const token = localStorage.getItem('token');
+    const token = storage.getItem('token');
     if (!token) {
         console.log('❌ Kein Token gefunden - Weiterleitung zum Login');
         window.location.href = 'index.html';
@@ -358,4 +358,46 @@ function checkAuth() {
 
     console.log('✅ Token gefunden - Auth OK');
     return true;
+}
+
+/**
+ * Show custom confirm dialog with Ja/Nein buttons
+ */
+function showConfirmDialog(message, onConfirm, onCancel = null) {
+    const dialogHTML = `
+        <div id="confirmDialog" class="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl max-w-sm w-full p-6 space-y-4 shadow-2xl" onclick="event.stopPropagation()">
+                <p class="text-gray-900 text-center">${message}</p>
+                <div class="flex gap-3">
+                    <button onclick="closeConfirmDialog(false)" class="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors">
+                        Nein
+                    </button>
+                    <button onclick="closeConfirmDialog(true)" class="flex-1 px-4 py-2 bg-gradient-to-r from-primary to-secondary text-white rounded-lg font-medium hover:shadow-lg transition-all">
+                        Ja
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', dialogHTML);
+
+    window.confirmDialogCallback = onConfirm;
+    window.confirmDialogCancelCallback = onCancel;
+}
+
+/**
+ * Close confirm dialog
+ */
+function closeConfirmDialog(confirmed) {
+    const dialog = document.getElementById('confirmDialog');
+    if (dialog) {
+        dialog.remove();
+    }
+
+    if (confirmed && window.confirmDialogCallback) {
+        window.confirmDialogCallback();
+    } else if (!confirmed && window.confirmDialogCancelCallback) {
+        window.confirmDialogCancelCallback();
+    }
 }

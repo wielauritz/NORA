@@ -20,7 +20,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
         // Check if token is present (successful login)
         if (data.token) {
             // Token speichern
-            localStorage.setItem('token', data.token);
+            storage.setItem('token', data.token);
 
             // Extract user info from email
             const userName = email.split('@')[0];
@@ -28,7 +28,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
                 email: email,
                 name: userName,
             };
-            localStorage.setItem('user', JSON.stringify(userInfo));
+            storage.setItem('user', JSON.stringify(userInfo));
 
             // Zeige Success-Nachricht
             showLoginSuccess('Login erfolgreich', userName);

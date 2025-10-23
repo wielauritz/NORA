@@ -24,7 +24,7 @@ class AppUpdater {
             return;
         }
 
-        const lastCheck = localStorage.getItem(LAST_CHECK_KEY);
+        const lastCheck = storage.getItem(LAST_CHECK_KEY);
         const now = Date.now();
 
         // Prüfe nur einmal pro Interval (außer wenn force=true)
@@ -39,10 +39,10 @@ class AppUpdater {
             const data = await response.json();
 
             const serverVersion = data.version;
-            const storedVersion = localStorage.getItem(VERSION_STORAGE_KEY);
+            const storedVersion = storage.getItem(VERSION_STORAGE_KEY);
 
             // Speichere letzte Prüfzeit
-            localStorage.setItem(LAST_CHECK_KEY, now.toString());
+            storage.setItem(LAST_CHECK_KEY, now.toString());
 
             // Vergleiche Versionen
             if (this.compareVersions(serverVersion, this.currentVersion) > 0) {
@@ -53,7 +53,7 @@ class AppUpdater {
             }
 
             // Speichere aktuelle Version
-            localStorage.setItem(VERSION_STORAGE_KEY, this.currentVersion);
+            storage.setItem(VERSION_STORAGE_KEY, this.currentVersion);
         } catch (error) {
             console.error('[AppUpdater] Update check failed:', error);
         }
@@ -96,7 +96,7 @@ class AppUpdater {
      * Erzwingt Update-Check
      */
     async forceUpdateCheck() {
-        localStorage.removeItem(LAST_CHECK_KEY);
+        storage.removeItem(LAST_CHECK_KEY);
         await this.checkForUpdates();
     }
 }

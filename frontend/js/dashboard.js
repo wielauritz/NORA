@@ -512,9 +512,9 @@ async function removeFriend(friendUserId, friendName) {
  * Logout function
  */
 function logout() {
-    if (confirm('Möchtest du dich wirklich abmelden?')) {
+    showConfirmDialog('Möchtest du dich wirklich abmelden?', () => {
         AuthAPI.logout();
-    }
+    });
 }
 
 /**
