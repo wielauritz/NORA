@@ -9,66 +9,135 @@ const API_BASE_URL = 'https://api.new.nora-nak.de/v1';
 // const API_BASE_URL = 'http://localhost:8000/v1';
 
 /**
- * Helper: API Request mit Authentication
+ * Helper: Detect if running in Capacitor
+ */
+function isCapacitor() {
+    return typeof window !== 'undefined' &&
+           window.Capacitor &&
+           window.Capacitor.isNativePlatform &&
+           window.Capacitor.isNativePlatform();
+}
+
+/**
+ * Helper: API Request mit Authentication (Capacitor & Browser compatible)
  */
 async function apiRequest(endpoint, options = {}) {
     const token = localStorage.getItem('token');
 
-    const defaultOptions = {
-        headers: {
-            'Content-Type': 'application/json',
-            ...(token && { 'Authorization': `Bearer ${token}` }),
-        },
+    const headers = {
+        'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` }),
+        ...options.headers,
     };
 
-    const finalOptions = {
-        ...defaultOptions,
-        ...options,
-        headers: {
-            ...defaultOptions.headers,
-            ...options.headers,
-        },
-    };
+    const url = `${API_BASE_URL}${endpoint}`;
+    const method = options.method || 'GET';
+    const body = options.body;
 
     try {
-        const response = await fetch(`${API_BASE_URL}${endpoint}`, finalOptions);
-
-        // Handle unauthorized - but only redirect if not on login/auth endpoints
-        if (response.status === 401) {
-            // Don't redirect on authentication endpoints - let them handle errors normally
-            const isAuthEndpoint = endpoint === '/login' || endpoint === '/resend-email' ||
-                                   endpoint === '/reset' || endpoint === '/reset-confirm';
-
-            if (!isAuthEndpoint) {
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-                window.location.href = '/index.html';
-                return null;
-            }
-            // For auth endpoints, fall through to normal error handling below
-        }
-
-        // Handle 204 No Content
-        if (response.status === 204) {
-            return { success: true };
-        }
-
-        // Parse JSON response
-        const contentType = response.headers.get('content-type');
+        let response;
         let data;
 
-        if (contentType && contentType.includes('application/json')) {
-            data = await response.json();
+        // Use Capacitor HTTP for native apps
+        if (isCapacitor() && window.Capacitor.Plugins && window.Capacitor.Plugins.Http) {
+            console.log('[API] Using Capacitor HTTP for native request');
+            // In Capacitor 5+, Http is available in Plugins
+            const Http = window.Capacitor.Plugins.Http;
+
+            const requestOptions = {
+                url: url,
+                method: method,
+                headers: headers,
+            };
+
+            if (body) {
+                requestOptions.data = JSON.parse(body);
+            }
+
+            console.log('[API] Request:', requestOptions);
+            response = await Http.request(requestOptions);
+            console.log('[API] Response:', response);
+
+            // CapacitorHttp response format: { status, data, headers }
+            const status = response.status;
+            data = response.data;
+
+            // Handle unauthorized
+            if (status === 401) {
+                const isAuthEndpoint = endpoint === '/login' || endpoint === '/resend-email' ||
+                                       endpoint === '/reset' || endpoint === '/reset-confirm';
+
+                if (!isAuthEndpoint) {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    window.location.href = '/index.html';
+                    return null;
+                }
+            }
+
+            // Handle 204 No Content
+            if (status === 204) {
+                return { success: true };
+            }
+
+            // Handle errors
+            if (status >= 400) {
+                const errorMessage = typeof data === 'object' ? (data.detail || data.message) : data;
+                throw new Error(errorMessage || `HTTP ${status}: API Request failed`);
+            }
+
+            return data;
+
         } else {
-            data = await response.text();
-        }
+            // Use fetch for browser
+            console.log('[API] Using fetch for browser request');
+            const fetchOptions = {
+                method: method,
+                headers: headers,
+            };
 
-        if (!response.ok) {
-            const errorMessage = typeof data === 'object' ? (data.detail || data.message) : data;
-            throw new Error(errorMessage || `HTTP ${response.status}: API Request failed`);
-        }
+            if (body) {
+                fetchOptions.body = body;
+            }
 
-        return data;
+            console.log('[API] Fetch request:', url, fetchOptions);
+            response = await fetch(url, fetchOptions);
+            console.log('[API] Fetch response:', response.status, response.statusText);
+
+            // Handle unauthorized
+            if (response.status === 401) {
+                const isAuthEndpoint = endpoint === '/login' || endpoint === '/resend-email' ||
+                                       endpoint === '/reset' || endpoint === '/reset-confirm';
+
+                if (!isAuthEndpoint) {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    window.location.href = '/index.html';
+                    return null;
+                }
+            }
+
+            // Handle 204 No Content
+            if (response.status === 204) {
+                return { success: true };
+            }
+
+            // Parse response
+            const contentType = response.headers.get('content-type');
+
+            if (contentType && contentType.includes('application/json')) {
+                data = await response.json();
+            } else {
+                data = await response.text();
+            }
+
+            if (!response.ok) {
+                const errorMessage = typeof data === 'object' ? (data.detail || data.message) : data;
+                throw new Error(errorMessage || `HTTP ${response.status}: API Request failed`);
+            }
+
+            return data;
+        }
     } catch (error) {
         console.error('API Error:', error);
         throw error;
