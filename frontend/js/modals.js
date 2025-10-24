@@ -459,8 +459,13 @@ async function submitCustomHour(event) {
         );
 
         // Success!
-        closeAddCustomHourModal();
         showToast('Eigene Stunde erfolgreich erstellt!', 'success');
+
+        // Reset button before closing modal
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Erstellen';
+
+        closeAddCustomHourModal();
 
         // Reload schedule if on stundenplan page
         if (typeof loadWeekSchedule === 'function') {
