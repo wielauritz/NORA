@@ -136,8 +136,13 @@ async function submitAddFriend(event) {
         const result = await FriendsAPI.addFriend(email);
 
         // Success!
-        closeAddFriendModal();
         showToast(result.message || 'Freund erfolgreich hinzugefügt!', 'success');
+
+        // Reset button before closing modal
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Hinzufügen';
+
+        closeAddFriendModal();
 
         // Reload friends if on dashboard page
         if (typeof loadFriends === 'function') {

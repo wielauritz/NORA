@@ -1298,14 +1298,18 @@ async function submitExam(event) {
         const result = await ExamsAPI.addExam(selectedCourse.module_number, start_time, duration, room);
 
         // Success!
-        closeAddExamModal();
-
         const isVerified = result.message && result.message.includes('verifiziert');
         const message = isVerified
             ? '✓ Klausur hinzugefügt und verifiziert!'
             : 'Klausur erfolgreich hinzugefügt!';
 
         showToast(message, 'success');
+
+        // Reset button before closing modal
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Klausur hinzufügen';
+
+        closeAddExamModal();
 
         // Reload exams if on dashboard page
         if (typeof loadUpcomingExams === 'function') {
