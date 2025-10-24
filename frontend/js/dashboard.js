@@ -70,6 +70,11 @@ function nl2br(text) {
  */
 async function initDashboard() {
     try {
+        // Restore preloader if tab navigation triggered it
+        if (typeof restorePreloaderIfNeeded === 'function') {
+            restorePreloaderIfNeeded();
+        }
+
         // Load user data
         await loadUserData();
 

@@ -2,6 +2,31 @@
  * Login Page JavaScript
  */
 
+/**
+ * Check if user is already authenticated (for login page)
+ * Returns true if user should stay on login page, false if redirect to dashboard
+ */
+async function checkAuthOnLoginPage() {
+    try {
+        // Initialize persistent storage
+        await initPersistentStorage();
+    } catch (e) {
+        console.warn('⚠️ Failed to initialize persistent storage:', e);
+    }
+
+    // Try to load token from persistent storage
+    const token = await loadTokenPersistent();
+
+    if (token) {
+        console.log('✅ Token found on login page - redirecting to dashboard');
+        window.location.href = 'dashboard.html';
+        return false; // Redirect happened
+    }
+
+    console.log('ℹ️ No token found - user can login');
+    return true; // Show login form
+}
+
 // Wait for deviceready event, then setup the form
 function initLoginForm() {
     // Prevent double initialization
@@ -89,20 +114,29 @@ function initLoginForm() {
 // Initialize login form after deviceready (ensures Capacitor plugins are available)
 if (typeof Capacitor !== 'undefined') {
     // Capacitor app - wait for deviceready event
-    document.addEventListener('deviceready', function() {
+    document.addEventListener('deviceready', async function() {
         console.log('✅ deviceready event fired - Capacitor plugins should now be available');
+
+        // Check if user is already authenticated (will redirect to dashboard if token found)
+        await checkAuthOnLoginPage();
+
+        // If we reach here, no token was found - show login form
         initLoginForm();
     }, false);
 
     // Fallback timeout in case deviceready doesn't fire quickly
-    setTimeout(() => {
+    setTimeout(async () => {
         if (!document.body.dataset.formInitialized) {
-            console.log('⏱️ deviceready timeout - initializing form anyway');
+            console.log('⏱️ deviceready timeout - checking auth and initializing form if needed');
+            await checkAuthOnLoginPage();
+            // If we reach here, no token was found - show login form
             initLoginForm();
-            document.body.dataset.formInitialized = 'true';
         }
     }, 2000);
 } else {
     // Web browser - initialize immediately
-    initLoginForm();
+    checkAuthOnLoginPage().then(() => {
+        // If we reach here, no token was found - show login form
+        initLoginForm();
+    });
 }

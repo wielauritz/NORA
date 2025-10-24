@@ -42,6 +42,11 @@ function getDaysToShow() {
  * Initialize stundenplan page
  */
 async function initStundenplan() {
+    // Restore preloader if tab navigation triggered it
+    if (typeof restorePreloaderIfNeeded === 'function') {
+        restorePreloaderIfNeeded();
+    }
+
     // Load user profile data
     await loadUserProfile();
 

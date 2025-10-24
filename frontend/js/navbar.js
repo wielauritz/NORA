@@ -80,7 +80,7 @@ function renderNavbar(activePage = '') {
                     </svg>
                     <span class="text-xs font-medium whitespace-nowrap">Raumplan</span>
                 </a>
-                <button onclick="showGlobalSearch()" class="flex-1 flex flex-col items-center justify-center py-3 gap-1 text-gray-600 hover:text-gray-900 transition-colors">
+                <button onclick="showGlobalSearch()" class="flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-colors ${activePage === 'search' ? 'text-primary' : 'text-gray-600 hover:text-gray-900'}">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                     </svg>
@@ -109,27 +109,46 @@ function renderNavbar(activePage = '') {
  * Show content preloader (behind navbar) - hidden by default to prevent layout shift
  */
 function showContentLoader() {
-    const loaderHTML = `
-        <div id="content-loader" class="hidden fixed top-12 left-0 right-0 bottom-0 bg-transparent z-30 flex items-center justify-center pointer-events-none">
-            <div class="text-center">
-                <div class="inline-block">
-                    <div class="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-                </div>
-                <p class="mt-4 text-gray-600 font-medium text-sm">Lädt...</p>
-            </div>
-        </div>
-    `;
+    const loader = document.getElementById('content-loader');
+    if (!loader) return;
 
-    document.body.insertAdjacentHTML('beforeend', loaderHTML);
+    // Add visible class to show preloader (CSS already handles display)
+    loader.classList.add('visible');
+
+    // Store the time when loader was shown using sessionStorage (persists across page navigations)
+    sessionStorage.setItem('loaderShowTime', Date.now().toString());
 }
 
 /**
- * Hide content preloader
+ * Hide content preloader with minimum display duration
  */
 function hideContentLoader() {
     const loader = document.getElementById('content-loader');
-    if (loader) {
-        loader.remove();
+    if (!loader) return;
+
+    // Get the time from sessionStorage (set when preloader was shown)
+    const showTimeStr = sessionStorage.getItem('loaderShowTime');
+    const showTime = showTimeStr ? parseInt(showTimeStr) : Date.now();
+    const elapsed = Date.now() - showTime;
+    const minDuration = 800; // Minimum 800ms display time for visibility
+
+    function removeLoader() {
+        // Just remove the visible class to hide the preloader
+        const l = document.getElementById('content-loader');
+        if (l) {
+            l.classList.remove('visible');
+        }
+
+        // Clear the sessionStorage timestamp
+        sessionStorage.removeItem('loaderShowTime');
+    }
+
+    if (elapsed < minDuration) {
+        // Wait for minimum duration before hiding
+        setTimeout(removeLoader, minDuration - elapsed);
+    } else {
+        // Already displayed long enough, hide immediately
+        removeLoader();
     }
 }
 
@@ -138,14 +157,49 @@ function hideContentLoader() {
  * Call this at the end of each page's script
  */
 function initNavbar(pageName) {
-    // Show loader first
-    showContentLoader();
-
     // Render navbar
     renderNavbar(pageName);
 
+    // Attach preloader handlers to tab navigation links
+    attachNavbarPreloaderHandlers();
+
     // Hide loader after a short delay or when content is ready
     // This will be called by the page's init function
+}
+
+/**
+ * Attach preloader handlers to navbar links
+ * Shows preloader when navigating between tabs
+ */
+function attachNavbarPreloaderHandlers() {
+    // Get all navbar links (desktop and mobile) that navigate to pages
+    // Exclude logo by checking href contains a page name
+    const navLinks = document.querySelectorAll('nav a[href$=".html"]');
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', (e) => {
+            // Show preloader when navigating to dashboard, stundenplan, raumplan, or search
+            const href = link.getAttribute('href');
+            if (href.includes('dashboard.html') ||
+                href.includes('stundenplan.html') ||
+                href.includes('raumplan.html') ||
+                href.includes('search.html')) {
+                showContentLoader();
+            }
+        });
+    });
+}
+
+/**
+ * Check if preloader should be shown on page load
+ * Call this at the beginning of each page's script
+ */
+function restorePreloaderIfNeeded() {
+    // If a preloader was triggered (sessionStorage has loaderShowTime), show it
+    const loaderShowTime = sessionStorage.getItem('loaderShowTime');
+    if (loaderShowTime) {
+        showContentLoader();
+    }
 }
 
 /**

@@ -820,6 +820,29 @@
 </head>
 <body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
 
+<!-- Content Preloader (hidden by default) -->
+<style id="content-loader-styles">
+    @keyframes slowSpin {
+        to { transform: rotate(360deg); }
+    }
+    #content-loader {
+        display: none;
+        pointer-events: auto;
+        z-index: 9999 !important;
+    }
+    #content-loader.visible {
+        display: flex;
+    }
+</style>
+<div id="content-loader" class="fixed top-12 left-0 right-0 md:bottom-0 bottom-20 bg-white/85 flex items-center justify-center backdrop-blur-xl">
+    <div class="text-center">
+        <div class="inline-block">
+            <div class="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full" style="animation: slowSpin 2s linear infinite;"></div>
+        </div>
+        <p class="mt-4 text-gray-700 font-medium text-sm">Lädt...</p>
+    </div>
+</div>
+
 <!-- Navigation Placeholder -->
 <div id="navbar-placeholder"></div>
 
