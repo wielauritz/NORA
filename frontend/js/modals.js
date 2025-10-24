@@ -430,9 +430,14 @@ async function submitCustomHour(event) {
         return;
     }
 
-    // Combine date and time to ISO format with UTC timezone
-    const start_time = `${validation.correctedDate}T${startTime}:00Z`;
-    const end_time = `${validation.correctedDate}T${endTime}:00Z`;
+    // Convert local time to UTC
+    // Create Date objects in local timezone
+    const startDateTime = new Date(`${validation.correctedDate}T${startTime}:00`);
+    const endDateTime = new Date(`${validation.correctedDate}T${endTime}:00`);
+
+    // Convert to ISO string (which is in UTC)
+    const start_time = startDateTime.toISOString();
+    const end_time = endDateTime.toISOString();
 
     // Disable button
     submitBtn.disabled = true;
@@ -675,11 +680,16 @@ async function populateUpdateCustomHourForm(event) {
     document.getElementById('updateCustomHourTitle').value = event.title;
     document.getElementById('updateCustomHourDescription').value = event.description || '';
 
-    // Parse date and time from ISO strings
+    // Parse date and time from ISO strings (converts UTC to local time)
     const startTime = new Date(event.start_time);
     const endTime = new Date(event.end_time);
 
-    const date = startTime.toISOString().split('T')[0];
+    // Format date in local timezone
+    const year = startTime.getFullYear();
+    const month = String(startTime.getMonth() + 1).padStart(2, '0');
+    const day = String(startTime.getDate()).padStart(2, '0');
+    const date = `${year}-${month}-${day}`;
+
     const startTimeStr = startTime.toTimeString().slice(0, 5);
     const endTimeStr = endTime.toTimeString().slice(0, 5);
 
@@ -860,8 +870,12 @@ async function submitUpdateCustomHour(event) {
     submitBtn.textContent = 'Aktualisiere...';
 
     try {
-        const startTimeISO = `${date}T${startTime}:00Z`;
-        const endTimeISO = `${date}T${endTime}:00Z`;
+        // Convert local time to UTC
+        const startDateTime = new Date(`${date}T${startTime}:00`);
+        const endDateTime = new Date(`${date}T${endTime}:00`);
+
+        const startTimeISO = startDateTime.toISOString();
+        const endTimeISO = endDateTime.toISOString();
 
         const updates = {
             title,
@@ -1249,8 +1263,9 @@ async function submitExam(event) {
         return;
     }
 
-    // Combine date and time to ISO format with UTC timezone
-    const start_time = `${validation.correctedDate}T${time}:00Z`;
+    // Convert local time to UTC
+    const startDateTime = new Date(`${validation.correctedDate}T${time}:00`);
+    const start_time = startDateTime.toISOString();
 
     // Disable button
     submitBtn.disabled = true;
