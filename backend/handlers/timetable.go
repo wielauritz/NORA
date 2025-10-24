@@ -706,11 +706,155 @@ func CalculateSimilarity(query, text string) float64 {
 		return 1.0
 	}
 
-	// Contains query
+	// Contains query (full substring match)
 	if strings.Contains(textLower, queryLower) {
-		return 0.9
+		// Score based on how much of the text the query covers
+		coverage := float64(len(queryLower)) / float64(len(textLower))
+		return 0.85 + (coverage * 0.15) // 0.85 to 1.0
 	}
 
-	// Simple similarity (can be improved with Levenshtein distance)
+	// Word-based matching: check if any word in text starts with query
+	words := strings.Fields(textLower)
+	queryWords := strings.Fields(queryLower)
+
+	// Check if any word in text starts with the query
+	for _, word := range words {
+		if strings.HasPrefix(word, queryLower) {
+			return 0.75
+		}
+	}
+
+	// Check if all query words are present in text
+	allWordsPresent := true
+	for _, qWord := range queryWords {
+		wordFound := false
+		for _, tWord := range words {
+			if strings.Contains(tWord, qWord) {
+				wordFound = true
+				break
+			}
+		}
+		if !wordFound {
+			allWordsPresent = false
+			break
+		}
+	}
+	if allWordsPresent && len(queryWords) > 0 {
+		return 0.65
+	}
+
+	// Partial word matches: check if query appears within any word
+	for _, word := range words {
+		if strings.Contains(word, queryLower) {
+			return 0.55
+		}
+	}
+
+	// Character-based fuzzy matching for potential typos
+	// Calculate Levenshtein distance ratio
+	distance := levenshteinDistance(queryLower, textLower)
+	maxLen := max(len(queryLower), len(textLower))
+	if maxLen > 0 {
+		similarity := 1.0 - (float64(distance) / float64(maxLen))
+		// Only return if similarity is meaningful (> 0.4)
+		if similarity > 0.4 {
+			return similarity * 0.5 // Scale down to max 0.5 for fuzzy matches
+		}
+	}
+
+	// Check for common subsequence
+	lcs := longestCommonSubsequence(queryLower, textLower)
+	if lcs > 3 { // At least 4 characters in common
+		score := float64(lcs) / float64(len(queryLower))
+		if score > 0.5 {
+			return score * 0.4 // Scale down to max 0.4
+		}
+	}
+
 	return 0.0
+}
+
+// levenshteinDistance calculates the Levenshtein distance between two strings
+func levenshteinDistance(s1, s2 string) int {
+	if len(s1) == 0 {
+		return len(s2)
+	}
+	if len(s2) == 0 {
+		return len(s1)
+	}
+
+	// Create matrix
+	matrix := make([][]int, len(s1)+1)
+	for i := range matrix {
+		matrix[i] = make([]int, len(s2)+1)
+		matrix[i][0] = i
+	}
+	for j := range matrix[0] {
+		matrix[0][j] = j
+	}
+
+	// Fill matrix
+	for i := 1; i <= len(s1); i++ {
+		for j := 1; j <= len(s2); j++ {
+			cost := 0
+			if s1[i-1] != s2[j-1] {
+				cost = 1
+			}
+			matrix[i][j] = min(
+				matrix[i-1][j]+1,      // deletion
+				matrix[i][j-1]+1,      // insertion
+				matrix[i-1][j-1]+cost, // substitution
+			)
+		}
+	}
+
+	return matrix[len(s1)][len(s2)]
+}
+
+// longestCommonSubsequence calculates the length of the longest common subsequence
+func longestCommonSubsequence(s1, s2 string) int {
+	m, n := len(s1), len(s2)
+	if m == 0 || n == 0 {
+		return 0
+	}
+
+	// Create DP table
+	dp := make([][]int, m+1)
+	for i := range dp {
+		dp[i] = make([]int, n+1)
+	}
+
+	// Fill DP table
+	for i := 1; i <= m; i++ {
+		for j := 1; j <= n; j++ {
+			if s1[i-1] == s2[j-1] {
+				dp[i][j] = dp[i-1][j-1] + 1
+			} else {
+				dp[i][j] = max(dp[i-1][j], dp[i][j-1])
+			}
+		}
+	}
+
+	return dp[m][n]
+}
+
+// Helper functions for min/max
+func min(a, b, c int) int {
+	if a < b {
+		if a < c {
+			return a
+		}
+		return c
+	}
+	if b < c {
+		return b
+	}
+	return c
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }

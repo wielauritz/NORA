@@ -11,13 +11,14 @@ import (
 
 // SearchResult represents a single search result
 type SearchResult struct {
-	ResultType string  `json:"result_type"`
-	ID         uint    `json:"id"`
-	Name       string  `json:"name"`
-	Details    *string `json:"details,omitempty"`
-	StartTime  *string `json:"start_time,omitempty"`
-	Location   *string `json:"location,omitempty"`
-	Score      float64 `json:"-"` // Internal use only
+	ResultType      string  `json:"result_type"`
+	ID              uint    `json:"id"`
+	Name            string  `json:"name"`
+	Details         *string `json:"details,omitempty"`
+	StartTime       *string `json:"start_time,omitempty"`
+	Location        *string `json:"location,omitempty"`
+	MatchPercentage float64 `json:"match_percentage"` // Percentage of match (0-100)
+	Score           float64 `json:"-"`                // Internal use for sorting
 }
 
 // GroupedSearchResponse represents grouped search results
@@ -76,13 +77,14 @@ func Search(c *fiber.Ctx) error {
 				}
 
 				timetableResults = append(timetableResults, SearchResult{
-					ResultType: "event",
-					ID:         tt.ID,
-					Name:       tt.Summary,
-					Details:    &details,
-					StartTime:  &startTime,
-					Location:   &location,
-					Score:      score,
+					ResultType:      "event",
+					ID:              tt.ID,
+					Name:            tt.Summary,
+					Details:         &details,
+					StartTime:       &startTime,
+					Location:        &location,
+					MatchPercentage: score * 100, // Convert to percentage
+					Score:           score,
 				})
 			}
 		}
@@ -110,13 +112,14 @@ func Search(c *fiber.Ctx) error {
 			startTime := ch.StartTime.Format("2006-01-02T15:04:05")
 
 			customHourResults = append(customHourResults, SearchResult{
-				ResultType: "custom_hour",
-				ID:         ch.ID,
-				Name:       ch.Title,
-				Details:    ch.Description,
-				StartTime:  &startTime,
-				Location:   &roomStr,
-				Score:      score,
+				ResultType:      "custom_hour",
+				ID:              ch.ID,
+				Name:            ch.Title,
+				Details:         ch.Description,
+				StartTime:       &startTime,
+				Location:        &roomStr,
+				MatchPercentage: score * 100, // Convert to percentage
+				Score:           score,
 			})
 		}
 	}
@@ -142,13 +145,14 @@ func Search(c *fiber.Ctx) error {
 			startTime := exam.StartTime.Format("2006-01-02T15:04:05")
 
 			examResults = append(examResults, SearchResult{
-				ResultType: "exam",
-				ID:         exam.ID,
-				Name:       exam.Course.Name,
-				Details:    &details,
-				StartTime:  &startTime,
-				Location:   nil,
-				Score:      score,
+				ResultType:      "exam",
+				ID:              exam.ID,
+				Name:            exam.Course.Name,
+				Details:         &details,
+				StartTime:       &startTime,
+				Location:        nil,
+				MatchPercentage: score * 100, // Convert to percentage
+				Score:           score,
 			})
 		}
 	}
@@ -179,13 +183,14 @@ func Search(c *fiber.Ctx) error {
 			location := "Gebäude " + room.Building + ", Etage " + room.Floor
 
 			roomResults = append(roomResults, SearchResult{
-				ResultType: "room",
-				ID:         room.ID,
-				Name:       room.RoomNumber,
-				Details:    &details,
-				StartTime:  nil,
-				Location:   &location,
-				Score:      score,
+				ResultType:      "room",
+				ID:              room.ID,
+				Name:            room.RoomNumber,
+				Details:         &details,
+				StartTime:       nil,
+				Location:        &location,
+				MatchPercentage: score * 100, // Convert to percentage
+				Score:           score,
 			})
 		}
 	}
@@ -225,13 +230,14 @@ func Search(c *fiber.Ctx) error {
 				details := "Zenturie: " + zenturieName
 
 				friendResults = append(friendResults, SearchResult{
-					ResultType: "friend",
-					ID:         friend.ID,
-					Name:       friend.FirstName + " " + friend.LastName,
-					Details:    &details,
-					StartTime:  nil,
-					Location:   nil,
-					Score:      score,
+					ResultType:      "friend",
+					ID:              friend.ID,
+					Name:            friend.FirstName + " " + friend.LastName,
+					Details:         &details,
+					StartTime:       nil,
+					Location:        nil,
+					MatchPercentage: score * 100, // Convert to percentage
+					Score:           score,
 				})
 			}
 		}
