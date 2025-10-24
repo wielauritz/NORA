@@ -130,12 +130,12 @@
             to { transform: rotate(360deg); }
         }
         #content-loader {
-            display: none;
+            display: none !important;
             pointer-events: auto;
-            z-index: 9999 !important;
+            z-index: 40 !important;
         }
         #content-loader.visible {
-            display: flex;
+            display: flex !important;
         }
     </style>
     <div id="content-loader" class="fixed top-12 left-0 right-0 md:bottom-0 bottom-20 bg-white/85 flex items-center justify-center backdrop-blur-xl">
@@ -151,7 +151,7 @@
     <div id="navbar-placeholder"></div>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style="padding-top: 8rem !important; padding-bottom: 9rem !important; margin: 0 !important;">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style="padding-top: 8rem !important; padding-bottom: 9rem !important;">
         
         <!-- Welcome Section -->
         <div class="mb-8">
