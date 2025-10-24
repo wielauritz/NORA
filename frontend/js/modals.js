@@ -430,9 +430,9 @@ async function submitCustomHour(event) {
         return;
     }
 
-    // Combine date and time to ISO format
-    const start_time = `${validation.correctedDate}T${startTime}:00`;
-    const end_time = `${validation.correctedDate}T${endTime}:00`;
+    // Combine date and time to ISO format with UTC timezone
+    const start_time = `${validation.correctedDate}T${startTime}:00Z`;
+    const end_time = `${validation.correctedDate}T${endTime}:00Z`;
 
     // Disable button
     submitBtn.disabled = true;
@@ -860,8 +860,8 @@ async function submitUpdateCustomHour(event) {
     submitBtn.textContent = 'Aktualisiere...';
 
     try {
-        const startTimeISO = `${date}T${startTime}:00`;
-        const endTimeISO = `${date}T${endTime}:00`;
+        const startTimeISO = `${date}T${startTime}:00Z`;
+        const endTimeISO = `${date}T${endTime}:00Z`;
 
         const updates = {
             title,
@@ -1249,8 +1249,8 @@ async function submitExam(event) {
         return;
     }
 
-    // Combine date and time to ISO format
-    const start_time = `${validation.correctedDate}T${time}:00`;
+    // Combine date and time to ISO format with UTC timezone
+    const start_time = `${validation.correctedDate}T${time}:00Z`;
 
     // Disable button
     submitBtn.disabled = true;
