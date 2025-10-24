@@ -8,5 +8,9 @@
       "launchShowDuration": 2000,
       "backgroundColor": "#667eea"
     }
-  }
+  },
+  "packageClassList": [
+    "FilesystemPlugin",
+    "PreferencesPlugin"
+  ]
 }
