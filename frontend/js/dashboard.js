@@ -36,9 +36,11 @@
 })();
 
 // Check authentication on page load
-if (!checkAuth()) {
-    // checkAuth() redirects to login if not authenticated
-}
+(async () => {
+    if (!(await checkAuth())) {
+        // checkAuth() redirects to login if not authenticated
+    }
+})();
 
 // Global state
 let userData = null;
@@ -512,8 +514,8 @@ async function removeFriend(friendUserId, friendName) {
  * Logout function
  */
 function logout() {
-    showConfirmDialog('Möchtest du dich wirklich abmelden?', () => {
-        AuthAPI.logout();
+    showConfirmDialog('Möchtest du dich wirklich abmelden?', async () => {
+        await AuthAPI.logout();
     });
 }
 

@@ -1,25 +1,26 @@
 /**
- * Storage Manager für sichere Token/User Persistierung
- * Kombiniert localStorage mit In-Memory Fallback
+ * Storage Manager für Token/User Persistierung
+ * Nutzt direkt localStorage mit Fallback
  */
 
 class StorageManager {
     constructor() {
-        this.inMemoryStorage = {};
-        this.useLocalStorage = this.checkLocalStorage();
+        this.useLocalStorage = this.testLocalStorage();
+        this.fallbackStorage = {}; // In-Memory Fallback
     }
 
     /**
-     * Check if localStorage is available and working
+     * Test ob localStorage funktioniert
      */
-    checkLocalStorage() {
+    testLocalStorage() {
         try {
-            const test = '__localStorage_test__';
+            const test = '__test__' + Date.now();
             localStorage.setItem(test, test);
             localStorage.removeItem(test);
+            console.log('[Storage] localStorage verfügbar');
             return true;
         } catch (e) {
-            console.warn('localStorage nicht verfügbar, nutze in-memory storage');
+            console.warn('[Storage] localStorage nicht verfügbar, nutze Fallback');
             return false;
         }
     }
@@ -33,36 +34,41 @@ class StorageManager {
         if (this.useLocalStorage) {
             try {
                 localStorage.setItem(key, stringValue);
+                console.log(`[Storage] localStorage: ${key} = ${stringValue.substring(0, 50)}...`);
             } catch (e) {
-                console.warn(`Fehler beim Speichern in localStorage: ${e}`);
-                this.inMemoryStorage[key] = stringValue;
+                console.error(`[Storage] Fehler bei localStorage.setItem: ${e}`);
+                this.fallbackStorage[key] = stringValue;
             }
         } else {
-            this.inMemoryStorage[key] = stringValue;
+            this.fallbackStorage[key] = stringValue;
+            console.log(`[Storage] Fallback: ${key} gespeichert`);
         }
-
-        console.log(`[Storage] Gespeichert: ${key}`);
     }
 
     /**
      * Get item from storage
      */
     getItem(key) {
-        let value = null;
-
         if (this.useLocalStorage) {
             try {
-                value = localStorage.getItem(key);
+                const value = localStorage.getItem(key);
+                if (value) {
+                    console.log(`[Storage] localStorage: ${key} gefunden`);
+                    return value;
+                }
             } catch (e) {
-                console.warn(`Fehler beim Abrufen aus localStorage: ${e}`);
-                value = this.inMemoryStorage[key] || null;
+                console.error(`[Storage] Fehler bei localStorage.getItem: ${e}`);
             }
-        } else {
-            value = this.inMemoryStorage[key] || null;
         }
 
-        console.log(`[Storage] Abgerufen: ${key} = ${value ? '***' : 'null'}`);
-        return value;
+        // Fallback
+        if (this.fallbackStorage[key]) {
+            console.log(`[Storage] Fallback: ${key} gefunden`);
+            return this.fallbackStorage[key];
+        }
+
+        console.log(`[Storage] ${key} nicht gefunden`);
+        return null;
     }
 
     /**
@@ -73,14 +79,11 @@ class StorageManager {
             try {
                 localStorage.removeItem(key);
             } catch (e) {
-                console.warn(`Fehler beim Löschen aus localStorage: ${e}`);
-                delete this.inMemoryStorage[key];
+                console.error(`[Storage] Fehler beim Löschen: ${e}`);
             }
-        } else {
-            delete this.inMemoryStorage[key];
         }
-
-        console.log(`[Storage] Gelöscht: ${key}`);
+        delete this.fallbackStorage[key];
+        console.log(`[Storage] ${key} gelöscht`);
     }
 
     /**
@@ -91,13 +94,10 @@ class StorageManager {
             try {
                 localStorage.clear();
             } catch (e) {
-                console.warn(`Fehler beim Löschen des localStorage: ${e}`);
-                this.inMemoryStorage = {};
+                console.error(`[Storage] Fehler beim Clear: ${e}`);
             }
-        } else {
-            this.inMemoryStorage = {};
         }
-
+        this.fallbackStorage = {};
         console.log('[Storage] Alle Daten gelöscht');
     }
 }

@@ -2,25 +2,43 @@
  * Login Page JavaScript
  */
 
-// Login/Register Form Handler
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
+// Wait for deviceready event, then setup the form
+function initLoginForm() {
+    // Prevent double initialization
+    if (document.body.dataset.formInitialized === 'true') {
+        console.log('ℹ️ Form already initialized, skipping');
+        return;
+    }
+    document.body.dataset.formInitialized = 'true';
 
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
+    console.log('🚀 initLoginForm called');
 
-    // Disable submit button
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-    const originalText = disableSubmitButton(submitBtn, 'Wird verarbeitet...');
+    // Login/Register Form Handler
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
 
-    try {
-        // Call Backend Login API
-        const data = await AuthAPI.login(email, password);
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        // Disable submit button
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalText = disableSubmitButton(submitBtn, 'Wird verarbeitet...');
+
+        try {
+            // Call Backend Login API
+            const data = await AuthAPI.login(email, password);
 
         // Check if token is present (successful login)
         if (data.token) {
-            // Token speichern
-            storage.setItem('token', data.token);
+            // Token speichern - sowohl localStorage als auch Capacitor Preferences für iOS Persistierung
+            const token = data.token;
+
+            try {
+                // Use the helper function to store token
+                await storeToken(token);
+            } catch (e) {
+                console.error('❌ Fehler beim Token speichern:', e.message || JSON.stringify(e));
+            }
 
             // Extract user info from email
             const userName = email.split('@')[0];
@@ -28,7 +46,12 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
                 email: email,
                 name: userName,
             };
-            storage.setItem('user', JSON.stringify(userInfo));
+            try {
+                localStorage.setItem('user', JSON.stringify(userInfo));
+                console.log('✅ User info gespeichert');
+            } catch (e) {
+                console.error('❌ Fehler beim Speichern der User Info:', e);
+            }
 
             // Zeige Success-Nachricht
             showLoginSuccess('Login erfolgreich', userName);
@@ -60,4 +83,26 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
 
         enableSubmitButton(submitBtn, originalText);
     }
-});
+    });
+}
+
+// Initialize login form after deviceready (ensures Capacitor plugins are available)
+if (typeof Capacitor !== 'undefined') {
+    // Capacitor app - wait for deviceready event
+    document.addEventListener('deviceready', function() {
+        console.log('✅ deviceready event fired - Capacitor plugins should now be available');
+        initLoginForm();
+    }, false);
+
+    // Fallback timeout in case deviceready doesn't fire quickly
+    setTimeout(() => {
+        if (!document.body.dataset.formInitialized) {
+            console.log('⏱️ deviceready timeout - initializing form anyway');
+            initLoginForm();
+            document.body.dataset.formInitialized = 'true';
+        }
+    }, 2000);
+} else {
+    // Web browser - initialize immediately
+    initLoginForm();
+}

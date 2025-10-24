@@ -26,7 +26,7 @@
 <div id="navbar-placeholder"></div>
 
 <!-- Main Content -->
-<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" style="padding-top: 8rem !important; padding-bottom: 9rem !important; margin: 0 !important;">
 
     <!-- Search Container -->
     <div class="space-y-6">
@@ -66,6 +66,7 @@
 </main>
 
 <!-- Scripts -->
+<script src="js/storage-ios.js"></script>
 <script src="js/storage-manager.js"></script>
     <script src="js/api-helper.js"></script>
 <script src="js/auth.js"></script>
@@ -75,21 +76,23 @@
 
 <script>
     // Initialize page
-    if (!checkAuth()) {
-        // Already redirects
-    } else {
-        // Initialize navbar
-        initNavbar('search');
+    (async () => {
+        if (!(await checkAuth())) {
+            // Already redirects
+        } else {
+            // Initialize navbar
+            initNavbar('search');
 
-        // Focus search input
-        setTimeout(() => {
-            const input = document.getElementById('globalSearchInput');
-            if (input) input.focus();
-        }, 100);
+            // Focus search input
+            setTimeout(() => {
+                const input = document.getElementById('globalSearchInput');
+                if (input) input.focus();
+            }, 100);
 
-        // Hide loader when ready
-        pageContentReady();
-    }
+            // Hide loader when ready
+            pageContentReady();
+        }
+    })();
 </script>
 
 </body>

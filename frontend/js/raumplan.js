@@ -3,10 +3,12 @@
  * Zeigt alle Räume mit deren Belegung
  */
 
-// Check authentication
-if (!checkAuth()) {
-    // Redirects to login
-}
+// Check authentication (wrapped in async IIFE)
+(async () => {
+    if (!(await checkAuth())) {
+        // Redirects to login
+    }
+})();
 
 /**
  * Helper: Format time
@@ -948,8 +950,8 @@ function formatTime(timeString) {
  * Logout function
  */
 function logout() {
-    showConfirmDialog('Möchtest du dich wirklich abmelden?', () => {
-        AuthAPI.logout();
+    showConfirmDialog('Möchtest du dich wirklich abmelden?', async () => {
+        await AuthAPI.logout();
     });
 }
 

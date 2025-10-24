@@ -202,10 +202,12 @@ const AuthAPI = {
         });
     },
 
-    // Logout (clear local storage)
-    logout() {
-        storage.removeItem('token');
-        storage.removeItem('user');
+    // Logout (clear all auth storage including Capacitor Cookies)
+    async logout() {
+        // Clear from all storage mechanisms
+        await clearAuthStorage();
+
+        // Redirect to login
         window.location.href = '/index.html';
     },
 
