@@ -431,11 +431,16 @@ async function submitCustomHour(event) {
     }
 
     // Convert local time to UTC
-    // Create Date objects in local timezone
-    const startDateTime = new Date(`${validation.correctedDate}T${startTime}:00`);
-    const endDateTime = new Date(`${validation.correctedDate}T${endTime}:00`);
+    // Parse date and time components
+    const [year, month, day] = validation.correctedDate.split('-').map(Number);
+    const [startHour, startMinute] = startTime.split(':').map(Number);
+    const [endHour, endMinute] = endTime.split(':').map(Number);
 
-    // Convert to ISO string (which is in UTC)
+    // Create Date objects in LOCAL timezone
+    const startDateTime = new Date(year, month - 1, day, startHour, startMinute, 0);
+    const endDateTime = new Date(year, month - 1, day, endHour, endMinute, 0);
+
+    // toISOString() converts local time to UTC automatically
     const start_time = startDateTime.toISOString();
     const end_time = endDateTime.toISOString();
 
@@ -871,8 +876,12 @@ async function submitUpdateCustomHour(event) {
 
     try {
         // Convert local time to UTC
-        const startDateTime = new Date(`${date}T${startTime}:00`);
-        const endDateTime = new Date(`${date}T${endTime}:00`);
+        const [year, month, day] = date.split('-').map(Number);
+        const [startHour, startMinute] = startTime.split(':').map(Number);
+        const [endHour, endMinute] = endTime.split(':').map(Number);
+
+        const startDateTime = new Date(year, month - 1, day, startHour, startMinute, 0);
+        const endDateTime = new Date(year, month - 1, day, endHour, endMinute, 0);
 
         const startTimeISO = startDateTime.toISOString();
         const endTimeISO = endDateTime.toISOString();
@@ -1264,7 +1273,10 @@ async function submitExam(event) {
     }
 
     // Convert local time to UTC
-    const startDateTime = new Date(`${validation.correctedDate}T${time}:00`);
+    const [year, month, day] = validation.correctedDate.split('-').map(Number);
+    const [hour, minute] = time.split(':').map(Number);
+
+    const startDateTime = new Date(year, month - 1, day, hour, minute, 0);
     const start_time = startDateTime.toISOString();
 
     // Disable button
