@@ -43,12 +43,13 @@ main > div:first-child {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    min-height: 180px;
+    align-items: flex-start;
+    min-height: 120px;
 }
 
 @media (min-width: 1024px) {
     main > div:first-child {
-        min-height: 240px;
+        min-height: 200px;
         margin-bottom: 3rem !important;
     }
 
@@ -60,6 +61,23 @@ main > div:first-child {
     main > div:first-child p {
         font-size: 1.125rem !important;
     }
+}
+
+/* Fix navbar logo layout shift - reserve space before image loads */
+nav img[src*="logo"] {
+    width: 32px;
+    height: 32px;
+    aspect-ratio: auto;
+    display: block;
+}
+
+/* Ensure navbar is properly aligned vertically */
+nav {
+    padding-top: max(0.5rem, env(safe-area-inset-top)) !important;
+}
+
+nav .flex.justify-between {
+    align-items: center;
 }
 
 /* Glass Effect */
