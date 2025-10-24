@@ -3,6 +3,7 @@
  * Gemeinsame Funktionen für Auth-Flows
  */
 
+
 /**
  * Get URL parameter by name
  */
@@ -346,143 +347,42 @@ function setupPasswordToggle(inputId, toggleButtonId) {
 }
 
 /**
- * Try to store token in Capacitor Preferences with aggressive retry logic
- * Retries for up to 60 seconds to account for iOS plugin initialization timing
+ * Store token using filesystem persistent storage
+ * Fast, non-blocking, and reliable across app restarts
  */
-async function storeTokenInPreferences(token, maxRetries = 120) {
-    console.log('🔄 [storeTokenInPreferences] Starting background Preferences storage task (will retry for ~60 seconds)');
-
-    if (!token) {
-        console.warn('🔄 [storeTokenInPreferences] Token is empty');
-        return false;
-    }
-
-    if (typeof Capacitor === 'undefined') {
-        console.warn('🔄 [storeTokenInPreferences] Capacitor not available');
-        return false;
-    }
-
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-            // Log every 10th attempt to reduce log spam
-            if (attempt === 1 || attempt % 10 === 0 || (Capacitor.plugins && Capacitor.plugins.Preferences)) {
-                console.log(`🔄 [storeTokenInPreferences] Attempt ${attempt}/${maxRetries}`);
-            }
-
-            if (Capacitor.plugins && Capacitor.plugins.Preferences) {
-                console.log(`✅ [storeTokenInPreferences] Plugins FINALLY available on attempt ${attempt}! Calling Preferences.set()`);
-                await Capacitor.plugins.Preferences.set({
-                    key: 'token',
-                    value: token
-                });
-                console.log('✅ Token in Capacitor Preferences gespeichert (after ' + attempt + ' attempts)');
-                return true;
-            }
-        } catch (e) {
-            console.error(`🔄 [storeTokenInPreferences] Attempt ${attempt}/${maxRetries} - Preferences.set() error:`, e.message || JSON.stringify(e));
-        }
-
-        // Wait before retrying (500ms = 60 seconds total for 120 retries)
-        if (attempt < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, 500));
-        }
-    }
-
-    console.log('⏱️ [storeTokenInPreferences] GAVE UP after ' + maxRetries + ' attempts (~60 seconds). Preferences plugin never became available.');
-    return false;
-}
-
-/**
- * Store token in localStorage and attempt Preferences in background
- * Does not block - localStorage is stored immediately, Preferences attempted asynchronously
- */
-async function storeToken(token) {
+function storeToken(token) {
     if (!token) {
         console.warn('⚠️ Attempted to store empty token');
         return false;
     }
 
-    let storedInLocalStorage = false;
+    // Use the persistent storage module (defined in persistent-storage.js)
+    // This handles both localStorage and filesystem storage
+    storeTokenPersistent(token).catch(e => {
+        console.error('❌ [storeToken] Error:', e);
+    });
 
-    // Always store in localStorage first (non-blocking)
-    try {
-        localStorage.setItem('token', token);
-        console.log('✅ Token in localStorage gespeichert');
-        storedInLocalStorage = true;
-    } catch (e) {
-        console.warn('⚠️ localStorage nicht verfügbar:', e.message);
-    }
-
-    // Try Capacitor Preferences in the background (non-blocking)
-    // Don't await this - let it happen asynchronously
-    if (typeof Capacitor !== 'undefined') {
-        console.log('🔄 Triggering background Preferences storage task...');
-        storeTokenInPreferences(token).then(success => {
-            if (success) {
-                console.log('✅ Background task: Token successfully stored to Preferences');
-            } else {
-                console.warn('⚠️ Background task: Failed to store token to Preferences after retries');
-            }
-        }).catch(e => {
-            console.error('❌ Background task error:', e);
-        });
-    } else {
-        console.warn('⚠️ Capacitor not available for background storage');
-    }
-
-    return storedInLocalStorage;
+    return true;
 }
 
 /**
  * Check if user is authenticated
- * Reads from Capacitor Preferences (iOS persistent) first, then localStorage
+ * Uses persistent storage (filesystem first, then localStorage)
  */
 async function checkAuth() {
-    let token = null;
-
-    // 1. Try Capacitor Preferences first (iOS persistent across restarts)
+    // Initialize persistent storage first
     try {
-        if (typeof Capacitor !== 'undefined' && Capacitor.plugins && Capacitor.plugins.Preferences) {
-            console.log('📦 Attempting to read token from Capacitor Preferences');
-            const result = await Capacitor.plugins.Preferences.get({ key: 'token' });
-            console.log('📦 Capacitor Preferences.get() result:', result);
-            if (result && result.value) {
-                console.log('✅ Token aus Capacitor Preferences geladen');
-                // Also update localStorage for immediate access
-                try {
-                    localStorage.setItem('token', result.value);
-                } catch (e) {
-                    console.warn('localStorage nicht verfügbar:', e);
-                }
-                return true;
-            } else {
-                console.log('ℹ️ Kein Token in Capacitor Preferences gefunden');
-            }
-        } else {
-            console.log('ℹ️ Capacitor Preferences nicht verfügbar');
-        }
+        await initPersistentStorage();
     } catch (e) {
-        console.error('❌ Capacitor Preferences Fehler:', e.message || JSON.stringify(e));
+        console.warn('⚠️ Failed to initialize persistent storage:', e);
     }
 
-    // 2. Try localStorage as fallback
-    try {
-        token = localStorage.getItem('token');
-        if (token) {
-            console.log('✅ Token aus localStorage geladen');
-            return true;
-        }
-    } catch (e) {
-        console.warn('localStorage nicht verfügbar:', e);
-    }
+    // Try to load token from persistent storage (filesystem first, then localStorage)
+    const token = await loadTokenPersistent();
 
-    // 3. Fallback auf StorageManager
-    if (!token && typeof storage !== 'undefined') {
-        token = storage.getItem('token');
-        if (token) {
-            console.log('✅ Token aus StorageManager geladen');
-            return true;
-        }
+    if (token) {
+        console.log('✅ Token geladen - Benutzer ist authentifiziert');
+        return true;
     }
 
     console.log('❌ Kein Token gefunden - Weiterleitung zum Login');
@@ -536,22 +436,13 @@ function closeConfirmDialog(confirmed) {
  * Clear all auth data from storage (Preferences + localStorage)
  */
 async function clearAuthStorage() {
-    // 1. Clear Capacitor Preferences
-    try {
-        if (typeof Capacitor !== 'undefined' && Capacitor.plugins && Capacitor.plugins.Preferences) {
-            await Capacitor.plugins.Preferences.remove({ key: 'token' });
-            await Capacitor.plugins.Preferences.remove({ key: 'user' });
-            console.log('✅ Token und User aus Capacitor Preferences gelöscht');
-        }
-    } catch (e) {
-        console.warn('⚠️ Fehler beim Löschen von Capacitor Preferences:', e.message || JSON.stringify(e));
-    }
+    // Clear token from persistent storage (filesystem and localStorage)
+    await clearTokenPersistent();
 
-    // 2. Clear localStorage
+    // 2. Clear user data from localStorage
     try {
-        localStorage.removeItem('token');
         localStorage.removeItem('user');
-        console.log('✅ Token und User aus localStorage gelöscht');
+        console.log('✅ User aus localStorage gelöscht');
     } catch (e) {
         console.warn('localStorage nicht verfügbar:', e);
     }
