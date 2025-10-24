@@ -147,25 +147,32 @@ async function performSearch(query) {
         if (response && typeof response === 'object') {
             // Flatten all results from all categories into a single array
             if (Array.isArray(response.timetables)) {
+                console.log('📋 Timetables found:', response.timetables.length);
                 results = results.concat(response.timetables);
             }
             if (Array.isArray(response.custom_hours)) {
+                console.log('📋 Custom hours found:', response.custom_hours.length);
                 results = results.concat(response.custom_hours);
             }
             if (Array.isArray(response.exams)) {
+                console.log('📋 Exams found:', response.exams.length);
                 results = results.concat(response.exams);
             }
             if (Array.isArray(response.rooms)) {
+                console.log('📋 Rooms found:', response.rooms.length);
                 results = results.concat(response.rooms);
             }
             if (Array.isArray(response.friends)) {
+                console.log('📋 Friends found:', response.friends.length);
                 results = results.concat(response.friends);
             }
         } else if (Array.isArray(response)) {
             // Fallback: if response is already an array
+            console.log('📋 Response is array:', response.length);
             results = response;
         }
 
+        console.log('📊 Total results:', results.length, results);
         searchResults = results;
         renderSearchResults(results, query);
     } catch (error) {
@@ -178,14 +185,18 @@ async function performSearch(query) {
  * Render search results
  */
 function renderSearchResults(results, query) {
+    console.log('🎨 Rendering search results:', results);
     const container = document.getElementById('searchResultsContainer');
     const loading = document.getElementById('searchLoadingIndicator');
+
+    console.log('📦 Container:', container, 'Loading:', loading);
 
     // Hide loading and show container
     loading?.classList.add('hidden');
     container?.classList.remove('hidden');
 
     if (!results || results.length === 0) {
+        console.log('⚠️ No results found');
         container.innerHTML = `
             <div class="text-center text-gray-500 py-12">
                 <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -206,6 +217,8 @@ function renderSearchResults(results, query) {
         room: results.filter(r => r.result_type === 'room'),
         friend: results.filter(r => r.result_type === 'friend')
     };
+
+    console.log('📊 Grouped results:', groupedResults);
 
     let html = `
         <div class="mb-4">
@@ -277,13 +290,15 @@ function renderResultSection(title, results, type) {
  */
 function renderResultItem(result, type) {
     const timeStr = result.start_time ? formatDateTime(result.start_time) : '';
+    const detailsStr = result.details || '';
+    const locationStr = result.location || '';
 
     return `
         <div class="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-shadow cursor-pointer" onclick="handleResultClick('${type}', ${result.id})">
             <div class="flex items-start justify-between">
                 <div class="flex-1">
-                    <h4 class="font-semibold text-gray-900 mb-1">${escapeHtml(result.name)}</h4>
-                    ${result.details ? `<p class="text-sm text-gray-600 mb-2">${escapeHtml(result.details)}</p>` : ''}
+                    <h4 class="font-semibold text-gray-900 mb-1">${escapeHtml(result.name || '')}</h4>
+                    ${detailsStr ? `<p class="text-sm text-gray-600 mb-2">${escapeHtml(detailsStr)}</p>` : ''}
                     <div class="flex flex-wrap items-center gap-3 text-xs text-gray-500">
                         ${timeStr ? `
                             <span class="flex items-center">
@@ -293,12 +308,12 @@ function renderResultItem(result, type) {
                                 ${timeStr}
                             </span>
                         ` : ''}
-                        ${result.location ? `
+                        ${locationStr ? `
                             <span class="flex items-center">
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
                                 </svg>
-                                ${escapeHtml(result.location)}
+                                ${escapeHtml(locationStr)}
                             </span>
                         ` : ''}
                     </div>
