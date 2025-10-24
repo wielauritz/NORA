@@ -44,40 +44,43 @@ main > div:first-child {
     flex-direction: column;
     justify-content: center;
     align-items: flex-start;
-    min-height: 120px;
+    min-height: 140px;
 }
 
 @media (min-width: 1024px) {
     main > div:first-child {
-        min-height: 200px;
-        margin-bottom: 3rem !important;
+        min-height: 240px;
+        margin-bottom: 4rem !important;
     }
 
     main > div:first-child h1 {
         font-size: 2.5rem !important;
-        line-height: 1.2 !important;
+        line-height: 1.3 !important;
+        margin-bottom: 0.5rem !important;
     }
 
     main > div:first-child p {
         font-size: 1.125rem !important;
+        margin: 0 !important;
     }
 }
 
 /* Fix navbar logo layout shift - reserve space before image loads */
+/* Logo aspect ratio is 898 x 250px (3.592:1) */
 nav img[src*="logo"] {
-    width: 32px;
     height: 32px;
-    aspect-ratio: auto;
+    width: auto;
+    aspect-ratio: 898 / 250;
     display: block;
 }
 
 /* Ensure navbar is properly aligned vertically */
 nav {
-    padding-top: max(0.5rem, env(safe-area-inset-top)) !important;
+    padding-bottom: 0.5rem !important;
 }
 
-nav .flex.justify-between {
-    align-items: center;
+nav > div {
+    width: 100%;
 }
 
 /* Glass Effect */

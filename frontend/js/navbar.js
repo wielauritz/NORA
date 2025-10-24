@@ -10,8 +10,8 @@
 function renderNavbar(activePage = '') {
     const navbarHTML = `
         <!-- Navigation -->
-        <nav class="glass-effect shadow-lg fixed top-0 left-0 right-0 z-50 w-full" style="padding-top: max(0.5rem, env(safe-area-inset-top));">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <nav class="glass-effect shadow-lg fixed top-0 left-0 right-0 z-50 w-full" style="padding-top: max(0.5rem, env(safe-area-inset-top)); display: flex; flex-direction: column; justify-content: center;">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
                 <div class="flex justify-between items-center h-12">
 
                     <!-- Logo -->
