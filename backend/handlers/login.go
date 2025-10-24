@@ -45,6 +45,9 @@ func Login(c *fiber.Ctx) error {
 		})
 	}
 
+	// Normalize email to lowercase
+	req.Mail = strings.ToLower(req.Mail)
+
 	// Find user in database
 	var user models.User
 	result := config.DB.Where("mail = ?", req.Mail).First(&user)
@@ -209,6 +212,9 @@ func RequestPasswordReset(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusNoContent)
 	}
 
+	// Normalize email to lowercase
+	req.Mail = strings.ToLower(req.Mail)
+
 	// Find user
 	var user models.User
 	if err := config.DB.Where("mail = ?", req.Mail).First(&user).Error; err != nil {
@@ -305,6 +311,9 @@ func ResendVerificationEmail(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return c.SendStatus(fiber.StatusNoContent)
 	}
+
+	// Normalize email to lowercase
+	req.Mail = strings.ToLower(req.Mail)
 
 	var user models.User
 	if err := config.DB.Where("mail = ?", req.Mail).First(&user).Error; err != nil {
