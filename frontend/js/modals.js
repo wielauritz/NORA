@@ -708,7 +708,12 @@ async function populateUpdateCustomHourForm(event) {
     document.getElementById('updateCustomHourEndTime').value = endTimeStr;
 
     // Set location type and value
-    if (event.room) {
+    // IMPORTANT: Check custom_location FIRST, because backend sets 'room' to custom_location value when custom_location exists
+    if (event.custom_location) {
+        document.querySelector('input[name="updateLocationType"][value="custom"]').checked = true;
+        toggleUpdateLocationType('custom');
+        document.getElementById('updateCustomHourCustomLocation').value = event.custom_location;
+    } else if (event.room) {
         document.querySelector('input[name="updateLocationType"][value="room"]').checked = true;
         toggleUpdateLocationType('room');
 
@@ -717,10 +722,6 @@ async function populateUpdateCustomHourForm(event) {
 
         // Then set the selected room
         document.getElementById('updateCustomHourRoom').value = event.room;
-    } else if (event.custom_location) {
-        document.querySelector('input[name="updateLocationType"][value="custom"]').checked = true;
-        toggleUpdateLocationType('custom');
-        document.getElementById('updateCustomHourCustomLocation').value = event.custom_location;
     }
 
     // Hide error
