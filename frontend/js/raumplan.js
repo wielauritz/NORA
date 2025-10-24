@@ -28,9 +28,9 @@ let roomOccupancyData = new Map(); // Map<room_number, occupancy_events[]>
  * Initialize raumplan page
  */
 async function initRaumplan() {
-    // Restore preloader if tab navigation triggered it
-    if (typeof restorePreloaderIfNeeded === 'function') {
-        restorePreloaderIfNeeded();
+    // Always show preloader on raumplan load
+    if (typeof showContentLoader === 'function') {
+        showContentLoader();
     }
 
     // Load user profile

@@ -130,13 +130,19 @@ function hideContentLoader() {
     const showTimeStr = sessionStorage.getItem('loaderShowTime');
     const showTime = showTimeStr ? parseInt(showTimeStr) : Date.now();
     const elapsed = Date.now() - showTime;
-    const minDuration = 800; // Minimum 800ms display time for visibility
+    const minDuration = 300; // Minimum 300ms display time for visibility
 
     function removeLoader() {
-        // Just remove the visible class to hide the preloader
+        // Hide the preloader
         const l = document.getElementById('content-loader');
         if (l) {
             l.classList.remove('visible');
+        }
+
+        // Show the main content
+        const main = document.querySelector('main');
+        if (main) {
+            main.style.display = 'block';
         }
 
         // Clear the sessionStorage timestamp
@@ -199,6 +205,12 @@ function restorePreloaderIfNeeded() {
     const loaderShowTime = sessionStorage.getItem('loaderShowTime');
     if (loaderShowTime) {
         showContentLoader();
+    } else {
+        // No preloader was triggered, just show the content directly
+        const main = document.querySelector('main');
+        if (main) {
+            main.style.display = 'block';
+        }
     }
 }
 

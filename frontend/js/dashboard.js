@@ -70,9 +70,9 @@ function nl2br(text) {
  */
 async function initDashboard() {
     try {
-        // Restore preloader if tab navigation triggered it
-        if (typeof restorePreloaderIfNeeded === 'function') {
-            restorePreloaderIfNeeded();
+        // Always show preloader on dashboard load (both initial load and tab navigation)
+        if (typeof showContentLoader === 'function') {
+            showContentLoader();
         }
 
         // Load user data

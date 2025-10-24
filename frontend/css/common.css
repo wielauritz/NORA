@@ -35,7 +35,31 @@ main {
     width: 100%;
     padding-top: 4.5rem !important;
     padding-bottom: 8.5rem !important;
-    margin: 0 !important;
+    margin: 0 auto !important;
+}
+
+/* Header styling - larger on desktop, centered vertically */
+main > div:first-child {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 180px;
+}
+
+@media (min-width: 1024px) {
+    main > div:first-child {
+        min-height: 240px;
+        margin-bottom: 3rem !important;
+    }
+
+    main > div:first-child h1 {
+        font-size: 2.5rem !important;
+        line-height: 1.2 !important;
+    }
+
+    main > div:first-child p {
+        font-size: 1.125rem !important;
+    }
 }
 
 /* Glass Effect */
