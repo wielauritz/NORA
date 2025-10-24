@@ -142,16 +142,25 @@ async function performSearch(query) {
         console.log('✅ Search results:', response);
 
         // Extract results from API response structure
-        // API returns: { query: "...", groups: [{group_type, group_name, results: [...], total_count}], total_results: N }
+        // API now returns: { timetables: [...], custom_hours: [...], exams: [...], rooms: [...], friends: [...] }
         let results = [];
-        if (response && response.groups && Array.isArray(response.groups)) {
-            // Flatten all results from all groups into a single array
-            results = response.groups.flatMap(group => {
-                if (group.results && Array.isArray(group.results)) {
-                    return group.results;
-                }
-                return [];
-            });
+        if (response && typeof response === 'object') {
+            // Flatten all results from all categories into a single array
+            if (Array.isArray(response.timetables)) {
+                results = results.concat(response.timetables);
+            }
+            if (Array.isArray(response.custom_hours)) {
+                results = results.concat(response.custom_hours);
+            }
+            if (Array.isArray(response.exams)) {
+                results = results.concat(response.exams);
+            }
+            if (Array.isArray(response.rooms)) {
+                results = results.concat(response.rooms);
+            }
+            if (Array.isArray(response.friends)) {
+                results = results.concat(response.friends);
+            }
         } else if (Array.isArray(response)) {
             // Fallback: if response is already an array
             results = response;
@@ -190,9 +199,9 @@ function renderSearchResults(results, query) {
     }
 
     // Group results by type
-    // Note: API returns 'timetable' and 'custom_hour' which we treat as 'event'
+    // Note: Backend returns 'event' for timetables and 'custom_hour' for custom hours
     const groupedResults = {
-        event: results.filter(r => r.result_type === 'event' || r.result_type === 'timetable' || r.result_type === 'custom_hour'),
+        event: results.filter(r => r.result_type === 'event' || r.result_type === 'custom_hour'),
         exam: results.filter(r => r.result_type === 'exam'),
         room: results.filter(r => r.result_type === 'room'),
         friend: results.filter(r => r.result_type === 'friend')
