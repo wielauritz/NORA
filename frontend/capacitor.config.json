@@ -1,6 +1,6 @@
 {
   "appId": "de.nora.nak",
-  "appName": "NORA Stundenplan",
+  "appName": "NORA",
   "webDir": "www",
   "bundledWebRuntime": false,
   "plugins": {

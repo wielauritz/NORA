@@ -188,11 +188,13 @@ function renderSearchResults(results, query) {
     console.log('🎨 Rendering search results:', results);
     const container = document.getElementById('searchResultsContainer');
     const loading = document.getElementById('searchLoadingIndicator');
+    const mobileLoading = document.getElementById('searchMobileLoadingIndicator');
 
     console.log('📦 Container:', container, 'Loading:', loading);
 
     // Hide loading and show container
     loading?.classList.add('hidden');
+    mobileLoading?.classList.add('hidden');
     container?.classList.remove('hidden');
 
     if (!results || results.length === 0) {
@@ -365,9 +367,11 @@ function handleResultClick(type, id) {
 function showSearchLoading() {
     const container = document.getElementById('searchResultsContainer');
     const loading = document.getElementById('searchLoadingIndicator');
+    const mobileLoading = document.getElementById('searchMobileLoadingIndicator');
 
     if (container) container.classList.add('hidden');
     if (loading) loading.classList.remove('hidden');
+    if (mobileLoading) mobileLoading.classList.remove('hidden');
 }
 
 /**
@@ -376,8 +380,10 @@ function showSearchLoading() {
 function showEmptyState() {
     const container = document.getElementById('searchResultsContainer');
     const loading = document.getElementById('searchLoadingIndicator');
+    const mobileLoading = document.getElementById('searchMobileLoadingIndicator');
 
     if (loading) loading.classList.add('hidden');
+    if (mobileLoading) mobileLoading.classList.add('hidden');
     if (container) {
         container.classList.remove('hidden');
         container.innerHTML = `
@@ -398,8 +404,10 @@ function showEmptyState() {
 function showSearchError(message) {
     const container = document.getElementById('searchResultsContainer');
     const loading = document.getElementById('searchLoadingIndicator');
+    const mobileLoading = document.getElementById('searchMobileLoadingIndicator');
 
     if (loading) loading.classList.add('hidden');
+    if (mobileLoading) mobileLoading.classList.add('hidden');
     if (container) {
         container.classList.remove('hidden');
         container.innerHTML = `
@@ -447,6 +455,16 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+/**
+ * Logout function - needed for search page navbar
+ * Uses same confirm dialog as dashboard for consistency
+ */
+function logout() {
+    showConfirmDialog('Möchtest du dich wirklich abmelden?', async () => {
+        await AuthAPI.logout();
+    });
 }
 
 /**
