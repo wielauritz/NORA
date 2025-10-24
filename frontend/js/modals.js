@@ -1104,6 +1104,11 @@ async function loadRoomsForExam() {
             option.value = room.room_number;
             option.textContent = `${room.room_number}${room.room_name ? ' - ' + room.room_name : ''}`;
             select.appendChild(option);
+
+            // Automatically select Audimax if available
+            if (room.room_name && room.room_name.toLowerCase() === 'audimax') {
+                option.selected = true;
+            }
         });
     } catch (error) {
         console.error('Error loading rooms:', error);
