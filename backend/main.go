@@ -151,6 +151,10 @@ func setupProtectedRoutes(app *fiber.App) {
 	protected.Post("/zenturie", handlers.SetZenturie)
 	protected.Get("/courses", handlers.GetCourses)
 
+	// User Settings
+	protected.Get("/user_settings", handlers.GetUserSettings)
+	protected.Post("/user_settings", handlers.UpdateUserSettings)
+
 	// Events & Timetables
 	protected.Get("/events", handlers.GetEvents)
 	protected.Get("/exams", handlers.GetExams)

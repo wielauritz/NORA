@@ -78,6 +78,7 @@ func AutoMigrate() error {
 		&models.Exam{},
 		&models.Friend{},
 		&models.FriendRequest{},
+		&models.UserSettings{},
 	)
 
 	if err != nil {

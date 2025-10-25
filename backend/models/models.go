@@ -179,3 +179,16 @@ type FriendRequest struct {
 func (FriendRequest) TableName() string {
 	return "friend_requests"
 }
+
+// UserSettings represents user-specific settings
+type UserSettings struct {
+	ID                     uint      `gorm:"primaryKey;autoIncrement" json:"id"`
+	UserID                 uint      `gorm:"uniqueIndex;not null" json:"user_id"`
+	Theme                  string    `gorm:"type:varchar(20);not null;default:'auto';check:theme IN ('auto', 'hell', 'dunkel')" json:"theme"`
+	NotificationPreference string    `gorm:"type:varchar(20);not null;default:'beide';check:notification_preference IN ('email', 'mobile', 'beide', 'keine')" json:"notification_preference"`
+	CreatedAt              time.Time `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt              time.Time `gorm:"autoUpdateTime" json:"updated_at"`
+
+	// Relationships
+	User *User `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE" json:"-"`
+}

@@ -24,6 +24,8 @@ tags:
     description: Login, Registrierung und Passwort-Reset
   - name: User
     description: Benutzer-Informationen
+  - name: User Settings
+    description: Benutzer-Einstellungen (Design, Benachrichtigungen, Zenturie)
   - name: Timetable
     description: Stundenpläne und Events
   - name: Friends V1
@@ -370,6 +372,105 @@ paths:
                   $ref: '#/components/schemas/CourseResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
+
+  # ============================================================================
+  # USER SETTINGS
+  # ============================================================================
+  /v1/user_settings:
+    get:
+      tags:
+        - User Settings
+      summary: Get User Settings
+      description: |
+        Returns all user settings including:
+        - Zenturie ID from users table
+        - Theme preference (auto, hell, dunkel)
+        - Notification preference (email, mobile, beide, keine)
+
+        Creates default settings if they don't exist.
+      parameters:
+        - $ref: '#/components/parameters/SessionID'
+      responses:
+        '200':
+          description: User settings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSettingsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - User Settings
+      summary: Update User Settings
+      description: |
+        Updates user settings. All fields are optional.
+
+        - `zenturie_id`: Updates the user's zenturie in the users table
+        - `theme`: Updates the design theme (auto, hell, dunkel)
+        - `notification_preference`: Updates notification settings (email, mobile, beide, keine)
+      parameters:
+        - $ref: '#/components/parameters/SessionID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                zenturie_id:
+                  type: integer
+                  nullable: true
+                  example: 1
+                  description: Zenturie ID (null or 0 to unset)
+                theme:
+                  type: string
+                  enum: [auto, hell, dunkel]
+                  example: dunkel
+                  description: UI theme preference
+                notification_preference:
+                  type: string
+                  enum: [email, mobile, beide, keine]
+                  example: email
+                  description: Notification delivery preference
+      responses:
+        '200':
+          description: Settings updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          description: Invalid request (invalid theme, notification preference, or zenturie_id)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_theme:
+                  value:
+                    detail: "Invalid theme. Must be one of: auto, hell, dunkel"
+                invalid_notification:
+                  value:
+                    detail: "Invalid notification preference. Must be one of: email, mobile, beide, keine"
+                invalid_zenturie:
+                  value:
+                    detail: "Invalid zenturie_id"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   # ============================================================================
   # TIMETABLE & EVENTS
@@ -1080,6 +1181,25 @@ components:
         year:
           type: string
           example: "2024"
+
+    UserSettingsResponse:
+      type: object
+      properties:
+        zenturie_id:
+          type: integer
+          nullable: true
+          example: 1
+          description: User's zenturie ID (from users table)
+        theme:
+          type: string
+          enum: [auto, hell, dunkel]
+          example: auto
+          description: UI theme preference
+        notification_preference:
+          type: string
+          enum: [email, mobile, beide, keine]
+          example: beide
+          description: Notification delivery preference
 
     ZenturieResponse:
       type: object
