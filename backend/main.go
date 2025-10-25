@@ -125,13 +125,13 @@ func setupPublicRoutes(app *fiber.App) {
 		})
 	})
 
-	// Login Service
-	app.Post("/v1/login", handlers.Login)
+	// Login Service (with rate limiting)
+	app.Post("/v1/login", middleware.LoginRateLimiter(), handlers.Login)
 	app.Get("/v1/verify", handlers.VerifyEmail)
-	app.Post("/v1/reset", handlers.RequestPasswordReset)
+	app.Post("/v1/reset", middleware.PasswordResetRateLimiter(), handlers.RequestPasswordReset)
 	app.Get("/v1/reset-password", handlers.ShowPasswordResetForm)
 	app.Post("/v1/reset-confirm", handlers.ConfirmPasswordReset)
-	app.Post("/v1/resend-email", handlers.ResendVerificationEmail)
+	app.Post("/v1/resend-email", middleware.ResendEmailRateLimiter(), handlers.ResendVerificationEmail)
 
 	// Public endpoints (no auth required)
 	app.Get("/v1/rooms", handlers.GetRooms)
@@ -172,8 +172,8 @@ func setupProtectedRoutes(app *fiber.App) {
 	// Exams
 	protected.Post("/add", handlers.AddExam)
 
-	// Search
-	protected.Get("/search", handlers.Search)
+	// Search (with rate limiting)
+	protected.Get("/search", middleware.SearchRateLimiter(), handlers.Search)
 
 	// Scheduler status
 	protected.Get("/scheduler/status", handlers.GetSchedulerStatus)
@@ -182,13 +182,13 @@ func setupProtectedRoutes(app *fiber.App) {
 	protectedV2 := app.Group("/v2", middleware.AuthMiddleware)
 
 	// Friends V2 (bidirectional friend requests)
-	protectedV2.Post("/friends/request", handlers.SendFriendRequest)     // Send friend request
-	protectedV2.Get("/friends/requests", handlers.GetFriendRequests)     // Get incoming/outgoing requests
-	protectedV2.Post("/friends/accept", handlers.AcceptFriendRequest)    // Accept request
-	protectedV2.Post("/friends/reject", handlers.RejectFriendRequest)    // Reject request
-	protectedV2.Delete("/friends/request", handlers.CancelFriendRequest) // Cancel outgoing request
-	protectedV2.Get("/friends", handlers.GetFriendsV2)                   // Get accepted friends
-	protectedV2.Delete("/friends", handlers.RemoveFriendV2)              // Remove friend
+	protectedV2.Post("/friends/request", middleware.FriendRequestRateLimiter(), handlers.SendFriendRequest) // Send friend request (with rate limiting)
+	protectedV2.Get("/friends/requests", handlers.GetFriendRequests)                                        // Get incoming/outgoing requests
+	protectedV2.Post("/friends/accept", handlers.AcceptFriendRequest)                                       // Accept request
+	protectedV2.Post("/friends/reject", handlers.RejectFriendRequest)                                       // Reject request
+	protectedV2.Delete("/friends/request", handlers.CancelFriendRequest)                                    // Cancel outgoing request
+	protectedV2.Get("/friends", handlers.GetFriendsV2)                                                      // Get accepted friends
+	protectedV2.Delete("/friends", handlers.RemoveFriendV2)                                                 // Remove friend
 }
 
 func customErrorHandler(c *fiber.Ctx, err error) error {
