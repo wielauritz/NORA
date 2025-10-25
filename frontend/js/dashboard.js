@@ -70,6 +70,11 @@ function nl2br(text) {
  */
 async function initDashboard() {
     try {
+        // Always show preloader on dashboard load (both initial load and tab navigation)
+        if (typeof showContentLoader === 'function') {
+            showContentLoader();
+        }
+
         // Load user data
         await loadUserData();
 
