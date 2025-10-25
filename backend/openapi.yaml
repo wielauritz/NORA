@@ -1,0 +1,1424 @@
+openapi: 3.0.3
+info:
+  title: NORA-NAK Stundenplan API
+  description: |
+    API für das NORA-NAK Stundenplan System.
+
+    Die API bietet zwei Versionen:
+    - **V1**: Bestehende API (vollständig funktional)
+    - **V2**: Neue Features mit bidirektionalem Freundschaftssystem
+
+    ## Authentifizierung
+    Die meisten Endpunkte erfordern eine Authentifizierung über `session_id` Query-Parameter.
+  version: 2.0.0
+  contact:
+    name: NORA-NAK Support
+    url: https://nora-nak.de
+
+servers:
+  - url: http://localhost:3000
+    description: Development Server
+
+tags:
+  - name: Authentication
+    description: Login, Registrierung und Passwort-Reset
+  - name: User
+    description: Benutzer-Informationen
+  - name: Timetable
+    description: Stundenpläne und Events
+  - name: Friends V1
+    description: Freunde-System (V1 - deprecated)
+  - name: Friends V2
+    description: Bidirektionales Freundschaftssystem (V2)
+  - name: Custom Hours
+    description: Benutzerdefinierte Termine
+  - name: Exams
+    description: Prüfungsverwaltung
+  - name: Rooms
+    description: Rauminformationen
+  - name: Search
+    description: Suche über alle Entitäten
+  - name: System
+    description: System-Status und Health Checks
+
+security:
+  - sessionAuth: []
+
+paths:
+  # ============================================================================
+  # SYSTEM
+  # ============================================================================
+  /:
+    get:
+      tags:
+        - System
+      summary: Redirect to Dashboard
+      description: Redirects to the NORA-NAK dashboard
+      security: []
+      responses:
+        '301':
+          description: Redirect to dashboard
+
+  /v1/health:
+    get:
+      tags:
+        - System
+      summary: Health Check
+      description: Check if API is running
+      security: []
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: NORA API is running
+                  version:
+                    type: string
+                    example: 2.0.0
+
+  /v1/app-version:
+    get:
+      tags:
+        - System
+      summary: Get App Version
+      description: Returns current app version and update URLs for mobile apps
+      security: []
+      responses:
+        '200':
+          description: App version information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  version:
+                    type: string
+                    example: 1.0.0
+                  required_version:
+                    type: string
+                    example: 1.0.0
+                  update_url_android:
+                    type: string
+                    example: https://play.google.com/store/apps/details?id=de.nora.nak
+                  update_url_ios:
+                    type: string
+                    example: https://apps.apple.com/app/nora-stundenplan/id123456789
+
+  # ============================================================================
+  # AUTHENTICATION
+  # ============================================================================
+  /v1/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login / Auto-Register
+      description: |
+        Login mit @nordakademie.de E-Mail.
+        Erstellt automatisch einen Account beim ersten Login.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - mail
+                - passwort
+              properties:
+                mail:
+                  type: string
+                  format: email
+                  example: max.mustermann@nordakademie.de
+                passwort:
+                  type: string
+                  format: password
+                  example: MySecurePassword123
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Login erfolgreich
+                  token:
+                    type: string
+                    example: abc123-session-id-xyz789
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/verify:
+    get:
+      tags:
+        - Authentication
+      summary: Verify Email
+      description: Verify user email with UUID from verification email
+      security: []
+      parameters:
+        - name: uuid
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Email verified successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /v1/reset:
+    post:
+      tags:
+        - Authentication
+      summary: Request Password Reset
+      description: Send password reset email to user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - mail
+              properties:
+                mail:
+                  type: string
+                  format: email
+                  example: max.mustermann@nordakademie.de
+      responses:
+        '200':
+          description: Reset email sent
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v1/reset-password:
+    get:
+      tags:
+        - Authentication
+      summary: Show Password Reset Form
+      description: Display password reset form (HTML)
+      security: []
+      parameters:
+        - name: uuid
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: HTML form displayed
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /v1/reset-confirm:
+    post:
+      tags:
+        - Authentication
+      summary: Confirm Password Reset
+      description: Set new password with reset UUID
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - uuid
+                - new_password
+              properties:
+                uuid:
+                  type: string
+                  format: uuid
+                new_password:
+                  type: string
+                  format: password
+                  minLength: 8
+      responses:
+        '200':
+          description: Password reset successful
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /v1/resend-email:
+    post:
+      tags:
+        - Authentication
+      summary: Resend Verification Email
+      description: Resend email verification link
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - mail
+              properties:
+                mail:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Verification email sent
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================================================
+  # USER
+  # ============================================================================
+  /v1/user:
+    get:
+      tags:
+        - User
+      summary: Get Current User
+      description: Returns information about the authenticated user
+      parameters:
+        - $ref: '#/components/parameters/SessionID'
+      responses:
+        '200':
+          description: User information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/zenturie:
+    post:
+      tags:
+        - User
+      summary: Set User Zenturie
+      description: Set or update user's zenturie (class/cohort)
+      parameters:
+        - $ref: '#/components/parameters/SessionID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - zenturie
+              properties:
+                zenturie:
+                  type: string
+                  example: I24c
+      responses:
+        '200':
+          description: Zenturie set successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/all_zenturie:
+    get:
+      tags:
+        - User
+      summary: Get All Zenturien
+      description: Returns list of all available zenturien
+      security: []
+      responses:
+        '200':
+          description: List of zenturien
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ZenturieResponse'
+
+  /v1/courses:
+    get:
+      tags:
+        - User
+      summary: Get User Courses
+      description: Returns all courses for user's zenturie
+      parameters:
+        - $ref: '#/components/parameters/SessionID'
+      responses:
+        '200':
+          description: List of courses
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CourseResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ============================================================================
+  # TIMETABLE & EVENTS
+  # ============================================================================
+  /v1/events:
+    get:
+      tags:
+        - Timetable
+      summary: Get Events
+      description: |
+        Returns timetable events, custom hours, and exams for a given time range.
+        Can optionally include friend's timetables.
+      parameters:
+        - $ref: '#/components/parameters/SessionID'
+        - name: start
+          in: query
+          required: true
+          description: Start date (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+            example: 2024-01-01T00:00:00Z
+        - name: end
+          in: query
+          required: true
+          description: End date (ISO 8601)
+          schema:
+            type: string
+            format: date-time
+            example: 2024-01-31T23:59:59Z
+        - name: friend_user_id
+          in: query
+          required: false
+          description: Include friend's timetable events
+          schema:
+            type: integer
+            example: 42
+      responses:
+        '200':
+          description: List of events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/view:
+    get:
+      tags:
+        - Timetable
+      summary: View Zenturie Timetable (Public)
+      description: Public endpoint to view timetable for a specific zenturie
+      security: []
+      parameters:
+        - name: zenturie
+          in: query
+          required: true
+          schema:
+            type: string
+            example: I24c
+      responses:
+        '200':
+          description: Timetable events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TimetableEvent'
+
+  /v1/subscription/{uuid}:
+    get:
+      tags:
+        - Timetable
+      summary: ICS Subscription Feed
+      description: Returns ICS calendar feed for calendar apps
+      security: []
+      parameters:
+        - name: uuid
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: ICS calendar file
+          content:
+            text/calendar:
+              schema:
+                type: string
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================================================
+  # FRIENDS V1 (DEPRECATED)
+  # ============================================================================
+  /v1/friends:
+    get:
+      tags:
+        - Friends V1
+      summary: Get Friends (V1 - Deprecated)
+      deprecated: true
+      description: |
+        **DEPRECATED**: Use `/v2/friends` instead.
+        Returns list of friends (V1 direct friendship)
+      parameters:
+        - $ref: '#/components/parameters/SessionID'
+      responses:
+        '200':
+          description: List of friends
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FriendResponse'
+
+    post:
+      tags:
+        - Friends V1
+      summary: Add Friend (V1 - Deprecated)
+      deprecated: true
+      description: |
+        **DEPRECATED**: Use `/v2/friends/request` instead.
+        Adds friend directly without request (V1)
+      parameters:
+        - $ref: '#/components/parameters/SessionID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - friend_mail
+              properties:
+                friend_mail:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Friend added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+    delete:
+      tags:
+        - Friends V1
+      summary: Remove Friend (V1 - Deprecated)
+      deprecated: true
+      description: |
+        **DEPRECATED**: Use `/v2/friends` instead.
+      parameters:
+        - $ref: '#/components/parameters/SessionID'
+        - name: friend_user_id
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Friend removed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  # ============================================================================
+  # FRIENDS V2 (NEW)
+  # ============================================================================
+  /v2/friends/request:
+    post:
+      tags:
+        - Friends V2
+      summary: Send Friend Request
+      description: Send a bidirectional friend request to another user
+      parameters:
+        - $ref: '#/components/parameters/SessionID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - friend_mail
+              properties:
+                friend_mail:
+                  type: string
+                  format: email
+                  example: anna.schmidt@nordakademie.de
+      responses:
+        '200':
+          description: Friend request sent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Friends V2
+      summary: Cancel Friend Request
+      description: Cancel an outgoing pending friend request
+      parameters:
+        - $ref: '#/components/parameters/SessionID'
+        - name: request_id
+          in: query
+          required: true
+          schema:
+            type: integer
+            example: 123
+      responses:
+        '200':
+          description: Request cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /v2/friends/requests:
+    get:
+      tags:
+        - Friends V2
+      summary: Get Friend Requests
+      description: Get all incoming and outgoing friend requests
+      parameters:
+        - $ref: '#/components/parameters/SessionID'
+      responses:
+        '200':
+          description: Friend requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FriendRequestsResponse'
+
+  /v2/friends/accept:
+    post:
+      tags:
+        - Friends V2
+      summary: Accept Friend Request
+      description: Accept an incoming friend request
+      parameters:
+        - $ref: '#/components/parameters/SessionID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - request_id
+              properties:
+                request_id:
+                  type: integer
+                  example: 123
+      responses:
+        '200':
+          description: Request accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v2/friends/reject:
+    post:
+      tags:
+        - Friends V2
+      summary: Reject Friend Request
+      description: Reject an incoming friend request
+      parameters:
+        - $ref: '#/components/parameters/SessionID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - request_id
+              properties:
+                request_id:
+                  type: integer
+                  example: 123
+      responses:
+        '200':
+          description: Request rejected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v2/friends:
+    get:
+      tags:
+        - Friends V2
+      summary: Get Accepted Friends
+      description: Get all accepted friends
+      parameters:
+        - $ref: '#/components/parameters/SessionID'
+      responses:
+        '200':
+          description: List of friends
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AcceptedFriendResponse'
+
+    delete:
+      tags:
+        - Friends V2
+      summary: Remove Friend
+      description: Remove an accepted friend
+      parameters:
+        - $ref: '#/components/parameters/SessionID'
+        - name: friend_user_id
+          in: query
+          required: true
+          schema:
+            type: integer
+            example: 42
+      responses:
+        '200':
+          description: Friend removed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================================================
+  # CUSTOM HOURS
+  # ============================================================================
+  /v1/create:
+    post:
+      tags:
+        - Custom Hours
+      summary: Create Custom Hour
+      description: Create a custom appointment/event
+      parameters:
+        - $ref: '#/components/parameters/SessionID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - start_time
+                - end_time
+              properties:
+                title:
+                  type: string
+                  example: Lerngruppe Algorithmen
+                description:
+                  type: string
+                  example: Vorbereitung für Klausur
+                start_time:
+                  type: string
+                  format: date-time
+                  example: 2024-01-15T14:00:00Z
+                end_time:
+                  type: string
+                  format: date-time
+                  example: 2024-01-15T16:00:00Z
+                room:
+                  type: string
+                  example: D102
+                custom_location:
+                  type: string
+                  example: Online via Teams
+      responses:
+        '200':
+          description: Custom hour created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /v1/update:
+    post:
+      tags:
+        - Custom Hours
+      summary: Update Custom Hour
+      description: Update an existing custom hour
+      parameters:
+        - $ref: '#/components/parameters/SessionID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - custom_hour_id
+              properties:
+                custom_hour_id:
+                  type: integer
+                  example: 123
+                title:
+                  type: string
+                description:
+                  type: string
+                start_time:
+                  type: string
+                  format: date-time
+                end_time:
+                  type: string
+                  format: date-time
+                room:
+                  type: string
+                custom_location:
+                  type: string
+      responses:
+        '200':
+          description: Custom hour updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /v1/delete:
+    delete:
+      tags:
+        - Custom Hours
+      summary: Delete Custom Hour
+      description: Delete a custom hour
+      parameters:
+        - $ref: '#/components/parameters/SessionID'
+        - name: custom_hour_id
+          in: query
+          required: true
+          schema:
+            type: integer
+            example: 123
+      responses:
+        '200':
+          description: Custom hour deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  # ============================================================================
+  # EXAMS
+  # ============================================================================
+  /v1/exams:
+    get:
+      tags:
+        - Exams
+      summary: Get User Exams
+      description: Get all exams for the authenticated user
+      parameters:
+        - $ref: '#/components/parameters/SessionID'
+      responses:
+        '200':
+          description: List of exams
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExamResponse'
+
+  /v1/add:
+    post:
+      tags:
+        - Exams
+      summary: Add Exam
+      description: Add a new exam
+      parameters:
+        - $ref: '#/components/parameters/SessionID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - course
+                - start_time
+                - duration
+              properties:
+                course:
+                  type: string
+                  example: Algorithmen und Datenstrukturen
+                start_time:
+                  type: string
+                  format: date-time
+                  example: 2024-02-15T09:00:00Z
+                duration:
+                  type: integer
+                  enum: [30, 45, 60, 90, 120]
+                  example: 90
+                room:
+                  type: string
+                  example: D102
+      responses:
+        '200':
+          description: Exam added
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  # ============================================================================
+  # ROOMS
+  # ============================================================================
+  /v1/rooms:
+    get:
+      tags:
+        - Rooms
+      summary: Get All Rooms
+      description: Returns list of all rooms
+      security: []
+      responses:
+        '200':
+          description: List of rooms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RoomResponse'
+
+  /v1/room:
+    get:
+      tags:
+        - Rooms
+      summary: Get Room Details
+      description: Get detailed information about a specific room including occupancy
+      security: []
+      parameters:
+        - name: room_number
+          in: query
+          required: true
+          schema:
+            type: string
+            example: D102
+      responses:
+        '200':
+          description: Room details with occupancy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoomDetailResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v1/free-rooms:
+    get:
+      tags:
+        - Rooms
+      summary: Get Free Rooms
+      description: Find rooms that are free in a given time range
+      security: []
+      parameters:
+        - name: start_time
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+            example: 2024-01-15T14:00:00Z
+        - name: end_time
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+            example: 2024-01-15T16:00:00Z
+      responses:
+        '200':
+          description: List of free rooms
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FreeRoomsResponse'
+
+  # ============================================================================
+  # SEARCH
+  # ============================================================================
+  /v1/search:
+    get:
+      tags:
+        - Search
+      summary: Global Search
+      description: Search across timetables, custom hours, exams, rooms, and friends
+      parameters:
+        - $ref: '#/components/parameters/SessionID'
+        - name: parameter
+          in: query
+          required: true
+          description: Search query
+          schema:
+            type: string
+            example: Algorithmen
+      responses:
+        '200':
+          description: Grouped search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+
+  # ============================================================================
+  # SCHEDULER
+  # ============================================================================
+  /v1/scheduler/status:
+    get:
+      tags:
+        - System
+      summary: Get Scheduler Status
+      description: Returns status of the background scheduler
+      parameters:
+        - $ref: '#/components/parameters/SessionID'
+      responses:
+        '200':
+          description: Scheduler status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  running:
+                    type: boolean
+                  last_run:
+                    type: string
+                    format: date-time
+                  next_run:
+                    type: string
+                    format: date-time
+
+# ============================================================================
+# COMPONENTS
+# ============================================================================
+components:
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: query
+      name: session_id
+      description: Session ID obtained from login
+
+  parameters:
+    SessionID:
+      name: session_id
+      in: query
+      required: true
+      description: Session ID for authentication
+      schema:
+        type: string
+        example: abc123-session-id-xyz789
+
+  schemas:
+    # User Schemas
+    UserResponse:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          example: 42
+        initials:
+          type: string
+          example: MM
+        first_name:
+          type: string
+          example: Max
+        last_name:
+          type: string
+          example: Mustermann
+        subscription_uuid:
+          type: string
+          format: uuid
+        zenturie:
+          type: string
+          example: I24c
+        year:
+          type: string
+          example: "2024"
+
+    ZenturieResponse:
+      type: object
+      properties:
+        zenturie:
+          type: string
+          example: I24c
+        year:
+          type: string
+          example: "2024"
+
+    CourseResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 123
+        module_number:
+          type: string
+          example: I110
+        name:
+          type: string
+          example: Algorithmen und Datenstrukturen
+
+    # Event Schemas
+    EventResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        event_type:
+          type: string
+          enum: [timetable, custom_hour, exam, friend_timetable]
+        title:
+          type: string
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+        location:
+          type: string
+        description:
+          type: string
+        color:
+          type: string
+        borderColor:
+          type: string
+
+    TimetableEvent:
+      type: object
+      properties:
+        id:
+          type: integer
+        summary:
+          type: string
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        location:
+          type: string
+        professor:
+          type: string
+        course_type:
+          type: string
+
+    # Friend Schemas V1
+    FriendResponse:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          example: 42
+        zenturie:
+          type: string
+          example: I24c
+        first_name:
+          type: string
+          example: Max
+        last_name:
+          type: string
+          example: Mustermann
+        initials:
+          type: string
+          example: MM
+
+    # Friend Schemas V2
+    FriendRequestResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 123
+        requester_id:
+          type: integer
+          example: 42
+        receiver_id:
+          type: integer
+          example: 67
+        status:
+          type: string
+          enum: [pending, accepted, rejected]
+          example: pending
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        user_id:
+          type: integer
+          description: The other user's ID
+          example: 67
+        first_name:
+          type: string
+          example: Anna
+        last_name:
+          type: string
+          example: Schmidt
+        initials:
+          type: string
+          example: AS
+        zenturie:
+          type: string
+          example: I24b
+
+    FriendRequestsResponse:
+      type: object
+      properties:
+        incoming:
+          type: array
+          description: Requests received by current user
+          items:
+            $ref: '#/components/schemas/FriendRequestResponse'
+        outgoing:
+          type: array
+          description: Requests sent by current user
+          items:
+            $ref: '#/components/schemas/FriendRequestResponse'
+
+    AcceptedFriendResponse:
+      type: object
+      properties:
+        user_id:
+          type: integer
+          example: 42
+        first_name:
+          type: string
+          example: Max
+        last_name:
+          type: string
+          example: Mustermann
+        initials:
+          type: string
+          example: MM
+        zenturie:
+          type: string
+          example: I24c
+
+    # Exam Schemas
+    ExamResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        course_name:
+          type: string
+        module_number:
+          type: string
+        start_time:
+          type: string
+          format: date-time
+        duration:
+          type: integer
+          example: 90
+        is_verified:
+          type: boolean
+        room:
+          type: string
+
+    # Room Schemas
+    RoomResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        room_number:
+          type: string
+          example: D102
+        building:
+          type: string
+          example: D
+        floor:
+          type: string
+          example: "1"
+        room_name:
+          type: string
+          example: Hörsaal
+
+    RoomOccupancyEvent:
+      type: object
+      properties:
+        event_type:
+          type: string
+          enum: [timetable, exam, custom]
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        details:
+          type: string
+
+    RoomDetailResponse:
+      type: object
+      properties:
+        room:
+          $ref: '#/components/schemas/RoomResponse'
+        occupancy:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoomOccupancyEvent'
+
+    FreeRoomsResponse:
+      type: object
+      properties:
+        free_rooms:
+          type: array
+          items:
+            $ref: '#/components/schemas/RoomResponse'
+        total_count:
+          type: integer
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+
+    # Search Schemas
+    SearchResult:
+      type: object
+      properties:
+        result_type:
+          type: string
+          enum: [event, custom_hour, exam, room, friend]
+        id:
+          type: integer
+        name:
+          type: string
+        details:
+          type: string
+        start_time:
+          type: string
+          format: date-time
+        location:
+          type: string
+        match_percentage:
+          type: number
+          format: float
+          description: Match percentage (0-100)
+
+    SearchResponse:
+      type: object
+      properties:
+        timetables:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchResult'
+        custom_hours:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchResult'
+        exams:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchResult'
+        rooms:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchResult'
+        friends:
+          type: array
+          items:
+            $ref: '#/components/schemas/SearchResult'
+
+    # Generic Schemas
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Operation successful
+
+    ErrorResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+          example: Error message
+
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            detail: Invalid request parameters
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            detail: Invalid or missing session_id
+
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            detail: You don't have permission to perform this action
+
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            detail: Resource not found
