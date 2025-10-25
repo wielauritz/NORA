@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"html/template"
+	"log"
 	"time"
 
 	"github.com/nora-nak/backend/config"
@@ -20,12 +21,11 @@ func NewEmailService() *EmailService {
 
 // SendVerificationEmail sends an email verification link
 func (e *EmailService) SendVerificationEmail(toEmail, firstName, verifyUUID string) error {
-	fmt.Printf("[EMAIL] Attempting to send verification email to: %s\n", toEmail)
+	log.Printf("[EMAIL] Sending verification email")
 	subject := "NORA - E-Mail Bestätigung"
 	// Link should go to backend API endpoint which handles verification and redirects to frontend
 	apiURL := "https://api.new.nora-nak.de"
 	verifyLink := fmt.Sprintf("%s/v1/verify?uuid=%s", apiURL, verifyUUID)
-	fmt.Printf("[EMAIL] Verification link: %s\n", verifyLink)
 
 	htmlBody := fmt.Sprintf(`
 <!DOCTYPE html>
@@ -210,13 +210,11 @@ func (e *EmailService) SendICSImportNotification(filesDownloaded, eventsCreated,
 
 // sendEmail sends an email via SMTP
 func (e *EmailService) sendEmail(to, subject, htmlBody string) error {
-	fmt.Printf("[EMAIL] Preparing to send email to: %s\n", to)
-	fmt.Printf("[EMAIL] Subject: %s\n", subject)
-	fmt.Printf("[EMAIL] SMTP Config: Host=%s, Port=%s, User=%s, From=%s\n",
+	log.Printf("[EMAIL] Preparing to send email")
+	log.Printf("[EMAIL] Subject: %s", subject)
+	log.Printf("[EMAIL] SMTP Config: Host=%s, Port=%s",
 		config.AppConfig.SMTPHost,
-		config.AppConfig.SMTPPort,
-		config.AppConfig.SMTPUser,
-		config.AppConfig.SMTPFrom)
+		config.AppConfig.SMTPPort)
 
 	m := gomail.NewMessage()
 	m.SetHeader("From", config.AppConfig.SMTPFrom)
@@ -231,7 +229,7 @@ func (e *EmailService) sendEmail(to, subject, htmlBody string) error {
 		smtpPort = 587 // Default to STARTTLS port
 	}
 
-	fmt.Printf("[EMAIL] Using port: %d, SSL: %v\n", smtpPort, smtpPort == 465)
+	log.Printf("[EMAIL] Using port: %d, SSL: %v", smtpPort, smtpPort == 465)
 
 	d := gomail.NewDialer(
 		config.AppConfig.SMTPHost,
@@ -245,13 +243,13 @@ func (e *EmailService) sendEmail(to, subject, htmlBody string) error {
 		d.SSL = true
 	}
 
-	fmt.Printf("[EMAIL] Attempting to dial and send...\n")
+	log.Printf("[EMAIL] Attempting to dial and send")
 	if err := d.DialAndSend(m); err != nil {
-		fmt.Printf("[EMAIL ERROR] Failed to send email: %v\n", err)
+		log.Printf("[EMAIL ERROR] Failed to send email: %v", err)
 		return fmt.Errorf("failed to send email: %w", err)
 	}
 
-	fmt.Printf("[EMAIL SUCCESS] Email sent successfully to: %s\n", to)
+	log.Printf("[EMAIL SUCCESS] Email sent successfully")
 	return nil
 }
 

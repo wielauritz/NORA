@@ -30,6 +30,9 @@ type Config struct {
 
 	// Session expiration (days)
 	SessionExpirationDays int
+
+	// Logging
+	LogLevel string // debug, info, warning, error
 }
 
 var AppConfig *Config
@@ -51,6 +54,7 @@ func LoadConfig() *Config {
 		FrontendURL:           getEnvConfig("FRONTEND_URL", "https://nora-nak.de"),
 		ICSBaseURL:            getEnvConfig("ICS_BASE_URL", "https://cis.nordakademie.de/fileadmin/Infos/Stundenplaene"),
 		SessionExpirationDays: 7,
+		LogLevel:              getEnvConfig("LOG_LEVEL", "info"), // debug, info, warning, error
 	}
 
 	return AppConfig

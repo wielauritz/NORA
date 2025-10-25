@@ -2,6 +2,7 @@ package utils
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"time"
@@ -47,4 +48,76 @@ func LogICSImportStatistics(filesDownloaded, eventsCreated, eventsUpdated, event
 	}
 
 	return nil
+}
+
+// LogLevel represents logging levels
+type LogLevel int
+
+const (
+	LogLevelDebug LogLevel = iota
+	LogLevelInfo
+	LogLevelWarning
+	LogLevelError
+)
+
+// getLogLevel converts string to LogLevel
+func getLogLevel(level string) LogLevel {
+	switch level {
+	case "debug":
+		return LogLevelDebug
+	case "info":
+		return LogLevelInfo
+	case "warning", "warn":
+		return LogLevelWarning
+	case "error":
+		return LogLevelError
+	default:
+		return LogLevelInfo
+	}
+}
+
+// shouldLog checks if the message should be logged based on configured log level
+// Note: This requires config package, but to avoid circular imports,
+// we check environment variable directly
+func shouldLog(level LogLevel) bool {
+	logLevelStr := os.Getenv("LOG_LEVEL")
+	if logLevelStr == "" {
+		logLevelStr = "info"
+	}
+	configuredLevel := getLogLevel(logLevelStr)
+	return level >= configuredLevel
+}
+
+// LogDebug logs debug messages (only in debug mode)
+// Use for detailed troubleshooting information
+// WICHTIG: Keine personenbezogenen Daten loggen!
+func LogDebug(format string, v ...interface{}) {
+	if shouldLog(LogLevelDebug) {
+		log.Printf("[DEBUG] "+format, v...)
+	}
+}
+
+// LogInfo logs informational messages
+// Use for general operational messages
+// WICHTIG: Keine personenbezogenen Daten loggen!
+func LogInfo(format string, v ...interface{}) {
+	if shouldLog(LogLevelInfo) {
+		log.Printf("[INFO] "+format, v...)
+	}
+}
+
+// LogWarning logs warning messages
+// Use for unexpected but non-critical issues
+func LogWarning(format string, v ...interface{}) {
+	if shouldLog(LogLevelWarning) {
+		log.Printf("[WARNING] "+format, v...)
+	}
+}
+
+// LogError logs error messages
+// Use for errors that need attention
+func LogError(format string, v ...interface{}) {
+	if shouldLog(LogLevelError) {
+		log.Printf("[ERROR] "+format, v...)
+	}
 }
