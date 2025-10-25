@@ -143,7 +143,7 @@ func setupPublicRoutes(app *fiber.App) {
 }
 
 func setupProtectedRoutes(app *fiber.App) {
-	// Protected group with auth middleware
+	// Protected group with auth middleware (v1)
 	protected := app.Group("/v1", middleware.AuthMiddleware)
 
 	// User & Zenturie
@@ -155,7 +155,7 @@ func setupProtectedRoutes(app *fiber.App) {
 	protected.Get("/events", handlers.GetEvents)
 	protected.Get("/exams", handlers.GetExams)
 
-	// Friends
+	// Friends (v1 - deprecated, kept for backwards compatibility)
 	protected.Get("/friends", handlers.GetFriends)
 	protected.Post("/friends", handlers.AddFriend)
 	protected.Delete("/friends", handlers.RemoveFriend)
@@ -173,6 +173,18 @@ func setupProtectedRoutes(app *fiber.App) {
 
 	// Scheduler status
 	protected.Get("/scheduler/status", handlers.GetSchedulerStatus)
+
+	// V2 Protected Routes
+	protectedV2 := app.Group("/v2", middleware.AuthMiddleware)
+
+	// Friends V2 (bidirectional friend requests)
+	protectedV2.Post("/friends/request", handlers.SendFriendRequest)     // Send friend request
+	protectedV2.Get("/friends/requests", handlers.GetFriendRequests)     // Get incoming/outgoing requests
+	protectedV2.Post("/friends/accept", handlers.AcceptFriendRequest)    // Accept request
+	protectedV2.Post("/friends/reject", handlers.RejectFriendRequest)    // Reject request
+	protectedV2.Delete("/friends/request", handlers.CancelFriendRequest) // Cancel outgoing request
+	protectedV2.Get("/friends", handlers.GetFriendsV2)                   // Get accepted friends
+	protectedV2.Delete("/friends", handlers.RemoveFriendV2)              // Remove friend
 }
 
 func customErrorHandler(c *fiber.Ctx, err error) error {

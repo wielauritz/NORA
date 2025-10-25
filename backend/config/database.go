@@ -77,14 +77,18 @@ func AutoMigrate() error {
 		&models.CustomHour{},
 		&models.Exam{},
 		&models.Friend{},
+		&models.FriendRequest{},
 	)
 
 	if err != nil {
 		return fmt.Errorf("failed to run migrations: %w", err)
 	}
 
-	// Add unique constraint for friends table
+	// Add unique constraint for friends table (v1)
 	DB.Exec("CREATE UNIQUE INDEX IF NOT EXISTS unique_friendship ON friends(LEAST(user_id1, user_id2), GREATEST(user_id1, user_id2))")
+
+	// Add unique constraint for friend_requests table (v2) - prevent duplicate requests
+	DB.Exec("CREATE UNIQUE INDEX IF NOT EXISTS unique_friend_request ON friend_requests(LEAST(requester_id, receiver_id), GREATEST(requester_id, receiver_id)) WHERE status IN ('pending', 'accepted')")
 
 	// Migration: Drop old UID unique index and create composite index
 	// This allows Wahlpflichtmodule (same UID) for different zenturien

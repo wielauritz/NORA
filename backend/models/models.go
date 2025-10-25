@@ -143,7 +143,7 @@ type Exam struct {
 	Room   *Room   `gorm:"foreignKey:RoomID;constraint:OnDelete:SET NULL" json:"room,omitempty"`
 }
 
-// Friend represents a friendship relationship
+// Friend represents a friendship relationship (v1 API - deprecated, kept for backwards compatibility)
 type Friend struct {
 	ID        uint      `gorm:"primaryKey;autoIncrement" json:"id"`
 	UserID1   uint      `gorm:"index;not null" json:"user_id1"`
@@ -159,4 +159,23 @@ func (Friend) TableName() string {
 // BeforeCreate hook for Friend to ensure unique constraint
 func (f *Friend) BeforeCreate(tx *gorm.DB) error {
 	return nil
+}
+
+// FriendRequest represents a bidirectional friend request (v2 API)
+type FriendRequest struct {
+	ID          uint      `gorm:"primaryKey;autoIncrement" json:"id"`
+	RequesterID uint      `gorm:"index;not null" json:"requester_id"`                              // User who sends the request
+	ReceiverID  uint      `gorm:"index;not null" json:"receiver_id"`                               // User who receives the request
+	Status      string    `gorm:"type:varchar(20);not null;default:'pending';index" json:"status"` // pending, accepted, rejected
+	CreatedAt   time.Time `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt   time.Time `gorm:"autoUpdateTime" json:"updated_at"`
+
+	// Relationships
+	Requester *User `gorm:"foreignKey:RequesterID;constraint:OnDelete:CASCADE" json:"requester,omitempty"`
+	Receiver  *User `gorm:"foreignKey:ReceiverID;constraint:OnDelete:CASCADE" json:"receiver,omitempty"`
+}
+
+// TableName specifies the table name
+func (FriendRequest) TableName() string {
+	return "friend_requests"
 }
