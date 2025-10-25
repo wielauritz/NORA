@@ -86,16 +86,18 @@ func Login(c *fiber.Ctx) error {
 		// Create new user
 		verificationUUID := uuid.New()
 		subscriptionUUID := uuid.New().String()
+		verificationExpiry := time.Now().Add(24 * time.Hour) // Expires in 24 hours
 
 		user = models.User{
-			Mail:             req.Mail,
-			PasswordHash:     passwordHash,
-			UUID:             verificationUUID,
-			Verified:         false,
-			FirstName:        firstName,
-			LastName:         lastName,
-			Initials:         string(firstName[0]) + string(lastName[0]),
-			SubscriptionUUID: &subscriptionUUID,
+			Mail:               req.Mail,
+			PasswordHash:       passwordHash,
+			UUID:               verificationUUID,
+			VerificationExpiry: &verificationExpiry,
+			Verified:           false,
+			FirstName:          firstName,
+			LastName:           lastName,
+			Initials:           string(firstName[0]) + string(lastName[0]),
+			SubscriptionUUID:   &subscriptionUUID,
 		}
 
 		if err := config.DB.Create(&user).Error; err != nil {
@@ -175,6 +177,11 @@ func VerifyEmail(c *fiber.Ctx) error {
 		})
 	}
 
+	// Check if verification link has expired
+	if user.VerificationExpiry != nil && time.Now().After(*user.VerificationExpiry) {
+		return c.Type("html").SendString(getExpiredVerificationPage())
+	}
+
 	// Create session (for auto-login)
 	sessionID := uuid.New().String()
 	expiration := time.Now().Add(24 * time.Hour)
@@ -198,7 +205,8 @@ func VerifyEmail(c *fiber.Ctx) error {
 
 	// Mark user as verified
 	user.Verified = true
-	user.UUID = uuid.Nil // Clear UUID
+	user.UUID = uuid.Nil          // Clear UUID
+	user.VerificationExpiry = nil // Clear expiry
 	config.DB.Save(&user)
 
 	return c.Type("html").SendString(getVerificationSuccessPage(sessionID, user.Mail))
@@ -325,9 +333,11 @@ func ResendVerificationEmail(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusNoContent)
 	}
 
-	// Generate new verification UUID
+	// Generate new verification UUID and expiry
 	newUUID := uuid.New()
+	verificationExpiry := time.Now().Add(24 * time.Hour) // Expires in 24 hours
 	user.UUID = newUUID
+	user.VerificationExpiry = &verificationExpiry
 	config.DB.Save(&user)
 
 	// Send verification email (async)
@@ -378,6 +388,35 @@ func getInvalidResetCode() string {
 <body>
     <h1>Ungültiger Reset-Code</h1>
     <p>Dieser Link ist ungültig oder abgelaufen.</p>
+    <a href="https://new.nora-nak.de">Zurück zur Startseite</a>
+</body>
+</html>
+`
+}
+
+func getExpiredVerificationPage() string {
+	return `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Verifizierung abgelaufen - NORA</title>
+    <meta charset="UTF-8">
+    <style>
+        body {font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; text-align: center;}
+        h1 {color: #d32f2f;}
+        p {line-height: 1.6; color: #555;}
+        a {color: #667eea; text-decoration: none; font-weight: bold;}
+        a:hover {text-decoration: underline;}
+        .info-box {background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;}
+    </style>
+</head>
+<body>
+    <h1>Verifizierungs-Link abgelaufen</h1>
+    <p>Dieser Verifizierungs-Link ist leider abgelaufen. Verifikations-Links sind aus Sicherheitsgründen nur 24 Stunden gültig.</p>
+    <div class="info-box">
+        <p><strong>Was können Sie tun?</strong></p>
+        <p>Bitte loggen Sie sich erneut ein, um einen neuen Verifizierungs-Link zu erhalten, oder fordern Sie eine neue Verifizierungs-E-Mail an.</p>
+    </div>
     <a href="https://new.nora-nak.de">Zurück zur Startseite</a>
 </body>
 </html>

@@ -18,18 +18,19 @@ type Zenturie struct {
 
 // User represents a user with authentication
 type User struct {
-	ID               uint      `gorm:"primaryKey;autoIncrement" json:"id"`
-	Mail             string    `gorm:"uniqueIndex;not null" json:"mail"`
-	PasswordHash     string    `gorm:"not null" json:"-"`
-	CreatedAt        time.Time `gorm:"autoCreateTime" json:"created_at"`
-	Verified         bool      `gorm:"default:false" json:"verified"`
-	UUID             uuid.UUID `gorm:"type:uuid;default:gen_random_uuid()" json:"uuid"`
-	ResetUUID        *string   `gorm:"size:255" json:"reset_uuid,omitempty"`
-	FirstName        string    `gorm:"size:255;not null" json:"first_name"`
-	LastName         string    `gorm:"size:255;not null" json:"last_name"`
-	Initials         string    `gorm:"size:2;not null" json:"initials"`
-	ZenturienID      *uint     `gorm:"index" json:"zenturie_id,omitempty"`
-	SubscriptionUUID *string   `gorm:"size:255;uniqueIndex" json:"subscription_uuid,omitempty"`
+	ID                 uint       `gorm:"primaryKey;autoIncrement" json:"id"`
+	Mail               string     `gorm:"uniqueIndex;not null" json:"mail"`
+	PasswordHash       string     `gorm:"not null" json:"-"`
+	CreatedAt          time.Time  `gorm:"autoCreateTime" json:"created_at"`
+	Verified           bool       `gorm:"default:false" json:"verified"`
+	UUID               uuid.UUID  `gorm:"type:uuid;default:gen_random_uuid()" json:"uuid"`
+	VerificationExpiry *time.Time `gorm:"index" json:"verification_expiry,omitempty"` // Expiry for email verification link
+	ResetUUID          *string    `gorm:"size:255" json:"reset_uuid,omitempty"`
+	FirstName          string     `gorm:"size:255;not null" json:"first_name"`
+	LastName           string     `gorm:"size:255;not null" json:"last_name"`
+	Initials           string     `gorm:"size:2;not null" json:"initials"`
+	ZenturienID        *uint      `gorm:"index" json:"zenturie_id,omitempty"`
+	SubscriptionUUID   *string    `gorm:"size:255;uniqueIndex" json:"subscription_uuid,omitempty"`
 
 	// Relationships
 	Zenturie    *Zenturie    `gorm:"foreignKey:ZenturienID;constraint:OnDelete:SET NULL" json:"zenturie,omitempty"`
