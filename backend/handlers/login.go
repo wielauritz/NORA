@@ -230,9 +230,11 @@ func RequestPasswordReset(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusNoContent)
 	}
 
-	// Generate reset UUID
+	// Generate reset UUID with 1 hour expiry
 	resetUUID := uuid.New().String()
+	resetExpiry := time.Now().Add(1 * time.Hour) // Expires in 1 hour
 	user.ResetUUID = &resetUUID
+	user.ResetUUIDExpiry = &resetExpiry
 	config.DB.Save(&user)
 
 	// Send reset email (async)
@@ -256,6 +258,11 @@ func ShowPasswordResetForm(c *fiber.Ctx) error {
 		return c.Type("html").SendString(getInvalidResetCode())
 	}
 
+	// Check if reset link has expired
+	if user.ResetUUIDExpiry != nil && time.Now().After(*user.ResetUUIDExpiry) {
+		return c.Type("html").SendString(getExpiredResetPage())
+	}
+
 	return c.Type("html").SendString(getHTMLResetForm(resetUUID))
 }
 
@@ -277,6 +284,13 @@ func ConfirmPasswordReset(c *fiber.Ctx) error {
 		})
 	}
 
+	// Check if reset link has expired
+	if user.ResetUUIDExpiry != nil && time.Now().After(*user.ResetUUIDExpiry) {
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+			"detail": "Reset-Link ist abgelaufen. Bitte fordern Sie einen neuen an.",
+		})
+	}
+
 	// Hash new password
 	passwordHash, err := utils.HashPassword(req.NewPassword)
 	if err != nil {
@@ -285,9 +299,10 @@ func ConfirmPasswordReset(c *fiber.Ctx) error {
 		})
 	}
 
-	// Update password and clear reset UUID
+	// Update password and clear reset UUID + expiry
 	user.PasswordHash = passwordHash
 	user.ResetUUID = nil
+	user.ResetUUIDExpiry = nil
 	config.DB.Save(&user)
 
 	// Create session (auto-login)
@@ -416,6 +431,35 @@ func getExpiredVerificationPage() string {
     <div class="info-box">
         <p><strong>Was können Sie tun?</strong></p>
         <p>Bitte loggen Sie sich erneut ein, um einen neuen Verifizierungs-Link zu erhalten, oder fordern Sie eine neue Verifizierungs-E-Mail an.</p>
+    </div>
+    <a href="https://new.nora-nak.de">Zurück zur Startseite</a>
+</body>
+</html>
+`
+}
+
+func getExpiredResetPage() string {
+	return `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reset-Link abgelaufen - NORA</title>
+    <meta charset="UTF-8">
+    <style>
+        body {font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; text-align: center;}
+        h1 {color: #d32f2f;}
+        p {line-height: 1.6; color: #555;}
+        a {color: #667eea; text-decoration: none; font-weight: bold;}
+        a:hover {text-decoration: underline;}
+        .info-box {background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;}
+    </style>
+</head>
+<body>
+    <h1>Passwort-Reset-Link abgelaufen</h1>
+    <p>Dieser Passwort-Reset-Link ist leider abgelaufen. Reset-Links sind aus Sicherheitsgründen nur 1 Stunde gültig.</p>
+    <div class="info-box">
+        <p><strong>Was können Sie tun?</strong></p>
+        <p>Bitte fordern Sie einen neuen Passwort-Reset-Link an. Der neue Link wird Ihnen per E-Mail zugesendet.</p>
     </div>
     <a href="https://new.nora-nak.de">Zurück zur Startseite</a>
 </body>

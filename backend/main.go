@@ -65,10 +65,12 @@ func main() {
 
 	// CORS Middleware - must be before routes
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "*",
+		AllowOriginsFunc: func(origin string) bool {
+			return origin == "https://nora-nak.de" || origin == "https://new.nora-nak.de"
+		},
 		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS,PATCH",
 		AllowHeaders:     "*",
-		AllowCredentials: false, // Must be false with AllowOrigins: "*"
+		AllowCredentials: true, // Must be false with AllowOrigins: "*"
 		ExposeHeaders:    "*",
 	}))
 
