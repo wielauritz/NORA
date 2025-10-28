@@ -72,7 +72,7 @@ func Login(c *fiber.Ctx) error {
 		}
 
 		// Capitalize names
-		firstName := strings.Title(strings.ToLower(nameParts[0]))
+		firstName := strings.Title(strings.ReplaceAll(strings.ToLower(nameParts[0]), "-", " "))
 		lastName := strings.Title(strings.ToLower(nameParts[1]))
 
 		// Hash password
@@ -101,8 +101,34 @@ func Login(c *fiber.Ctx) error {
 		}
 
 		if err := config.DB.Create(&user).Error; err != nil {
+			// Check if error is due to duplicate email (race condition or existing user)
+			var existingUser models.User
+			if err := config.DB.Where("mail = ?", req.Mail).First(&existingUser).Error; err == nil {
+				// User already exists - check if verified
+				if !existingUser.Verified {
+					// User exists but is not verified - resend verification email
+					newUUID := uuid.New()
+					newVerificationExpiry := time.Now().Add(24 * time.Hour)
+					existingUser.UUID = newUUID
+					existingUser.VerificationExpiry = &newVerificationExpiry
+					config.DB.Save(&existingUser)
+
+					emailService := utils.NewEmailService()
+					go emailService.SendVerificationEmail(existingUser.Mail, existingUser.FirstName, newUUID.String())
+
+					return c.Status(fiber.StatusConflict).JSON(fiber.Map{
+						"detail": "Benutzer existiert bereits. Eine neue Verifizierungs-E-Mail wurde gesendet.",
+					})
+				}
+				// User exists and is verified
+				return c.Status(fiber.StatusConflict).JSON(fiber.Map{
+					"detail": "Ein Benutzer mit dieser E-Mail-Adresse existiert bereits. Bitte melden Sie sich an.",
+				})
+			}
+
+			// Some other database error occurred
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-				"detail": "Failed to create user",
+				"detail": "Fehler beim Erstellen des Benutzers",
 			})
 		}
 
