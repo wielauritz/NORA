@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Dashboard - Stundenplan</title>
+    <script src="js/dark-mode.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
@@ -31,15 +33,6 @@
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.3);
-        }
-
-        .card-hover:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-        }
-
-        .card-hover {
-            transition: all 0.3s ease;
         }
 
         .gradient-text {
@@ -120,7 +113,7 @@
         }
     </style>
 </head>
-<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-800 min-h-screen">
 
     <!-- Hide content immediately to prevent flash before preloader/content ready -->
     <style>main { display: none; }</style>
@@ -157,7 +150,7 @@
         <!-- Welcome Section -->
         <div class="mb-8">
             <h1 class="text-3xl font-bold text-gray-900 mb-2">
-                Willkommen zurück, <span class="gradient-text">John</span> 👋
+                Willkommen zurück, <span class="gradient-text">Student</span> 👋
             </h1>
             <p class="text-gray-600" id="dashboardDateText">Hier ist deine Übersicht für heute</p>
         </div>
@@ -166,9 +159,9 @@
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
 
             <!-- Stat Card 1 - Termine heute (moved to first position) -->
-            <div class="glass-effect rounded-2xl p-6 card-hover">
+            <div class="glass-effect rounded-2xl p-6">
                 <div class="flex items-center justify-between mb-4">
-                    <div class="p-3 bg-green-100 rounded-xl">
+                    <div class="p-3 bg-green-50 rounded-xl">
                         <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                         </svg>
@@ -179,7 +172,7 @@
             </div>
 
             <!-- Stat Card 2 - Kurse heute -->
-            <div class="glass-effect rounded-2xl p-6 card-hover">
+            <div class="glass-effect rounded-2xl p-6">
                 <div class="flex items-center justify-between mb-4">
                     <div class="p-3 bg-primary/10 rounded-xl">
                         <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -192,7 +185,7 @@
             </div>
 
             <!-- Stat Card 3 - Klausuren bald -->
-            <div class="glass-effect rounded-2xl p-6 card-hover">
+            <div class="glass-effect rounded-2xl p-6">
                 <div class="flex items-center justify-between mb-4">
                     <div class="p-3 bg-accent/10 rounded-xl">
                         <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -205,7 +198,7 @@
             </div>
 
             <!-- Stat Card 4 - Freunde online -->
-            <div class="glass-effect rounded-2xl p-6 card-hover">
+            <div class="glass-effect rounded-2xl p-6">
                 <div class="flex items-center justify-between mb-4">
                     <div class="p-3 bg-secondary/10 rounded-xl">
                         <svg class="w-6 h-6 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,6 +1,7 @@
 /**
  * Common Styles für Stundenplan Dashboard
  * Gemeinsame CSS-Klassen für alle Seiten
+ * Mit automatischem Dark Mode Support (Tailwind)
  */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -9,12 +10,25 @@
     font-family: 'Inter', sans-serif;
 }
 
+/* Enable dark mode based on system preference */
+@media (prefers-color-scheme: dark) {
+    html {
+        color-scheme: dark;
+    }
+}
+
 /* iOS Safe Area Support */
 html, body {
     width: 100%;
     margin: 0;
     padding: 0;
     background: #f9fafb;
+}
+
+@media (prefers-color-scheme: dark) {
+    html, body {
+        background: #0f172a;
+    }
 }
 
 body {
@@ -43,7 +57,7 @@ main {
     display: block;
     width: 100%;
     height: 100%;
-    margin: 0 !important;
+    margin: 0 auto auto !important;
     padding-top: 0 !important;
     padding-bottom: 8.5rem !important;
     box-sizing: border-box;
@@ -110,6 +124,448 @@ nav > div {
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.divider-text {
+    background: #f8f8f8;
+}
+
+@media (prefers-color-scheme: dark) {
+    .glass-effect {
+        background: rgba(15, 23, 42, 0.8);
+        border: 1px solid rgba(148, 163, 184, 0.1);
+    }
+}
+
+/* Comprehensive Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+    /* Text Colors */
+    .text-gray-900 { color: #f1f5f9 !important; }
+    .text-gray-800 { color: #f1f5f9 !important; }
+    .text-gray-700 { color: #cbd5e1 !important; }
+    .text-gray-600 { color: #cbd5e1 !important; }
+    .text-gray-500 { color: #cbd5e1 !important; }
+    .text-gray-400 { color: #94a3b8 !important; }
+    .text-gray-300 { color: #64748b !important; }
+
+    /* Background Colors */
+    .bg-white { background-color: #1e293b !important; }
+    .bg-gray-50 { background-color: #0f172a !important; }
+    .bg-gray-100 { background-color: #1e293b !important; }
+    .bg-gray-200 { background-color: #334155 !important; }
+    .bg-white\/85 { background-color: rgba(30, 41, 59, 0.85) !important; }
+    .bg-white\/95 { background-color: rgba(30, 41, 59, 0.95) !important; }
+
+    /* Border Colors */
+    .border-gray-200 { border-color: #334155 !important; }
+    .border-gray-300 { border-color: #475569 !important; }
+    .border-gray-400 { border-color: #64748b !important; }
+    .border-gray-100 { border-color: #1e293b !important; }
+
+    /* Input Fields */
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    input[type="search"],
+    select,
+    textarea {
+        background-color: #1e293b !important;
+        color: #f1f5f9 !important;
+        border-color: #475569 !important;
+    }
+
+    input::placeholder,
+    textarea::placeholder {
+        color: #94a3b8 !important;
+    }
+
+    /* Buttons */
+    button {
+        color: inherit;
+    }
+
+    /* Cards & Containers */
+    .rounded-2xl,
+    .rounded-xl,
+    .rounded-lg {
+        background-color: inherit;
+    }
+
+    .glass-effect {
+        background: rgba(30, 41, 59, 0.8) !important;
+        border-color: rgba(148, 163, 184, 0.1) !important;
+    }
+
+    .divider-text {
+        background: #192332;
+    }
+
+    /* Modal Overlays */
+    .modal-overlay {
+        background-color: rgba(0, 0, 0, 0.7) !important;
+    }
+
+    .modal-overlay .bg-white {
+        background-color: #1e293b !important;
+    }
+
+    /* Preloader */
+    #content-loader {
+        background-color: rgba(30, 41, 59, 0.85) !important;
+    }
+
+    /* Navbar Text */
+    nav {
+        color: #f1f5f9;
+    }
+
+    nav a {
+        color: #cbd5e1;
+    }
+
+    nav a:hover {
+        color: #f1f5f9;
+        background-color: rgba(148, 163, 184, 0.1) !important;
+    }
+
+    /* Active nav items */
+    nav a.text-primary,
+    nav .text-primary {
+        color: #3cd2ff !important;
+    }
+
+    /* Hover States */
+    .hover\:bg-gray-50:hover { background-color: #1e293b !important; }
+    .hover\:bg-gray-100:hover { background-color: #334155 !important; }
+    .hover\:bg-gray-200:hover { background-color: #475569 !important; }
+
+    /* Shadow adjustments */
+    .shadow { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.5) !important; }
+    .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.7) !important; }
+    .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8) !important; }
+
+    /* Specific Elements */
+    /* .bg-red-50 { background-color: rgba(127, 29, 29, 0.2) !important; }
+    .bg-blue-50 { background-color: rgba(30, 58, 138, 0.2) !important; } */
+    .bg-green-50 { background-color: rgba(6, 78, 59, 0.2) !important; }
+
+    /* Stundenplan Event Containers - fix white backgrounds */
+    [style*="background: linear-gradient"] {
+        background: linear-gradient(135deg, rgba(60, 210, 255, 0.3) 0%, rgba(60, 210, 255, 0.4) 100%) !important;
+        border-color: #3cd2ff !important;
+    }
+
+    /* Event Cards - ensure they have dark background */
+    .event-card,
+    [class*="event"],
+    .schedule-event {
+        color: #f1f5f9 !important;
+    }
+
+    /* Toggle switches & buttons in light backgrounds */
+    .peer-checked\:translate-x-5 {
+        background-color: #cbd5e1 !important;
+    }
+
+    .peer:checked ~ .peer-checked\:translate-x-5 {
+        background-color: #3cd2ff !important;
+    }
+
+    /* Improve contrast for low-opacity colored backgrounds */
+    [style*="background: linear-gradient(135deg, #3cd2ff"] {
+        background: linear-gradient(135deg, rgba(60, 210, 255, 0.5) 0%, rgba(60, 210, 255, 0.6) 100%) !important;
+    }
+
+    [style*="background: linear-gradient(135deg, #3cd2ff15"] {
+        background: linear-gradient(135deg, rgba(60, 210, 255, 0.4) 0%, rgba(60, 210, 255, 0.5) 100%) !important;
+    }
+
+    /* Buttons and interactive elements with light backgrounds need dark background */
+    button[style*="background: #"],
+    div[style*="background: #ffffff"],
+    div[style*="background: rgb(255"] {
+        background-color: #1e293b !important;
+    }
+
+    /* Ensure text on these elements is readable */
+    button,
+    [class*="button"],
+    [class*="btn"] {
+        color: inherit;
+    }
+
+    /* Switch toggle knob */
+    .absolute.left-0\.5 {
+        background-color: #0f172a !important;
+    }
+
+    .peer:checked ~ .absolute.left-0\.5 {
+        background-color: #3cd2ff !important;
+    }
+
+    /* Calendar Header - top borders */
+    .calendar-header {
+        background: linear-gradient(to bottom, #0f172a, #1e293b) !important;
+        border-bottom: 2px solid #475569 !important;
+    }
+
+    /* Calendar Day Headers - week view */
+    .calendar-day-header {
+        background-color: #1e293b !important;
+        color: #f1f5f9 !important;
+        border-right-color: #334155 !important;
+    }
+
+    .calendar-day-header:hover {
+        background-color: #334155 !important;
+    }
+
+    .calendar-day-header.today {
+        background: linear-gradient(135deg, rgba(60, 210, 255, 0.25), rgba(0, 58, 121, 0.15)) !important;
+    }
+
+    .calendar-day-name {
+        color: #f1f5f9 !important;
+    }
+
+    .calendar-day-name.today {
+        color: #3cd2ff !important;
+    }
+
+    .calendar-day-date {
+        color: #cbd5e1 !important;
+    }
+
+    .calendar-day-date.today {
+        color: #3cd2ff !important;
+    }
+
+    /* Month View */
+    .month-day-cell {
+        background-color: #1e293b !important;
+        border-color: #334155 !important;
+        color: #f1f5f9 !important;
+    }
+
+    .month-day-cell:hover {
+        background-color: #334155 !important;
+    }
+
+    .month-day-cell.other-month {
+        background-color: #0f172a !important;
+        color: #64748b !important;
+    }
+
+    .month-day-cell.today {
+        background: linear-gradient(135deg, rgba(60, 210, 255, 0.2), rgba(60, 210, 255, 0.1)) !important;
+        border-color: #3cd2ff !important;
+    }
+
+    .month-day-number {
+        color: #f1f5f9 !important;
+    }
+
+    .month-day-cell.today .month-day-number {
+        color: #3cd2ff !important;
+    }
+
+    .month-day-cell.other-month .month-day-number {
+        color: #64748b !important;
+    }
+
+    .month-event-item {
+        color: #f1f5f9 !important;
+    }
+
+    .month-event-item.timetable {
+        background: linear-gradient(135deg, rgba(60, 210, 255, 0.3), rgba(0, 58, 121, 0.2)) !important;
+        border-left-color: #3cd2ff !important;
+        color: #3cd2ff !important;
+    }
+
+    .month-event-item.custom {
+        background: linear-gradient(135deg, rgba(255, 160, 100, 0.3), rgba(255, 128, 64, 0.2)) !important;
+        border-left-color: #ffa064 !important;
+        color: #ffa064 !important;
+    }
+
+    .month-weekday-header {
+        background: linear-gradient(135deg, rgba(60, 210, 255, 0.25), rgba(0, 58, 121, 0.15)) !important;
+        color: #f1f5f9 !important;
+        border-bottom-color: #334155 !important;
+    }
+
+    .month-events-count {
+        color: #cbd5e1 !important;
+    }
+
+    /* Year View */
+    .year-month-card {
+        background-color: #1e293b !important;
+        border: 1px solid #334155 !important;
+        color: #f1f5f9 !important;
+    }
+
+    .year-month-card:hover {
+        background-color: #334155 !important;
+        border-color: #60d5ff !important;
+    }
+
+    .year-month-header {
+        color: #f1f5f9 !important;
+        border-bottom-color: #334155 !important;
+    }
+
+    .year-month-grid {
+        gap: 2px;
+    }
+
+    .year-weekday {
+        color: #cbd5e1 !important;
+    }
+
+    .year-day {
+        color: #cbd5e1 !important;
+    }
+
+    .year-day:hover {
+        background-color: #334155 !important;
+    }
+
+    .year-day.other-month {
+        color: #64748b !important;
+    }
+
+    .year-day.today {
+        background: linear-gradient(135deg, #3cd2ff, #003a79) !important;
+        color: white !important;
+    }
+
+    .year-day.has-events {
+        border-color: #60d5ff !important;
+    }
+
+    .year-day.today.has-events {
+        border-color: white !important;
+    }
+
+    .year-month-stats {
+        color: #cbd5e1 !important;
+        border-top-color: #334155 !important;
+    }
+
+    .year-event-count {
+        color: #cbd5e1 !important;
+    }
+
+    /* Calendar grid and time lines - make dark */
+    .calendar-grid {
+        background-color: #1e293b !important;
+    }
+
+    .calendar-day-column {
+        background-color: #1e293b !important;
+        border-right: 1px solid #334155 !important;
+    }
+
+    .calendar-hour-line {
+        background: #334155 !important;
+    }
+
+    .calendar-half-hour-line {
+        background: #475569 !important;
+    }
+
+    .calendar-time-column {
+        background-color: #1e293b !important;
+        border-right: 2px solid #334155 !important;
+    }
+
+    .calendar-time-label {
+        color: #94a3b8 !important;
+        background-color: #1e293b !important;
+        border-right: 1px solid #334155 !important;
+    }
+
+    .calendar-time-slot {
+        color: #94a3b8 !important;
+        border-bottom: 1px solid #334155 !important;
+    }
+
+    /* Different blue tone for stundenplan - not the bright cyan */
+    .course-block {
+        /* Will be overridden by inline styles, but this helps with text contrast */
+    }
+
+    .course-block .text-gray-900 {
+        color: #f1f5f9 !important;
+    }
+
+    .course-block .text-gray-600 {
+        color: #cbd5e1 !important;
+    }
+
+    /* Freund hinzufügen Button - much darker blue to differentiate from primary */
+    button[class*="bg-secondary/5"] {
+        background-color: rgba(17, 78, 92, 0.25) !important;
+    }
+
+    button[class*="bg-secondary/5"] .text-secondary {
+        color: #1ca9c9 !important;
+    }
+
+    button[class*="bg-secondary/5"]:hover {
+        background-color: rgba(28, 169, 201, 0.3) !important;
+    }
+
+    button[class*="bg-secondary/5"]:hover .text-secondary {
+        color: #2ba8d4 !important;
+    }
+
+    /* Freunde Icon Box - much darker blue */
+    .bg-secondary\/10 {
+        background-color: rgba(28, 169, 201, 0.2) !important;
+    }
+
+    .bg-secondary\/10 .text-secondary {
+        color: #1ca9c9 !important;
+    }
+
+    /* Termine heute - green background dark mode */
+    /* .bg-green-100 {
+        background-color: rgba(34, 197, 94, 0.15) !important;
+    }
+
+    /* Only white text on status buttons in room lists, not on icons */
+    /*button[class*="bg-green-100"] {
+        color: #ffffff !important;
+    }*/
+
+    /*button[class*="bg-red-100"] {
+        color: #ffffff !important;
+    }*/
+
+    /* Icon colors stay green/red */
+    .bg-green-100 .text-green-600 {
+        color: #4ade80 !important;
+    }
+
+    .bg-green-100 .text-green-700 {
+        color: #22c55e !important;
+    }
+
+    .text-green-600 {
+        color: #4ade80 !important;
+    }
+
+    .text-green-700 {
+        color: #22c55e !important;
+    }
+
+    .text-red-700 {
+        color: #ef4444 !important;
+    }
 }
 
 /* Gradient Background */

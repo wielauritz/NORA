@@ -601,7 +601,7 @@ function showCalendarSubscription() {
                             <div class="w-full border-t border-gray-300"></div>
                         </div>
                         <div class="relative flex justify-center text-sm">
-                            <span class="px-4 text-gray-500 font-medium" style="background: #f8f8f8;">ODER</span>
+                            <span class="divider-text px-4 text-gray-500 font-medium">ODER</span>
                         </div>
                     </div>
 

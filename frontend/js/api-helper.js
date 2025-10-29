@@ -78,8 +78,15 @@ async function apiRequest(endpoint, options = {}) {
                                        endpoint === '/reset' || endpoint === '/reset-confirm';
 
                 if (!isAuthEndpoint) {
+                    // Clear tokens from ALL storage locations (localStorage + iOS filesystem)
                     storage.removeItem('token');
                     storage.removeItem('user');
+
+                    // Also clear persistent storage to prevent redirect loop on iOS
+                    if (typeof clearTokenPersistent === 'function') {
+                        await clearTokenPersistent();
+                    }
+
                     window.location.href = '/index.html';
                     return null;
                 }
@@ -120,8 +127,15 @@ async function apiRequest(endpoint, options = {}) {
                                        endpoint === '/reset' || endpoint === '/reset-confirm';
 
                 if (!isAuthEndpoint) {
+                    // Clear tokens from ALL storage locations (localStorage + iOS filesystem)
                     storage.removeItem('token');
                     storage.removeItem('user');
+
+                    // Also clear persistent storage to prevent redirect loop on iOS
+                    if (typeof clearTokenPersistent === 'function') {
+                        await clearTokenPersistent();
+                    }
+
                     window.location.href = '/index.html';
                     return null;
                 }
