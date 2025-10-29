@@ -198,9 +198,7 @@ func VerifyEmail(c *fiber.Ctx) error {
 	// Find user with UUID
 	var user models.User
 	if err := config.DB.Where("uuid = ?", verificationUUID).First(&user).Error; err != nil {
-		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"detail": "Code Ungueltig.",
-		})
+		return c.Type("html").SendString(getInvalidVerificationCode())
 	}
 
 	// Check if verification link has expired
@@ -416,6 +414,35 @@ func getVerificationSuccessPage(sessionID, email string) string {
 </body>
 </html>
 `, sessionID, email)
+}
+
+func getInvalidVerificationCode() string {
+	return `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ungültiger Code - NORA</title>
+    <meta charset="UTF-8">
+    <style>
+        body {font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; text-align: center;}
+        h1 {color: #d32f2f;}
+        p {line-height: 1.6; color: #555;}
+        a {color: #667eea; text-decoration: none; font-weight: bold;}
+        a:hover {text-decoration: underline;}
+        .info-box {background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;}
+    </style>
+</head>
+<body>
+    <h1>Ungültiger Verifizierungs-Code</h1>
+    <p>Dieser Verifizierungs-Link ist ungültig oder wurde bereits verwendet.</p>
+    <div class="info-box">
+        <p><strong>Was können Sie tun?</strong></p>
+        <p>Wenn Sie sich bereits verifiziert haben, können Sie sich jetzt anmelden. Andernfalls fordern Sie bitte eine neue Verifizierungs-E-Mail an.</p>
+    </div>
+    <a href="https://new.nora-nak.de">Zurück zur Startseite</a>
+</body>
+</html>
+`
 }
 
 func getInvalidResetCode() string {
