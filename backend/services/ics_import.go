@@ -357,10 +357,25 @@ func ImportEventsToDatabase(eventsMap map[string][]TimetableEvent) (*ImportStati
 			}
 
 			// Find or create room(s)
+			// PRIORITY: Extract room from Description field (format: "Raum: A105")
+			// FALLBACK: Use Location field if no room found in Description
 			var roomID *uint
 			extraLocation := ""
-			if event.Location != "" {
-				roomID, extraLocation = findOrCreateRoom(event.Location)
+			roomLocation := ""
+
+			// Try to extract room from description first
+			if event.Description != "" {
+				roomLocation = extractRoomFromDescription(event.Description)
+			}
+
+			// Fallback to Location field if no room in description
+			if roomLocation == "" && event.Location != "" {
+				roomLocation = event.Location
+			}
+
+			// Parse and create room if we found a location
+			if roomLocation != "" {
+				roomID, extraLocation = findOrCreateRoom(roomLocation)
 			}
 
 			// Check if event already exists (by UID AND ZenturienID)
@@ -541,6 +556,48 @@ func extractCourseName(summary string) string {
 	return strings.TrimSpace(summary)
 }
 
+// extractRoomFromDescription extracts the room from the description field
+// Format: "Veranstaltung: ...\nDozent: ...\nRaum: A105\n..."
+// Returns the room string after "Raum: " up to the next newline
+func extractRoomFromDescription(description string) string {
+	if description == "" {
+		return ""
+	}
+
+	// Search for "Raum: " (case-sensitive as ICS files are consistent)
+	roomPrefix := "Raum: "
+	idx := strings.Index(description, roomPrefix)
+	if idx == -1 {
+		// Try alternative: "Raum:" without space
+		roomPrefix = "Raum:"
+		idx = strings.Index(description, roomPrefix)
+		if idx == -1 {
+			return ""
+		}
+	}
+
+	// Extract everything after "Raum: "
+	afterRoom := description[idx+len(roomPrefix):]
+
+	// Find the next newline
+	newlineIdx := strings.Index(afterRoom, "\n")
+	var room string
+	if newlineIdx != -1 {
+		room = afterRoom[:newlineIdx]
+	} else {
+		// No newline found, take everything until the end
+		room = afterRoom
+	}
+
+	// Trim whitespace and handle "-" which means "no room"
+	room = strings.TrimSpace(room)
+	if room == "-" || room == "" {
+		return ""
+	}
+
+	return room
+}
+
 // findOrCreateRoom finds or creates room(s) from location string
 // Returns the primary room ID and extra location info
 func findOrCreateRoom(location string) (*uint, string) {
@@ -607,7 +664,7 @@ func findOrCreateRoom(location string) (*uint, string) {
 }
 
 // parseRoomNumber extracts room number from location string
-// Examples: "A104" -> "A104", "EDV-A102" -> "A102"
+// Examples: "A104" -> "A104", "EDV-A102" -> "A102", "A 23 a" -> "A23A"
 func parseRoomNumber(location string) string {
 	// Remove ICS escape characters (backslashes) and trim
 	location = strings.ReplaceAll(location, "\\", "")
@@ -627,21 +684,25 @@ func parseRoomNumber(location string) string {
 	location = strings.ReplaceAll(location, "\\", "")
 	location = strings.TrimSpace(location)
 
-	// Check if it looks like a room number (Letter + digits)
-	if len(location) >= 3 {
+	// CRITICAL: Remove ALL spaces (handles "A 23 a" -> "A23a")
+	locationNoSpaces := strings.ReplaceAll(location, " ", "")
+
+	// Check if it looks like a room number (Letter + digits + optional letter)
+	if len(locationNoSpaces) >= 2 {
 		// Must start with a letter and contain digits
-		if (location[0] >= 'A' && location[0] <= 'Z') || (location[0] >= 'a' && location[0] <= 'z') {
+		if (locationNoSpaces[0] >= 'A' && locationNoSpaces[0] <= 'Z') || (locationNoSpaces[0] >= 'a' && locationNoSpaces[0] <= 'z') {
 			hasDigit := false
-			for _, c := range location {
+			for _, c := range locationNoSpaces {
 				if c >= '0' && c <= '9' {
 					hasDigit = true
 					break
 				}
 			}
 			if hasDigit {
-				// Return uppercase and trimmed
-				result := strings.ToUpper(location)
+				// Return uppercase without spaces or backslashes
+				result := strings.ToUpper(locationNoSpaces)
 				result = strings.ReplaceAll(result, "\\", "")
+				result = strings.ReplaceAll(result, " ", "")
 				return strings.TrimSpace(result)
 			}
 		}
