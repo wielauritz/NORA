@@ -238,7 +238,7 @@ function renderTodaySchedule() {
         return;
     }
 
-    container.innerHTML = upcomingEvents.map(event => {
+    container.innerHTML = upcomingEvents.map((event, index) => {
         const startTime = new Date(event.start_time);
         const endTime = new Date(event.end_time);
         const duration = Math.round((endTime - startTime) / 60000); // minutes
@@ -246,23 +246,24 @@ function renderTodaySchedule() {
         // Check if event is currently active
         const isActive = now >= startTime && now <= endTime;
 
-        // Different styling for timetable vs custom_hour
-        const borderColor = event.event_type === 'timetable' ? 'border-primary' : 'border-accent';
+        // Different styling for timetable vs custom_hour vs exam
+        const borderColor = event.event_type === 'timetable' ? 'border-primary' : (event.event_type === 'exam' ? 'border-accent' : 'border-purple');
+        const eventColorKey = event.event_type === 'timetable' ? 'primary' : (event.event_type === 'exam' ? 'accent' : 'purple');
         const bgColor = isActive
-            ? `bg-gradient-to-r from-${event.event_type === 'timetable' ? 'primary' : 'accent'}/5 to-${event.event_type === 'timetable' ? 'primary' : 'accent'}/10`
-            : 'bg-gray-50';
+            ? `bg-gradient-to-r from-${eventColorKey}/5 to-${eventColorKey}/10`
+            : 'bg-gray-50 dark:bg-slate-800';
 
         const startTimeStr = formatTime(startTime.toTimeString());
 
         return `
-            <div class="flex items-start space-x-4 p-4 ${bgColor} rounded-xl border-l-4 ${borderColor}">
+            <div class="flex items-start space-x-4 p-4 ${bgColor} rounded-xl border-l-4 ${borderColor} cursor-pointer hover:shadow-md transition-shadow" onclick='showEventDetails(${JSON.stringify(event).replace(/'/g, "&#39;")})'>
                 <div class="text-center flex-shrink-0">
-                    <div class="text-sm font-medium text-gray-600">${startTimeStr}</div>
-                    <div class="text-xs text-gray-400">${duration} min</div>
+                    <div class="text-sm font-medium text-gray-600 dark:text-gray-400">${startTimeStr}</div>
+                    <div class="text-xs text-gray-400 dark:text-gray-500">${duration} min</div>
                 </div>
                 <div class="flex-1 min-w-0">
-                    <h4 class="font-semibold text-gray-900 mb-1 event-title">${cleanEventTitle(event.title)}</h4>
-                    <div class="flex items-center space-x-4 text-sm text-gray-600">
+                    <h4 class="font-semibold text-gray-900 dark:text-white mb-1 event-title">${cleanEventTitle(event.title)}</h4>
+                    <div class="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
                         ${event.location ? `
                             <span class="flex items-center">
                                 <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -342,13 +343,26 @@ function renderUpcomingExams() {
         });
 
         const isUrgent = daysUntil <= 7;
-        const bgColor = isUrgent ? 'bg-gradient-to-r from-accent/5 to-accent/10' : 'bg-gray-50';
-        const iconBg = isUrgent ? 'bg-accent/20' : 'bg-gray-200';
-        const iconColor = isUrgent ? 'text-accent' : 'text-gray-600';
-        const daysColor = isUrgent ? 'text-accent' : 'text-gray-600';
+        const bgColor = isUrgent ? 'bg-gradient-to-r from-accent/5 to-accent/10' : 'bg-gray-50 dark:bg-slate-800';
+        const iconBg = isUrgent ? 'bg-accent/20' : 'bg-gray-200 dark:bg-slate-700';
+        const iconColor = isUrgent ? 'text-accent' : 'text-gray-600 dark:text-gray-400';
+        const daysColor = isUrgent ? 'text-accent' : 'text-gray-600 dark:text-gray-400';
+
+        // Convert exam to event format for modal
+        const endTime = new Date(examDate.getTime() + exam.duration * 60000);
+        const eventData = {
+            title: exam.course_name,
+            start_time: exam.start_time,
+            end_time: endTime.toISOString(),
+            location: exam.room || null,
+            room: exam.room || null,
+            professor: null,
+            description: exam.is_verified ? 'Status: Verifiziert' : 'Status: Nicht verifiziert',
+            event_type: 'exam'
+        };
 
         return `
-            <div class="flex items-center justify-between p-4 ${bgColor} rounded-xl">
+            <div class="flex items-center justify-between p-4 ${bgColor} rounded-xl cursor-pointer hover:shadow-md transition-shadow" onclick='showEventDetails(${JSON.stringify(eventData).replace(/'/g, "&#39;")})'>
                 <div class="flex items-center space-x-4">
                     <div class="p-3 ${iconBg} rounded-xl">
                         <svg class="w-6 h-6 ${iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -356,9 +370,9 @@ function renderUpcomingExams() {
                         </svg>
                     </div>
                     <div class="min-w-0 flex-1">
-                        <h4 class="font-semibold text-gray-900 event-title">${exam.course_name}</h4>
-                        <p class="text-sm text-gray-600">${dateStr}, ${timeStr} • ${exam.duration} Min${exam.room ? ` • ${exam.room}` : ''}</p>
-                        ${exam.is_verified ? '<span class="text-xs text-green-600">✓ Verifiziert</span>' : ''}
+                        <h4 class="font-semibold text-gray-900 dark:text-white event-title">${exam.course_name}</h4>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">${dateStr}, ${timeStr} • ${exam.duration} Min${exam.room ? ` • ${exam.room}` : ''}</p>
+                        ${exam.is_verified ? '<span class="text-xs text-green-600 dark:text-green-400">✓ Verifiziert</span>' : ''}
                     </div>
                 </div>
                 <span class="text-sm font-medium ${daysColor}">In ${daysUntil} ${daysUntil === 1 ? 'Tag' : 'Tagen'}</span>
@@ -718,6 +732,138 @@ function closeCalendarSubModal() {
         modal.classList.remove('active');
         document.body.style.overflow = 'auto';
         setTimeout(() => modal.remove(), 300);
+    }
+}
+
+/**
+ * Helper: Convert newlines to <br> tags
+ */
+function nl2br(text) {
+    if (!text) return '';
+    return text.replace(/\n/g, '<br>');
+}
+
+/**
+ * Helper: Filter description to remove redundant information
+ */
+function filterDescription(description) {
+    if (!description) return '';
+
+    let normalizedDesc = description.replace(/\\n/g, '\n');
+    const lines = normalizedDesc.split('\n');
+
+    const redundantPrefixes = [
+        'Veranstaltung:',
+        'Dozent:',
+        'Raum:',
+        'Zeit:',
+        'Dauer:'
+    ];
+
+    const filteredLines = lines.filter(line => {
+        const trimmedLine = line.trim();
+        if (!trimmedLine) return false;
+        return !redundantPrefixes.some(prefix => trimmedLine.startsWith(prefix));
+    });
+
+    return filteredLines.length > 0 ? filteredLines.join('\n') : '';
+}
+
+/**
+ * Variable to store currently viewed event
+ */
+let currentlyViewedEvent = null;
+
+/**
+ * Show event details modal
+ */
+function showEventDetails(event) {
+    currentlyViewedEvent = event;
+
+    const modal = document.getElementById('eventModal');
+    if (!modal) return;
+
+    const startTime = new Date(event.start_time);
+    const endTime = new Date(event.end_time);
+    const duration = Math.round((endTime - startTime) / 60000);
+
+    const cleanTitle = cleanEventTitle(event.title);
+
+    const modalContent = document.getElementById('eventModalContent');
+    if (modalContent) {
+        modalContent.innerHTML = `
+            <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">${cleanTitle}</h3>
+
+            <div class="space-y-3">
+                <div class="flex items-center text-gray-700 dark:text-gray-300">
+                    <svg class="w-5 h-5 mr-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span>${formatTime(startTime.toTimeString())} - ${formatTime(endTime.toTimeString())} (${duration} Min)</span>
+                </div>
+
+                ${event.location || event.room ? `
+                    <div class="flex items-center text-gray-700 dark:text-gray-300">
+                        <svg class="w-5 h-5 mr-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        <span>${event.location || event.room}</span>
+                    </div>
+                ` : ''}
+
+                ${event.professor ? `
+                    <div class="flex items-center text-gray-700 dark:text-gray-300">
+                        <svg class="w-5 h-5 mr-3 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                        <span>${event.professor}</span>
+                    </div>
+                ` : ''}
+
+                ${event.description ? (() => {
+                    const filteredDesc = filterDescription(event.description);
+                    return filteredDesc ? `
+                        <div class="mt-4 p-3 bg-gray-50 dark:bg-slate-700 rounded-lg">
+                            <p class="text-sm text-gray-700 dark:text-gray-300">${nl2br(filteredDesc)}</p>
+                        </div>
+                    ` : '';
+                })() : ''}
+
+                ${event.event_type === 'custom_hour' ? `
+                    <div class="mt-4 pt-4 border-t border-gray-200 dark:border-slate-700">
+                        <span class="inline-block px-3 py-1 bg-accent/10 text-accent rounded-full text-xs font-medium">
+                            Eigener Termin
+                        </span>
+                    </div>
+                ` : ''}
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <button onclick="closeEventModal()" class="px-6 py-2 bg-gray-200 dark:bg-slate-700 hover:bg-gray-300 dark:hover:bg-slate-600 text-gray-700 dark:text-gray-200 rounded-lg transition-colors">
+                    Schließen
+                </button>
+            </div>
+        `;
+    }
+
+    modal.classList.add('active');
+
+    // Close modal when clicking outside
+    modal.onclick = (e) => {
+        if (e.target === modal) {
+            closeEventModal();
+        }
+    };
+}
+
+/**
+ * Close event modal
+ */
+function closeEventModal() {
+    const modal = document.getElementById('eventModal');
+    if (modal) {
+        modal.classList.remove('active');
     }
 }
 

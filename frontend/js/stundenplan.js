@@ -349,8 +349,31 @@ async function loadWeekSchedule() {
                 // Load friend's timetable for date range
                 allEvents = await ScheduleAPI.getFriendSchedule(viewingFriend, startDateStr, endDateStr);
             } else {
-                // Load own events for date range
+                // Load own events for date range (timetables + custom hours)
                 allEvents = await ScheduleAPI.getEvents(startDateStr, endDateStr);
+
+                // Also load exams and filter for current week
+                try {
+                    const exams = await ExamsAPI.getUpcomingExams();
+                    const weekExams = exams.filter(exam => {
+                        const examDate = exam.start_time.split('T')[0];
+                        return examDate >= startDateStr && examDate <= endDateStr;
+                    });
+
+                    // Convert exams to event format and add to allEvents
+                    const examEvents = weekExams.map(exam => ({
+                        ...exam,
+                        title: exam.course_name,
+                        location: exam.room,
+                        event_type: 'exam',
+                        end_time: new Date(new Date(exam.start_time).getTime() + exam.duration * 60000).toISOString()
+                    }));
+
+                    allEvents = [...allEvents, ...examEvents];
+                    console.log(`📝 Added ${examEvents.length} exams to week view`);
+                } catch (examError) {
+                    console.warn('Could not load exams:', examError);
+                }
             }
         } catch (error) {
             console.error('Error loading week events:', error);
@@ -774,6 +797,29 @@ async function loadMonthEvents() {
             allEvents = await ScheduleAPI.getFriendSchedule(viewingFriend, startDateStr, endDateStr);
         } else {
             allEvents = await ScheduleAPI.getEvents(startDateStr, endDateStr);
+
+            // Also load exams and filter for current month
+            try {
+                const exams = await ExamsAPI.getUpcomingExams();
+                const monthExams = exams.filter(exam => {
+                    const examDate = exam.start_time.split('T')[0];
+                    return examDate >= startDateStr && examDate <= endDateStr;
+                });
+
+                // Convert exams to event format and add to allEvents
+                const examEvents = monthExams.map(exam => ({
+                    ...exam,
+                    title: exam.course_name,
+                    location: exam.room,
+                    event_type: 'exam',
+                    end_time: new Date(new Date(exam.start_time).getTime() + exam.duration * 60000).toISOString()
+                }));
+
+                allEvents = [...allEvents, ...examEvents];
+                console.log(`📝 Added ${examEvents.length} exams to month view`);
+            } catch (examError) {
+                console.warn('Could not load exams:', examError);
+            }
         }
 
         // Organize events by date (extract date from start_time)
@@ -917,7 +963,7 @@ function createMonthDayCell(dayNum, events, isCurrentMonth, today, date = null) 
         const eventsToShow = events.slice(0, 3);
         eventsToShow.forEach(event => {
             const eventItem = document.createElement('div');
-            const eventType = event.event_type === 'timetable' ? 'timetable' : 'custom';
+            const eventType = event.event_type === 'exam' ? 'exam' : (event.event_type === 'timetable' ? 'timetable' : 'custom');
             eventItem.className = `month-event-item ${eventType}`;
 
             const startTime = new Date(event.start_time);
@@ -945,7 +991,7 @@ function createMonthDayCell(dayNum, events, isCurrentMonth, today, date = null) 
         dotsContainer.style.display = 'none'; // Hidden by default, shown on mobile via CSS
         events.slice(0, 5).forEach(event => {
             const dot = document.createElement('span');
-            const eventType = event.event_type === 'timetable' ? 'timetable' : 'custom';
+            const eventType = event.event_type === 'exam' ? 'exam' : (event.event_type === 'timetable' ? 'timetable' : 'custom');
             dot.className = `month-event-dot ${eventType}`;
             dotsContainer.appendChild(dot);
         });
@@ -1056,6 +1102,29 @@ async function loadYearEvents() {
                 allEvents = await ScheduleAPI.getFriendSchedule(viewingFriend, startDateStr, endDateStr);
             } else {
                 allEvents = await ScheduleAPI.getEvents(startDateStr, endDateStr);
+
+                // Also load exams and filter for current month
+                try {
+                    const exams = await ExamsAPI.getUpcomingExams();
+                    const monthExams = exams.filter(exam => {
+                        const examDate = exam.start_time.split('T')[0];
+                        return examDate >= startDateStr && examDate <= endDateStr;
+                    });
+
+                    // Convert exams to event format and add to allEvents
+                    const examEvents = monthExams.map(exam => ({
+                        ...exam,
+                        title: exam.course_name,
+                        location: exam.room,
+                        event_type: 'exam',
+                        end_time: new Date(new Date(exam.start_time).getTime() + exam.duration * 60000).toISOString()
+                    }));
+
+                    allEvents = [...allEvents, ...examEvents];
+                    console.log(`📝 Added ${examEvents.length} exams to year view month ${monthIndex + 1}`);
+                } catch (examError) {
+                    console.warn('Could not load exams:', examError);
+                }
             }
 
             // Organize events by day for this month
@@ -1065,7 +1134,18 @@ async function loadYearEvents() {
                 const eventDateStr = event.start_time.split('T')[0];
                 const eventDate = new Date(eventDateStr);
                 const day = eventDate.getDate();
-                monthEvents[day] = true;
+
+                // Store event types for each day (prioritize exam > custom > timetable for display)
+                if (!monthEvents[day]) {
+                    monthEvents[day] = event.event_type || 'timetable';
+                } else {
+                    // Prioritize: exam > custom > timetable
+                    const currentType = monthEvents[day];
+                    const newType = event.event_type || 'timetable';
+                    if (newType === 'exam' || (newType === 'custom' && currentType === 'timetable')) {
+                        monthEvents[day] = newType;
+                    }
+                }
             });
 
             // Update calendar immediately for this month
@@ -1091,10 +1171,12 @@ function updateMonthWithEvents(monthIndex, monthEventDays) {
         // Find all day elements for this month and mark them with events
         Object.keys(monthEventDays).forEach(day => {
             const dayElements = monthCards[monthIndex].querySelectorAll('.year-day');
+            const eventType = monthEventDays[day]; // Get the event type for this day
             // Find the day element (accounting for offset)
             dayElements.forEach(dayEl => {
                 if (dayEl.textContent == day && !dayEl.classList.contains('other-month')) {
                     dayEl.classList.add('has-events');
+                    dayEl.classList.add(`has-events-${eventType}`);
                 }
             });
         });
@@ -1222,6 +1304,8 @@ function createYearMonthCard(year, monthIndex, monthName, today, eventDays = {})
         // Mark days with events
         if (eventDays[day]) {
             dayEl.classList.add('has-events');
+            const eventType = eventDays[day]; // Get the event type for this day
+            dayEl.classList.add(`has-events-${eventType}`);
         }
 
         grid.appendChild(dayEl);
@@ -1298,7 +1382,7 @@ function renderCalendarEvent(event, startHour, endHour, hourHeight, layoutInfo =
 
     // Create event element
     const eventEl = document.createElement('div');
-    const eventType = event.event_type === 'timetable' ? 'timetable' : 'custom';
+    const eventType = event.event_type === 'exam' ? 'exam' : (event.event_type === 'timetable' ? 'timetable' : 'custom');
     eventEl.className = `calendar-event ${eventType}`;
     eventEl.style.top = `${topPosition}px`;
     eventEl.style.height = `${height}px`;

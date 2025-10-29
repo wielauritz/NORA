@@ -213,12 +213,36 @@ function showVerificationRequired(email) {
     container.appendChild(verifyDiv);
 
     // Add event listener for resend button
-    document.getElementById('resendBtn').addEventListener('click', async () => {
+    const resendBtn = document.getElementById('resendBtn');
+    resendBtn.addEventListener('click', async () => {
+        // Disable button and start countdown
+        resendBtn.disabled = true;
+        const originalText = resendBtn.textContent;
+        let countdown = 30;
+
+        // Update button text with countdown
+        resendBtn.textContent = `Erneut senden (${countdown}s)`;
+
+        const countdownInterval = setInterval(() => {
+            countdown--;
+            if (countdown > 0) {
+                resendBtn.textContent = `Erneut senden (${countdown}s)`;
+            } else {
+                clearInterval(countdownInterval);
+                resendBtn.disabled = false;
+                resendBtn.textContent = originalText;
+            }
+        }, 1000);
+
         try {
             await AuthAPI.resendVerificationEmail(email);
             showError('Verifizierungs-E-Mail wurde erneut gesendet. Bitte überprüfe dein Postfach.');
         } catch (error) {
             showError('Fehler beim Senden der E-Mail: ' + error.message);
+            // If error occurs, stop countdown and re-enable button
+            clearInterval(countdownInterval);
+            resendBtn.disabled = false;
+            resendBtn.textContent = originalText;
         }
     });
 }
