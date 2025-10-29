@@ -382,12 +382,64 @@ async function checkAuth() {
 
     if (token) {
         console.log('✅ Token geladen - Benutzer ist authentifiziert');
+
+        // Load and apply user theme settings
+        loadAndApplyUserTheme().catch(e => {
+            console.warn('⚠️ Failed to load theme settings:', e);
+        });
+
         return true;
     }
 
     console.log('❌ Kein Token gefunden - Weiterleitung zum Login');
     window.location.href = 'index.html';
     return false;
+}
+
+/**
+ * Load user theme settings from API and apply them
+ * This syncs the database theme setting to localStorage
+ */
+async function loadAndApplyUserTheme() {
+    try {
+        // Check if UserAPI is available
+        if (typeof UserAPI === 'undefined' || !UserAPI.getSettings) {
+            console.warn('⚠️ UserAPI not available yet, skipping theme load');
+            return;
+        }
+
+        // Load settings from API
+        const settings = await UserAPI.getSettings();
+
+        if (settings && settings.theme) {
+            const theme = settings.theme;
+
+            // Sync to localStorage based on backend setting
+            if (theme === 'dunkel') {
+                localStorage.setItem('theme', 'dark');
+                document.documentElement.classList.add('dark');
+                document.documentElement.classList.remove('light');
+            } else if (theme === 'hell') {
+                localStorage.setItem('theme', 'light');
+                document.documentElement.classList.remove('dark');
+                document.documentElement.classList.add('light');
+            } else {
+                // "auto" - remove localStorage setting to use system preference
+                localStorage.removeItem('theme');
+                document.documentElement.classList.remove('light');
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            }
+
+            console.log('✅ Theme settings loaded:', theme);
+        }
+    } catch (error) {
+        console.warn('⚠️ Failed to load theme settings:', error);
+        // Don't fail the page load if theme loading fails
+    }
 }
 
 /**

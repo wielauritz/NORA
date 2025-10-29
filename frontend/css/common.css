@@ -10,9 +10,14 @@
     font-family: 'Inter', sans-serif;
 }
 
-/* Enable dark mode based on system preference */
+/* Force light mode when .light class is set (overrides prefers-color-scheme) */
+html.light {
+    color-scheme: light !important;
+}
+
+/* Enable dark mode based on system preference (only if .light is not set) */
 @media (prefers-color-scheme: dark) {
-    html {
+    html:not(.light) {
         color-scheme: dark;
     }
 }
@@ -26,7 +31,7 @@ html, body {
 }
 
 @media (prefers-color-scheme: dark) {
-    html, body {
+    html:not(.light), body {
         background: #0f172a;
     }
 }
@@ -131,404 +136,413 @@ nav > div {
 }
 
 @media (prefers-color-scheme: dark) {
-    .glass-effect {
+    html:not(.light) .glass-effect {
         background: rgba(15, 23, 42, 0.8);
         border: 1px solid rgba(148, 163, 184, 0.1);
     }
 }
 
-/* Comprehensive Dark Mode Support */
+/* Comprehensive Dark Mode Support (only if .light is not set) */
 @media (prefers-color-scheme: dark) {
-    /* Text Colors */
-    .text-gray-900 { color: #f1f5f9 !important; }
-    .text-gray-800 { color: #f1f5f9 !important; }
-    .text-gray-700 { color: #cbd5e1 !important; }
-    .text-gray-600 { color: #cbd5e1 !important; }
-    .text-gray-500 { color: #cbd5e1 !important; }
-    .text-gray-400 { color: #94a3b8 !important; }
-    .text-gray-300 { color: #64748b !important; }
+    /* Disable all dark mode styles if .light class is present */
+    html.light * {
+        /* Dark mode styles will be ignored for elements under html.light */
+    }
+
+    /* Only apply dark mode when .light is NOT set */
+    html:not(.light) .text-gray-900 { color: #f1f5f9 !important; }
+    html:not(.light) .text-gray-800 { color: #f1f5f9 !important; }
+    html:not(.light) .text-gray-700 { color: #cbd5e1 !important; }
+    html:not(.light) .text-gray-600 { color: #cbd5e1 !important; }
+    html:not(.light) .text-gray-500 { color: #cbd5e1 !important; }
+    html:not(.light) .text-gray-400 { color: #94a3b8 !important; }
+    html:not(.light) .text-gray-300 { color: #64748b !important; }
 
     /* Background Colors */
-    .bg-white { background-color: #1e293b !important; }
-    .bg-gray-50 { background-color: #0f172a !important; }
-    .bg-gray-100 { background-color: #1e293b !important; }
-    .bg-gray-200 { background-color: #334155 !important; }
-    .bg-white\/85 { background-color: rgba(30, 41, 59, 0.85) !important; }
-    .bg-white\/95 { background-color: rgba(30, 41, 59, 0.95) !important; }
+    html:not(.light) .bg-white { background-color: #1e293b !important; }
+    html:not(.light) .bg-gray-50 { background-color: #0f172a !important; }
+    html:not(.light) .bg-gray-100 { background-color: #1e293b !important; }
+    html:not(.light) .bg-gray-200 { background-color: #334155 !important; }
+    html:not(.light) .bg-white\/85 { background-color: rgba(30, 41, 59, 0.85) !important; }
+    html:not(.light) .bg-white\/95 { background-color: rgba(30, 41, 59, 0.95) !important; }
 
     /* Border Colors */
-    .border-gray-200 { border-color: #334155 !important; }
-    .border-gray-300 { border-color: #475569 !important; }
-    .border-gray-400 { border-color: #64748b !important; }
-    .border-gray-100 { border-color: #1e293b !important; }
+    html:not(.light) .border-gray-200 { border-color: #334155 !important; }
+    html:not(.light) .border-gray-300 { border-color: #475569 !important; }
+    html:not(.light) .border-gray-400 { border-color: #64748b !important; }
+    html:not(.light) .border-gray-100 { border-color: #1e293b !important; }
 
     /* Input Fields */
-    input[type="text"],
-    input[type="email"],
-    input[type="password"],
-    input[type="number"],
-    input[type="search"],
-    select,
-    textarea {
+    html:not(.light) input[type="text"],
+    html:not(.light) input[type="email"],
+    html:not(.light) input[type="password"],
+    html:not(.light) input[type="number"],
+    html:not(.light) input[type="search"],
+    html:not(.light) select,
+    html:not(.light) textarea {
         background-color: #1e293b !important;
         color: #f1f5f9 !important;
         border-color: #475569 !important;
     }
 
-    input::placeholder,
-    textarea::placeholder {
+    html:not(.light) input::placeholder,
+    html:not(.light) textarea::placeholder {
         color: #94a3b8 !important;
     }
 
     /* Buttons */
-    button {
+    html:not(.light) button {
         color: inherit;
     }
 
     /* Cards & Containers */
-    .rounded-2xl,
-    .rounded-xl,
-    .rounded-lg {
+    html:not(.light) .rounded-2xl,
+    html:not(.light) .rounded-xl,
+    html:not(.light) .rounded-lg {
         background-color: inherit;
     }
 
-    .glass-effect {
+    html:not(.light) .glass-effect {
         background: rgba(30, 41, 59, 0.8) !important;
         border-color: rgba(148, 163, 184, 0.1) !important;
     }
 
-    .divider-text {
+    html:not(.light) .divider-text {
         background: #192332;
     }
 
     /* Modal Overlays */
-    .modal-overlay {
+    html:not(.light) .modal-overlay {
         background-color: rgba(0, 0, 0, 0.7) !important;
     }
 
-    .modal-overlay .bg-white {
+    html:not(.light) .modal-overlay .bg-white {
         background-color: #1e293b !important;
     }
 
     /* Preloader */
-    #content-loader {
+    html:not(.light) #content-loader {
         background-color: rgba(30, 41, 59, 0.85) !important;
     }
 
     /* Navbar Text */
-    nav {
+    html:not(.light) nav {
         color: #f1f5f9;
     }
 
-    nav a {
+    html:not(.light) nav a {
         color: #cbd5e1;
     }
 
-    nav a:hover {
+    html:not(.light) nav a:hover {
         color: #f1f5f9;
         background-color: rgba(148, 163, 184, 0.1) !important;
     }
 
     /* Active nav items */
-    nav a.text-primary,
-    nav .text-primary {
+    html:not(.light) nav a.text-primary,
+    html:not(.light) nav .text-primary {
         color: #3cd2ff !important;
     }
 
+    html:not(.light) nav img[src*="logo"] {
+        filter: brightness(0) invert(1);
+    }
+
     /* Hover States */
-    .hover\:bg-gray-50:hover { background-color: #1e293b !important; }
-    .hover\:bg-gray-100:hover { background-color: #334155 !important; }
-    .hover\:bg-gray-200:hover { background-color: #475569 !important; }
+    html:not(.light) .hover\:bg-gray-50:hover { background-color: #1e293b !important; }
+    html:not(.light) .hover\:bg-gray-100:hover { background-color: #334155 !important; }
+    html:not(.light) .hover\:bg-gray-200:hover { background-color: #475569 !important; }
 
     /* Shadow adjustments */
-    .shadow { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.5) !important; }
-    .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.7) !important; }
-    .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8) !important; }
+    html:not(.light) .shadow { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.5) !important; }
+    html:not(.light) .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.7) !important; }
+    html:not(.light) .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8) !important; }
 
     /* Specific Elements */
     /* .bg-red-50 { background-color: rgba(127, 29, 29, 0.2) !important; }
-    .bg-blue-50 { background-color: rgba(30, 58, 138, 0.2) !important; } */
-    .bg-green-50 { background-color: rgba(6, 78, 59, 0.2) !important; }
+    html:not(.light) .bg-blue-50 { background-color: rgba(30, 58, 138, 0.2) !important; } */
+    html:not(.light) .bg-green-50 { background-color: rgba(6, 78, 59, 0.2) !important; }
 
     /* Stundenplan Event Containers - fix white backgrounds */
-    [style*="background: linear-gradient"] {
+    html:not(.light) [style*="background: linear-gradient"] {
         background: linear-gradient(135deg, rgba(60, 210, 255, 0.3) 0%, rgba(60, 210, 255, 0.4) 100%) !important;
         border-color: #3cd2ff !important;
     }
 
     /* Event Cards - ensure they have dark background */
-    .event-card,
-    [class*="event"],
-    .schedule-event {
+    html:not(.light) .event-card,
+    html:not(.light) [class*="event"],
+    html:not(.light) .schedule-event {
         color: #f1f5f9 !important;
     }
 
     /* Toggle switches & buttons in light backgrounds */
-    .peer-checked\:translate-x-5 {
+    html:not(.light) .peer-checked\:translate-x-5 {
         background-color: #cbd5e1 !important;
     }
 
-    .peer:checked ~ .peer-checked\:translate-x-5 {
+    html:not(.light) .peer:checked ~ .peer-checked\:translate-x-5 {
         background-color: #3cd2ff !important;
     }
 
     /* Improve contrast for low-opacity colored backgrounds */
-    [style*="background: linear-gradient(135deg, #3cd2ff"] {
+    html:not(.light) [style*="background: linear-gradient(135deg, #3cd2ff"] {
         background: linear-gradient(135deg, rgba(60, 210, 255, 0.5) 0%, rgba(60, 210, 255, 0.6) 100%) !important;
     }
 
-    [style*="background: linear-gradient(135deg, #3cd2ff15"] {
+    html:not(.light) [style*="background: linear-gradient(135deg, #3cd2ff15"] {
         background: linear-gradient(135deg, rgba(60, 210, 255, 0.4) 0%, rgba(60, 210, 255, 0.5) 100%) !important;
     }
 
     /* Buttons and interactive elements with light backgrounds need dark background */
-    button[style*="background: #"],
+    html:not(.light) button[style*="background: #"],
     div[style*="background: #ffffff"],
     div[style*="background: rgb(255"] {
         background-color: #1e293b !important;
     }
 
     /* Ensure text on these elements is readable */
-    button,
-    [class*="button"],
-    [class*="btn"] {
+    html:not(.light) button,
+    html:not(.light) [class*="button"],
+    html:not(.light) [class*="btn"] {
         color: inherit;
     }
 
     /* Switch toggle knob */
-    .absolute.left-0\.5 {
+    html:not(.light) .absolute.left-0\.5 {
         background-color: #0f172a !important;
     }
 
-    .peer:checked ~ .absolute.left-0\.5 {
+    html:not(.light) .peer:checked ~ .absolute.left-0\.5 {
         background-color: #3cd2ff !important;
     }
 
     /* Calendar Header - top borders */
-    .calendar-header {
+    html:not(.light) .calendar-header {
         background: linear-gradient(to bottom, #0f172a, #1e293b) !important;
         border-bottom: 2px solid #475569 !important;
     }
 
     /* Calendar Day Headers - week view */
-    .calendar-day-header {
+    html:not(.light) .calendar-day-header {
         background-color: #1e293b !important;
         color: #f1f5f9 !important;
         border-right-color: #334155 !important;
     }
 
-    .calendar-day-header:hover {
+    html:not(.light) .calendar-day-header:hover {
         background-color: #334155 !important;
     }
 
-    .calendar-day-header.today {
+    html:not(.light) .calendar-day-header.today {
         background: linear-gradient(135deg, rgba(60, 210, 255, 0.25), rgba(0, 58, 121, 0.15)) !important;
     }
 
-    .calendar-day-name {
+    html:not(.light) .calendar-day-name {
         color: #f1f5f9 !important;
     }
 
-    .calendar-day-name.today {
+    html:not(.light) .calendar-day-name.today {
         color: #3cd2ff !important;
     }
 
-    .calendar-day-date {
+    html:not(.light) .calendar-day-date {
         color: #cbd5e1 !important;
     }
 
-    .calendar-day-date.today {
+    html:not(.light) .calendar-day-date.today {
         color: #3cd2ff !important;
     }
 
     /* Month View */
-    .month-day-cell {
+    html:not(.light) .month-day-cell {
         background-color: #1e293b !important;
         border-color: #334155 !important;
         color: #f1f5f9 !important;
     }
 
-    .month-day-cell:hover {
+    html:not(.light) .month-day-cell:hover {
         background-color: #334155 !important;
     }
 
-    .month-day-cell.other-month {
+    html:not(.light) .month-day-cell.other-month {
         background-color: #0f172a !important;
         color: #64748b !important;
     }
 
-    .month-day-cell.today {
+    html:not(.light) .month-day-cell.today {
         background: linear-gradient(135deg, rgba(60, 210, 255, 0.2), rgba(60, 210, 255, 0.1)) !important;
         border-color: #3cd2ff !important;
     }
 
-    .month-day-number {
+    html:not(.light) .month-day-number {
         color: #f1f5f9 !important;
     }
 
-    .month-day-cell.today .month-day-number {
+    html:not(.light) .month-day-cell.today .month-day-number {
         color: #3cd2ff !important;
     }
 
-    .month-day-cell.other-month .month-day-number {
+    html:not(.light) .month-day-cell.other-month .month-day-number {
         color: #64748b !important;
     }
 
-    .month-event-item {
+    html:not(.light) .month-event-item {
         color: #f1f5f9 !important;
     }
 
-    .month-event-item.timetable {
+    html:not(.light) .month-event-item.timetable {
         background: linear-gradient(135deg, rgba(60, 210, 255, 0.3), rgba(0, 58, 121, 0.2)) !important;
         border-left-color: #3cd2ff !important;
         color: #3cd2ff !important;
     }
 
-    .month-event-item.custom {
+    html:not(.light) .month-event-item.custom {
         background: linear-gradient(135deg, rgba(255, 160, 100, 0.3), rgba(255, 128, 64, 0.2)) !important;
         border-left-color: #ffa064 !important;
         color: #ffa064 !important;
     }
 
-    .month-weekday-header {
+    html:not(.light) .month-weekday-header {
         background: linear-gradient(135deg, rgba(60, 210, 255, 0.25), rgba(0, 58, 121, 0.15)) !important;
         color: #f1f5f9 !important;
         border-bottom-color: #334155 !important;
     }
 
-    .month-events-count {
+    html:not(.light) .month-events-count {
         color: #cbd5e1 !important;
     }
 
     /* Year View */
-    .year-month-card {
+    html:not(.light) .year-month-card {
         background-color: #1e293b !important;
         border: 1px solid #334155 !important;
         color: #f1f5f9 !important;
     }
 
-    .year-month-card:hover {
+    html:not(.light) .year-month-card:hover {
         background-color: #334155 !important;
         border-color: #60d5ff !important;
     }
 
-    .year-month-header {
+    html:not(.light) .year-month-header {
         color: #f1f5f9 !important;
         border-bottom-color: #334155 !important;
     }
 
-    .year-month-grid {
+    html:not(.light) .year-month-grid {
         gap: 2px;
     }
 
-    .year-weekday {
+    html:not(.light) .year-weekday {
         color: #cbd5e1 !important;
     }
 
-    .year-day {
+    html:not(.light) .year-day {
         color: #cbd5e1 !important;
     }
 
-    .year-day:hover {
+    html:not(.light) .year-day:hover {
         background-color: #334155 !important;
     }
 
-    .year-day.other-month {
+    html:not(.light) .year-day.other-month {
         color: #64748b !important;
     }
 
-    .year-day.today {
+    html:not(.light) .year-day.today {
         background: linear-gradient(135deg, #3cd2ff, #003a79) !important;
         color: white !important;
     }
 
-    .year-day.has-events {
+    html:not(.light) .year-day.has-events {
         border-color: #60d5ff !important;
     }
 
-    .year-day.today.has-events {
+    html:not(.light) .year-day.today.has-events {
         border-color: white !important;
     }
 
-    .year-month-stats {
+    html:not(.light) .year-month-stats {
         color: #cbd5e1 !important;
         border-top-color: #334155 !important;
     }
 
-    .year-event-count {
+    html:not(.light) .year-event-count {
         color: #cbd5e1 !important;
     }
 
     /* Calendar grid and time lines - make dark */
-    .calendar-grid {
+    html:not(.light) .calendar-grid {
         background-color: #1e293b !important;
     }
 
-    .calendar-day-column {
+    html:not(.light) .calendar-day-column {
         background-color: #1e293b !important;
         border-right: 1px solid #334155 !important;
     }
 
-    .calendar-hour-line {
+    html:not(.light) .calendar-hour-line {
         background: #334155 !important;
     }
 
-    .calendar-half-hour-line {
+    html:not(.light) .calendar-half-hour-line {
         background: #475569 !important;
     }
 
-    .calendar-time-column {
+    html:not(.light) .calendar-time-column {
         background-color: #1e293b !important;
         border-right: 2px solid #334155 !important;
     }
 
-    .calendar-time-label {
+    html:not(.light) .calendar-time-label {
         color: #94a3b8 !important;
         background-color: #1e293b !important;
         border-right: 1px solid #334155 !important;
     }
 
-    .calendar-time-slot {
+    html:not(.light) .calendar-time-slot {
         color: #94a3b8 !important;
         border-bottom: 1px solid #334155 !important;
     }
 
     /* Different blue tone for stundenplan - not the bright cyan */
-    .course-block {
+    html:not(.light) .course-block {
         /* Will be overridden by inline styles, but this helps with text contrast */
     }
 
-    .course-block .text-gray-900 {
+    html:not(.light) .course-block .text-gray-900 {
         color: #f1f5f9 !important;
     }
 
-    .course-block .text-gray-600 {
+    html:not(.light) .course-block .text-gray-600 {
         color: #cbd5e1 !important;
     }
 
     /* Freund hinzufügen Button - much darker blue to differentiate from primary */
-    button[class*="bg-secondary/5"] {
+    html:not(.light) button[class*="bg-secondary/5"] {
         background-color: rgba(17, 78, 92, 0.25) !important;
     }
 
-    button[class*="bg-secondary/5"] .text-secondary {
+    html:not(.light) button[class*="bg-secondary/5"] .text-secondary {
         color: #1ca9c9 !important;
     }
 
-    button[class*="bg-secondary/5"]:hover {
+    html:not(.light) button[class*="bg-secondary/5"]:hover {
         background-color: rgba(28, 169, 201, 0.3) !important;
     }
 
-    button[class*="bg-secondary/5"]:hover .text-secondary {
+    html:not(.light) button[class*="bg-secondary/5"]:hover .text-secondary {
         color: #2ba8d4 !important;
     }
 
     /* Freunde Icon Box - much darker blue */
-    .bg-secondary\/10 {
+    html:not(.light) .bg-secondary\/10 {
         background-color: rgba(28, 169, 201, 0.2) !important;
     }
 
-    .bg-secondary\/10 .text-secondary {
+    html:not(.light) .bg-secondary\/10 .text-secondary {
         color: #1ca9c9 !important;
     }
 
@@ -547,23 +561,23 @@ nav > div {
     }*/
 
     /* Icon colors stay green/red */
-    .bg-green-100 .text-green-600 {
+    html:not(.light) .bg-green-100 .text-green-600 {
         color: #4ade80 !important;
     }
 
-    .bg-green-100 .text-green-700 {
+    html:not(.light) .bg-green-100 .text-green-700 {
         color: #22c55e !important;
     }
 
-    .text-green-600 {
+    html:not(.light) .text-green-600 {
         color: #4ade80 !important;
     }
 
-    .text-green-700 {
+    html:not(.light) .text-green-700 {
         color: #22c55e !important;
     }
 
-    .text-red-700 {
+    html:not(.light) .text-red-700 {
         color: #ef4444 !important;
     }
 }

@@ -314,6 +314,7 @@ async function loadCurrentView() {
 
 /**
  * Load week schedule from API
+ * Optimized: Uses single date-range request instead of multiple single-day requests
  */
 async function loadWeekSchedule() {
     try {
@@ -331,37 +332,42 @@ async function loadWeekSchedule() {
         // Determine number of days to load (5 or 7)
         const daysToLoad = showWeekends ? 7 : 5;
 
-        // Load events for each day of the week
-        const promises = [];
-        for (let i = 0; i < daysToLoad; i++) {
-            const date = new Date(currentWeekStart);
-            date.setDate(date.getDate() + i);
-            const dateStr = formatDateForAPI(date);
+        // Calculate start and end dates for the week
+        const startDate = new Date(currentWeekStart);
+        const endDate = new Date(currentWeekStart);
+        endDate.setDate(endDate.getDate() + daysToLoad - 1);
 
-            let promise;
+        const startDateStr = formatDateForAPI(startDate);
+        const endDateStr = formatDateForAPI(endDate);
+
+        console.log(`📅 Loading week events: ${startDateStr} to ${endDateStr}`);
+
+        // Single API request for the entire week
+        let allEvents = [];
+        try {
             if (viewingFriend) {
-                // Load friend's timetable
-                promise = ScheduleAPI.getFriendSchedule(viewingFriend, dateStr)
-                    .then(events => ({ date: dateStr, events }))
-                    .catch(() => ({ date: dateStr, events: [] })); // Handle errors gracefully
+                // Load friend's timetable for date range
+                allEvents = await ScheduleAPI.getFriendSchedule(viewingFriend, startDateStr, endDateStr);
             } else {
-                // Load own events
-                promise = ScheduleAPI.getEvents(dateStr)
-                    .then(events => ({ date: dateStr, events }))
-                    .catch(() => ({ date: dateStr, events: [] })); // Handle errors gracefully
+                // Load own events for date range
+                allEvents = await ScheduleAPI.getEvents(startDateStr, endDateStr);
             }
-
-            promises.push(promise);
+        } catch (error) {
+            console.error('Error loading week events:', error);
+            allEvents = [];
         }
 
-        const results = await Promise.all(promises);
-
-        // Organize events by date
-        results.forEach(result => {
-            weekEvents[result.date] = result.events || [];
+        // Organize events by date (extract date from start_time)
+        allEvents.forEach(event => {
+            // Extract date from ISO timestamp: "2025-10-13T07:15:00Z" -> "2025-10-13"
+            const eventDate = event.start_time.split('T')[0];
+            if (!weekEvents[eventDate]) {
+                weekEvents[eventDate] = [];
+            }
+            weekEvents[eventDate].push(event);
         });
 
-        console.log('✅ Week events loaded:', weekEvents);
+        console.log('✅ Week events loaded (optimized):', Object.keys(weekEvents).length, 'days');
 
         // Update UI
         updatePeriodDisplay();
@@ -746,6 +752,7 @@ async function loadMonthView() {
 
 /**
  * Load all events for the current month
+ * Optimized: Uses single date-range request instead of ~30 single-day requests
  */
 async function loadMonthEvents() {
     const year = currentMonth.getFullYear();
@@ -753,34 +760,36 @@ async function loadMonthEvents() {
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
 
+    const startDateStr = formatDateForAPI(firstDay);
+    const endDateStr = formatDateForAPI(lastDay);
+
+    console.log(`📅 Loading month events: ${startDateStr} to ${endDateStr}`);
+
     const events = {};
-    const promises = [];
 
-    // Load events for each day in the month
-    for (let day = 1; day <= lastDay.getDate(); day++) {
-        const date = new Date(year, month, day);
-        const dateStr = formatDateForAPI(date);
-
-        let promise;
+    try {
+        // Single API request for the entire month
+        let allEvents = [];
         if (viewingFriend) {
-            promise = ScheduleAPI.getFriendSchedule(viewingFriend, dateStr)
-                .then(dayEvents => ({ date: dateStr, events: dayEvents }))
-                .catch(() => ({ date: dateStr, events: [] }));
+            allEvents = await ScheduleAPI.getFriendSchedule(viewingFriend, startDateStr, endDateStr);
         } else {
-            promise = ScheduleAPI.getEvents(dateStr)
-                .then(dayEvents => ({ date: dateStr, events: dayEvents }))
-                .catch(() => ({ date: dateStr, events: [] }));
+            allEvents = await ScheduleAPI.getEvents(startDateStr, endDateStr);
         }
 
-        promises.push(promise);
+        // Organize events by date (extract date from start_time)
+        allEvents.forEach(event => {
+            // Extract date from ISO timestamp: "2025-10-13T07:15:00Z" -> "2025-10-13"
+            const eventDate = event.start_time.split('T')[0];
+            if (!events[eventDate]) {
+                events[eventDate] = [];
+            }
+            events[eventDate].push(event);
+        });
+
+        console.log('✅ Month events loaded (optimized):', Object.keys(events).length, 'days with events');
+    } catch (error) {
+        console.error('Error loading month events:', error);
     }
-
-    const results = await Promise.all(promises);
-
-    // Organize events by date
-    results.forEach(result => {
-        events[result.date] = result.events || [];
-    });
 
     return events;
 }
@@ -1000,18 +1009,15 @@ async function loadYearEventsAsync() {
 }
 
 /**
- * Load events for entire year - loads all days to accurately mark events
- * Uses throttled batching to avoid overwhelming the server (prevents logout)
+ * Load events for entire year
+ * MASSIVELY OPTIMIZED: Uses 12 date-range requests (one per month) instead of 365+ single-day requests!
  */
 async function loadYearEvents() {
     const year = currentYear.getFullYear();
-    const eventsPerMonth = {};
-
-    const allDates = [];
 
     // Get current month to prioritize loading
     const today = new Date();
-    const currentMonth = today.getFullYear() === year ? today.getMonth() : 0;
+    const currentMonthIndex = today.getFullYear() === year ? today.getMonth() : 0;
 
     // Smart loading order:
     // 1. Current month first
@@ -1021,85 +1027,58 @@ async function loadYearEvents() {
     const monthsToLoad = [];
 
     // Add current month first
-    monthsToLoad.push(currentMonth);
+    monthsToLoad.push(currentMonthIndex);
 
     // Add remaining months until end of year (forward)
-    for (let monthIndex = currentMonth + 1; monthIndex < 12; monthIndex++) {
+    for (let monthIndex = currentMonthIndex + 1; monthIndex < 12; monthIndex++) {
         monthsToLoad.push(monthIndex);
     }
 
     // Add previous months from current back to start (backward)
-    for (let monthIndex = currentMonth - 1; monthIndex >= 0; monthIndex--) {
+    for (let monthIndex = currentMonthIndex - 1; monthIndex >= 0; monthIndex--) {
         monthsToLoad.push(monthIndex);
     }
 
-    // Process requests in batches to avoid server overload and prevent logout
-    const BATCH_SIZE = 20; // Process 20 days at a time
-    const BATCH_DELAY = 100; // 100ms delay between batches
-
-    // Process each month sequentially and update UI immediately
+    // Load each month with a single API request
     for (const monthIndex of monthsToLoad) {
         const firstDay = new Date(year, monthIndex, 1);
         const lastDay = new Date(year, monthIndex + 1, 0);
-        const daysInMonth = lastDay.getDate();
 
-        // Collect dates for this month
-        const monthDates = [];
-        for (let day = 1; day <= daysInMonth; day++) {
-            const date = new Date(year, monthIndex, day);
-            monthDates.push({ date, monthIndex, day });
-        }
+        const startDateStr = formatDateForAPI(firstDay);
+        const endDateStr = formatDateForAPI(lastDay);
 
-        // Process this month's dates in batches
-        const monthResults = [];
-        for (let i = 0; i < monthDates.length; i += BATCH_SIZE) {
-            const batch = monthDates.slice(i, i + BATCH_SIZE);
-            const batchPromises = batch.map(({ date, monthIndex, day }) => {
-                const dateStr = formatDateForAPI(date);
+        console.log(`📅 Loading month ${monthIndex + 1}/12: ${startDateStr} to ${endDateStr}`);
 
-                let promise;
-                if (viewingFriend) {
-                    promise = ScheduleAPI.getFriendSchedule(viewingFriend, dateStr)
-                        .then(events => ({ monthIndex, day, events }))
-                        .catch((error) => {
-                            console.warn(`Failed to load events for ${dateStr}:`, error);
-                            return { monthIndex, day, events: [] };
-                        });
-                } else {
-                    promise = ScheduleAPI.getEvents(dateStr)
-                        .then(events => ({ monthIndex, day, events }))
-                        .catch((error) => {
-                            console.warn(`Failed to load events for ${dateStr}:`, error);
-                            return { monthIndex, day, events: [] };
-                        });
-                }
+        try {
+            // Single API request for the entire month
+            let allEvents = [];
+            if (viewingFriend) {
+                allEvents = await ScheduleAPI.getFriendSchedule(viewingFriend, startDateStr, endDateStr);
+            } else {
+                allEvents = await ScheduleAPI.getEvents(startDateStr, endDateStr);
+            }
 
-                return promise;
+            // Organize events by day for this month
+            const monthEvents = {};
+            allEvents.forEach(event => {
+                // Extract date from ISO timestamp: "2025-10-13T07:15:00Z" -> "2025-10-13"
+                const eventDateStr = event.start_time.split('T')[0];
+                const eventDate = new Date(eventDateStr);
+                const day = eventDate.getDate();
+                monthEvents[day] = true;
             });
 
-            // Execute this batch in parallel
-            const batchResults = await Promise.all(batchPromises);
-            monthResults.push(...batchResults);
+            // Update calendar immediately for this month
+            updateMonthWithEvents(monthIndex, monthEvents);
 
-            // Add delay between batches
-            if (i + BATCH_SIZE < monthDates.length) {
-                await new Promise(resolve => setTimeout(resolve, BATCH_DELAY));
-            }
+            console.log(`✅ Month ${monthIndex + 1} loaded: ${Object.keys(monthEvents).length} days with events`);
+        } catch (error) {
+            console.error(`Error loading month ${monthIndex + 1}:`, error);
+            // Continue with next month even if this one fails
         }
 
-        // Organize events for this month
-        const monthEvents = {};
-        monthResults.forEach(result => {
-            if (result.events && result.events.length > 0) {
-                monthEvents[result.day] = true;
-            }
-        });
-
-        // Update calendar immediately for this month
-        updateMonthWithEvents(monthIndex, monthEvents);
-
-        // Small delay before processing next month
-        await new Promise(resolve => setTimeout(resolve, 50));
+        // Small delay before processing next month to keep UI responsive
+        await new Promise(resolve => setTimeout(resolve, 100));
     }
 }
 
@@ -1445,11 +1424,14 @@ function showEventDetails(event) {
                     </div>
                 ` : ''}
 
-                ${event.description ? `
-                    <div class="mt-4 p-3 bg-gray-50 rounded-lg">
-                        <p class="text-sm text-gray-700">${nl2br(event.description)}</p>
-                    </div>
-                ` : ''}
+                ${event.description ? (() => {
+                    const filteredDesc = filterDescription(event.description);
+                    return filteredDesc ? `
+                        <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+                            <p class="text-sm text-gray-700">${nl2br(filteredDesc)}</p>
+                        </div>
+                    ` : '';
+                })() : ''}
 
                 ${event.event_type === 'custom_hour' ? `
                     <div class="mt-4 pt-4 border-t">
@@ -1628,6 +1610,51 @@ function cleanEventTitle(title) {
 function nl2br(text) {
     if (!text) return '';
     return text.replace(/\n/g, '<br>');
+}
+
+/**
+ * Helper: Filter description to remove redundant information already shown above
+ * Removes lines that start with: Veranstaltung, Dozent, Raum, Zeit
+ */
+function filterDescription(description) {
+    if (!description) return '';
+
+    console.log('Original description:', description);
+
+    // Split by actual newline characters (both \n and \\n)
+    // First replace literal \n strings with actual newlines
+    let normalizedDesc = description.replace(/\\n/g, '\n');
+    const lines = normalizedDesc.split('\n');
+
+    console.log('Split into lines:', lines);
+
+    // Filter out lines that start with redundant prefixes
+    const redundantPrefixes = [
+        'Veranstaltung:',
+        'Dozent:',
+        'Raum:',
+        'Zeit:',
+        'Dauer:'
+    ];
+
+    const filteredLines = lines.filter(line => {
+        const trimmedLine = line.trim();
+        // Remove empty lines
+        if (!trimmedLine) return false;
+        // Check if line starts with any redundant prefix
+        const isRedundant = redundantPrefixes.some(prefix => trimmedLine.startsWith(prefix));
+        if (isRedundant) {
+            console.log('Filtering out redundant line:', trimmedLine);
+        }
+        return !isRedundant;
+    });
+
+    console.log('Filtered lines:', filteredLines);
+
+    // Only return if there are meaningful lines left
+    const result = filteredLines.length > 0 ? filteredLines.join('\n') : '';
+    console.log('Final filtered description:', result);
+    return result;
 }
 
 // Initialize when page loads

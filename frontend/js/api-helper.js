@@ -258,22 +258,52 @@ const UserAPI = {
             body: JSON.stringify({ zenturie }),
         });
     },
+
+    // Get user settings
+    async getSettings() {
+        const sessionId = storage.getItem('token');
+        if (!sessionId) throw new Error('Nicht eingeloggt');
+        return await apiRequest(`/user_settings?session_id=${sessionId}`);
+    },
+
+    // Update user settings (zenturie_id, theme, notification_preference)
+    async updateSettings(settings) {
+        const sessionId = storage.getItem('token');
+        if (!sessionId) throw new Error('Nicht eingeloggt');
+        return await apiRequest(`/user_settings?session_id=${sessionId}`, {
+            method: 'POST',
+            body: JSON.stringify(settings),
+        });
+    },
 };
 
 /**
  * Events/Schedule APIs - NORA Timetable Service
  */
 const ScheduleAPI = {
-    // Get events for a specific date (timetables + custom_hours)
-    async getEvents(date) {
+    // Get events for a specific date or date range (timetables + custom_hours)
+    // If endDate is provided, returns all events between startDate and endDate (inclusive)
+    async getEvents(date, endDate = null) {
         const sessionId = storage.getItem('token');
         if (!sessionId) throw new Error('Nicht eingeloggt');
-        return await apiRequest(`/events?session_id=${sessionId}&date=${date}`);
+
+        let url = `/events?session_id=${sessionId}&date=${date}`;
+        if (endDate) {
+            url += `&end=${endDate}`;
+        }
+
+        return await apiRequest(url);
     },
 
     // Get friend's timetable (only timetables, no custom hours)
-    async getFriendSchedule(zenturie, date) {
-        return await apiRequest(`/view?zenturie=${zenturie}&date=${date}`);
+    // If endDate is provided, returns all events between startDate and endDate (inclusive)
+    async getFriendSchedule(zenturie, date, endDate = null) {
+        let url = `/view?zenturie=${zenturie}&date=${date}`;
+        if (endDate) {
+            url += `&end=${endDate}`;
+        }
+
+        return await apiRequest(url);
     },
 };
 

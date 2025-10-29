@@ -823,115 +823,115 @@
         /* Dark Mode Support for Week View */
         @media (prefers-color-scheme: dark) {
             /* Calendar Container */
-            .calendar-container {
+            html:not(.light) .calendar-container {
                 background: #1e293b;
             }
 
             /* Calendar Events - Week View */
-            .calendar-event {
+            html:not(.light) .calendar-event {
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
             }
 
-            .calendar-event:hover {
+            html:not(.light) .calendar-event:hover {
                 box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6);
             }
 
-            .calendar-event.timetable {
+            html:not(.light) .calendar-event.timetable {
                 background: linear-gradient(135deg, rgba(60, 210, 255, 0.35), rgba(0, 58, 121, 0.25));
                 border-left-color: #60d5ff;
                 color: #e0f2fe;
             }
 
-            .calendar-event.custom {
+            html:not(.light) .calendar-event.custom {
                 background: linear-gradient(135deg, rgba(255, 160, 100, 0.35), rgba(255, 128, 64, 0.25));
                 border-left-color: #ffb380;
                 color: #ffedd5;
             }
 
-            .calendar-event-title {
+            html:not(.light) .calendar-event-title {
                 color: #f1f5f9;
             }
 
-            .calendar-event-time,
-            .calendar-event-location {
+            html:not(.light) .calendar-event-time,
+            html:not(.light) .calendar-event-location {
                 color: #cbd5e1;
             }
 
             /* Current Time Indicator */
-            .current-time-indicator {
+            html:not(.light) .current-time-indicator {
                 background: linear-gradient(90deg, #60d5ff 0%, #3cd2ff 100%);
                 box-shadow: 0 0 12px rgba(60, 210, 255, 0.6);
             }
 
-            .current-time-indicator::before {
+            html:not(.light) .current-time-indicator::before {
                 background: #60d5ff;
                 border-color: #1e293b;
                 box-shadow: 0 0 8px rgba(60, 210, 255, 0.8);
             }
 
-            .current-time-indicator::after {
+            html:not(.light) .current-time-indicator::after {
                 border-left-color: #60d5ff;
             }
 
             /* Month View Grid Container */
-            .month-view-container {
+            html:not(.light) .month-view-container {
                 background: #334155;
                 border-color: #334155;
             }
 
             /* Year View Container */
-            .year-view-container {
+            html:not(.light) .year-view-container {
                 background: transparent;
             }
 
             /* Modal Overlay */
-            .modal-overlay {
+            html:not(.light) .modal-overlay {
                 background: rgba(0, 0, 0, 0.75);
             }
 
-            .modal-content {
+            html:not(.light) .modal-content {
                 background: rgba(30, 41, 59, 0.95) !important;
                 backdrop-filter: blur(20px);
                 border: 1px solid rgba(148, 163, 184, 0.2);
             }
 
             /* Modal Text Colors */
-            #eventModalContent h2,
-            #eventModalContent h3,
-            #eventModalContent p,
-            #eventModalContent div {
+            html:not(.light) #eventModalContent h2,
+            html:not(.light) #eventModalContent h3,
+            html:not(.light) #eventModalContent p,
+            html:not(.light) #eventModalContent div {
                 color: #f1f5f9;
             }
 
             /* Modal Icons and Buttons */
-            #eventModalContent button {
+            html:not(.light) #eventModalContent button {
                 color: #cbd5e1;
             }
 
-            #eventModalContent button:hover {
+            html:not(.light) #eventModalContent button:hover {
                 background-color: #334155;
             }
 
             /* Modal Sections */
-            #eventModalContent .border-t {
+            html:not(.light) #eventModalContent .border-t {
                 border-color: #475569 !important;
             }
 
-            #eventModalContent .bg-gray-50 {
+            html:not(.light) #eventModalContent .bg-gray-50 {
                 background-color: #0f172a !important;
             }
 
             /* Legend */
-            .glass-effect h3 {
+            html:not(.light) .glass-effect h3 {
                 color: #f1f5f9;
             }
 
-            .glass-effect span {
+            html:not(.light) .glass-effect span {
                 color: #cbd5e1;
             }
 
             /* Gradient Text - make it more visible in dark mode */
-            .gradient-text {
+            html:not(.light) .gradient-text {
                 background: linear-gradient(135deg, #60d5ff 0%, #3cd2ff 100%);
                 -webkit-background-clip: text;
                 -webkit-text-fill-color: transparent;
@@ -939,67 +939,67 @@
             }
 
             /* Preloader in Dark Mode */
-            #content-loader {
+            html:not(.light) #content-loader {
                 background: rgba(30, 41, 59, 0.95) !important;
             }
 
-            #content-loader p {
+            html:not(.light) #content-loader p {
                 color: #cbd5e1;
             }
 
             /* Weekend Toggle */
-            #weekendToggle {
+            html:not(.light) #weekendToggle {
                 background-color: #1e293b;
                 box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
             }
 
-            #weekendToggle span {
+            html:not(.light) #weekendToggle span {
                 color: #cbd5e1;
             }
 
             /* View Switcher Buttons */
-            .flex.bg-white.rounded-lg.shadow {
+            html:not(.light) .flex.bg-white.rounded-lg.shadow {
                 background-color: #1e293b !important;
                 box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5) !important;
             }
 
             /* Action Buttons in Header */
-            button[onclick*="showAdd"] {
+            html:not(.light) button[onclick*="showAdd"] {
                 background-color: #1e293b;
                 box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
             }
 
-            button[onclick*="showAdd"]:hover {
+            html:not(.light) button[onclick*="showAdd"]:hover {
                 background-color: #334155;
                 box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
             }
 
-            button[onclick*="showAdd"] svg {
+            html:not(.light) button[onclick*="showAdd"] svg {
                 color: #cbd5e1;
             }
 
-            button[onclick*="showAdd"] span {
+            html:not(.light) button[onclick*="showAdd"] span {
                 color: #f1f5f9;
             }
 
             /* Gradient buttons keep their gradients but with adjusted colors */
-            button[onclick*="showAddExam"] {
+            html:not(.light) button[onclick*="showAddExam"] {
                 background: linear-gradient(to right, #fb923c, #f97316) !important;
             }
 
             /* Navigation Buttons */
-            #prevPeriod:hover,
-            #nextPeriod:hover,
-            button[id*="view"]:hover {
+            html:not(.light) #prevPeriod:hover,
+            html:not(.light) #nextPeriod:hover,
+            html:not(.light) button[id*="view"]:hover {
                 background-color: #334155;
             }
 
             /* Period Title and Subtitle */
-            #periodTitle {
+            html:not(.light) #periodTitle {
                 color: #f1f5f9;
             }
 
-            #periodSubtitle {
+            html:not(.light) #periodSubtitle {
                 color: #cbd5e1;
             }
         }
@@ -1159,6 +1159,18 @@
             </div>
         </div>
     </div>
+
+    <!-- Footer -->
+    <footer class="mt-16 pt-8 pb-4 border-t border-gray-200 dark:border-slate-700">
+        <div class="text-center text-gray-500 dark:text-gray-400 text-xs space-y-2">
+            <p>&copy; 2025 NORA – Nordakademie Organizer & Room Assistant</p>
+            <p class="space-x-3">
+                <a href="/impressum.html" class="hover:text-primary transition-colors">Impressum</a>
+                <span>•</span>
+                <a href="/privacy.html" class="hover:text-primary transition-colors">Datenschutz</a>
+            </p>
+        </div>
+    </footer>
 
 </main>
 
