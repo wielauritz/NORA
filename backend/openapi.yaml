@@ -481,33 +481,27 @@ paths:
         - Timetable
       summary: Get Events
       description: |
-        Returns timetable events, custom hours, and exams for a given time range.
-        Can optionally include friend's timetables.
+        Returns timetable events, custom hours, and exams for a given date or date range.
+        - Single day: Use only `date` parameter (e.g., ?date=2024-01-20)
+        - Date range: Use `date` and `end` parameters (e.g., ?date=2024-01-01&end=2024-01-31)
       parameters:
         - $ref: '#/components/parameters/SessionID'
-        - name: start
+        - name: date
           in: query
           required: true
-          description: Start date (ISO 8601)
+          description: Start date (YYYY-MM-DD format)
           schema:
             type: string
-            format: date-time
-            example: 2024-01-01T00:00:00Z
+            format: date
+            example: 2024-01-20
         - name: end
           in: query
-          required: true
-          description: End date (ISO 8601)
+          required: false
+          description: Optional end date for range queries (YYYY-MM-DD format). If not provided, returns events for single day specified in 'date'.
           schema:
             type: string
-            format: date-time
-            example: 2024-01-31T23:59:59Z
-        - name: friend_user_id
-          in: query
-          required: false
-          description: Include friend's timetable events
-          schema:
-            type: integer
-            example: 42
+            format: date
+            example: 2024-01-31
       responses:
         '200':
           description: List of events
@@ -525,15 +519,24 @@ paths:
       tags:
         - Timetable
       summary: View Zenturie Timetable (Public)
-      description: Public endpoint to view timetable for a specific zenturie
+      description: Public endpoint to view timetable for a specific zenturie on a specific date
       security: []
       parameters:
         - name: zenturie
           in: query
           required: true
+          description: Zenturie name
           schema:
             type: string
             example: I24c
+        - name: date
+          in: query
+          required: true
+          description: Date to view timetable for (YYYY-MM-DD format)
+          schema:
+            type: string
+            format: date
+            example: 2024-01-20
       responses:
         '200':
           description: Timetable events
@@ -1408,7 +1411,13 @@ components:
       properties:
         event_type:
           type: string
-          enum: [timetable, exam, custom]
+          enum: [timetable, exam, custom, custom_hour_blocked]
+          description: |
+            Type of room occupancy event:
+            - `timetable`: Regular timetable event with details
+            - `exam`: Exam event
+            - `custom`: Custom event
+            - `custom_hour_blocked`: Room blocked by custom hour (no details for privacy)
         start_time:
           type: string
           format: date-time
@@ -1417,6 +1426,8 @@ components:
           format: date-time
         details:
           type: string
+          nullable: true
+          description: Event details (null for custom_hour_blocked due to privacy)
 
     RoomDetailResponse:
       type: object
