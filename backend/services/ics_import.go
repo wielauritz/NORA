@@ -579,9 +579,28 @@ func extractRoomFromDescription(description string) string {
 	// Extract everything after "Raum: "
 	afterRoom := description[idx+len(roomPrefix):]
 
-	// Find the next newline
-	newlineIdx := strings.Index(afterRoom, "\n")
+	// Find the next newline (handle both literal \n and actual newline)
+	// ICS files can have literal "\n" (backslash + n) or actual newline character
 	var room string
+
+	// Check for literal backslash-n first (common in ICS)
+	literalNewlineIdx := strings.Index(afterRoom, "\\n")
+	actualNewlineIdx := strings.Index(afterRoom, "\n")
+
+	// Use whichever comes first
+	newlineIdx := -1
+	if literalNewlineIdx != -1 && actualNewlineIdx != -1 {
+		if literalNewlineIdx < actualNewlineIdx {
+			newlineIdx = literalNewlineIdx
+		} else {
+			newlineIdx = actualNewlineIdx
+		}
+	} else if literalNewlineIdx != -1 {
+		newlineIdx = literalNewlineIdx
+	} else if actualNewlineIdx != -1 {
+		newlineIdx = actualNewlineIdx
+	}
+
 	if newlineIdx != -1 {
 		room = afterRoom[:newlineIdx]
 	} else {
@@ -665,47 +684,60 @@ func findOrCreateRoom(location string) (*uint, string) {
 
 // parseRoomNumber extracts room number from location string
 // Examples: "A104" -> "A104", "EDV-A102" -> "A102", "A 23 a" -> "A23A"
+// Stops at: backslash, newline, or other invalid characters
 func parseRoomNumber(location string) string {
-	// Remove ICS escape characters (backslashes) and trim
-	location = strings.ReplaceAll(location, "\\", "")
+	// Trim initial whitespace
 	location = strings.TrimSpace(location)
+
+	// CRITICAL: Stop at backslash (prevents "C007\nAnmerkung" -> "C007NANMERKUNG")
+	if idx := strings.Index(location, "\\"); idx != -1 {
+		location = location[:idx]
+		location = strings.TrimSpace(location)
+	}
 
 	// Handle special prefixes like "EDV-"
 	if strings.Contains(location, "-") {
 		parts := strings.Split(location, "-")
 		if len(parts) == 2 {
 			location = strings.TrimSpace(parts[1])
-			// Remove backslashes again after split
-			location = strings.ReplaceAll(location, "\\", "")
 		}
 	}
 
-	// Final trim and backslash removal
-	location = strings.ReplaceAll(location, "\\", "")
+	// Remove spaces (handles "A 23 a" -> "A23a")
+	location = strings.ReplaceAll(location, " ", "")
 	location = strings.TrimSpace(location)
 
-	// CRITICAL: Remove ALL spaces (handles "A 23 a" -> "A23a")
-	locationNoSpaces := strings.ReplaceAll(location, " ", "")
+	// Extract only valid room number: Letter + 2-3 digits + optional trailing letter
+	var roomNumber strings.Builder
+	digitCount := 0
 
-	// Check if it looks like a room number (Letter + digits + optional letter)
-	if len(locationNoSpaces) >= 2 {
-		// Must start with a letter and contain digits
-		if (locationNoSpaces[0] >= 'A' && locationNoSpaces[0] <= 'Z') || (locationNoSpaces[0] >= 'a' && locationNoSpaces[0] <= 'z') {
-			hasDigit := false
-			for _, c := range locationNoSpaces {
-				if c >= '0' && c <= '9' {
-					hasDigit = true
-					break
-				}
+	for i, c := range location {
+		if i == 0 {
+			// First character must be a letter
+			if (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') {
+				roomNumber.WriteRune(c)
+			} else {
+				return "" // Invalid start
 			}
-			if hasDigit {
-				// Return uppercase without spaces or backslashes
-				result := strings.ToUpper(locationNoSpaces)
-				result = strings.ReplaceAll(result, "\\", "")
-				result = strings.ReplaceAll(result, " ", "")
-				return strings.TrimSpace(result)
-			}
+		} else if c >= '0' && c <= '9' {
+			// Accept digits (2-3 digits expected)
+			roomNumber.WriteRune(c)
+			digitCount++
+		} else if digitCount >= 2 && ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) {
+			// Optional trailing letter (only after at least 2 digits, e.g., A23a)
+			roomNumber.WriteRune(c)
+			break // Only one trailing letter
+		} else {
+			// Stop at any other character (punctuation, symbols, etc.)
+			break
 		}
+	}
+
+	result := strings.ToUpper(roomNumber.String())
+
+	// Validate: Must have at least 3 characters (letter + 2 digits minimum)
+	if len(result) >= 3 && digitCount >= 2 {
+		return result
 	}
 
 	return ""
