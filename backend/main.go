@@ -63,11 +63,12 @@ func main() {
 		Format: "[${time}] ${status} - ${method} ${path} (${latency})\n",
 	}))
 
-	// CORS Middleware - must be before routes
+	// CORS Middleware - must be before routes (Allow all origins)
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "https://new.nora-nak.de,https://nora-nak.de,http://localhost:3000,http://localhost:5173",
+		AllowOrigins:     "*",
 		AllowHeaders:     "Content-Type,Authorization,Accept,Origin,User-Agent,Cache-Control,Pragma",
-		AllowCredentials: true,
+		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
+		AllowCredentials: false,
 		ExposeHeaders:    "Content-Length,Content-Type",
 	}))
 
