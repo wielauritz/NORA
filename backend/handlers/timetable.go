@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"sort"
 	"strings"
 	"time"
 
@@ -309,7 +310,12 @@ func GetEvents(c *fiber.Ctx) error {
 	}
 
 	// Sort by start_time
-	// Note: In production, use a proper sorting function
+	sort.Slice(events, func(i, j int) bool {
+		startTimeI, _ := time.Parse(time.RFC3339, events[i]["start_time"].(string))
+		startTimeJ, _ := time.Parse(time.RFC3339, events[j]["start_time"].(string))
+		return startTimeI.Before(startTimeJ)
+	})
+
 	return c.JSON(events)
 }
 
@@ -533,6 +539,13 @@ func ViewZenturieTimetable(c *fiber.Ctx) error {
 			"border_color": tt.BorderColor,
 		})
 	}
+
+	// Sort by start_time
+	sort.Slice(events, func(i, j int) bool {
+		startTimeI, _ := time.Parse(time.RFC3339, events[i]["start_time"].(string))
+		startTimeJ, _ := time.Parse(time.RFC3339, events[j]["start_time"].(string))
+		return startTimeI.Before(startTimeJ)
+	})
 
 	return c.JSON(events)
 }
