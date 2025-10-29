@@ -229,7 +229,7 @@ func VerifyEmail(c *fiber.Ctx) error {
 
 	// Mark user as verified
 	user.Verified = true
-	user.UUID = uuid.Nil          // Clear UUID
+	// Keep UUID intact so the link can be reused (important for email clients that pre-fetch links)
 	user.VerificationExpiry = nil // Clear expiry
 	config.DB.Save(&user)
 
@@ -391,6 +391,10 @@ func ResendVerificationEmail(c *fiber.Ctx) error {
 // HTML Templates (simplified versions - should be in separate files in production)
 
 func getVerificationSuccessPage(sessionID, email string) string {
+	// Escape strings for JavaScript to prevent XSS
+	escapedEmail := strings.ReplaceAll(strings.ReplaceAll(email, "\\", "\\\\"), "'", "\\'")
+	escapedToken := strings.ReplaceAll(strings.ReplaceAll(sessionID, "\\", "\\\\"), "'", "\\'")
+
 	// Redirect to new Ionic app with token as query parameter
 	return fmt.Sprintf(`
 <!DOCTYPE html>
@@ -413,7 +417,7 @@ func getVerificationSuccessPage(sessionID, email string) string {
     <p>Sie werden zum Dashboard weitergeleitet...</p>
 </body>
 </html>
-`, sessionID, email)
+`, escapedToken, escapedEmail)
 }
 
 func getInvalidVerificationCode() string {
