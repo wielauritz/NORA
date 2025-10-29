@@ -262,21 +262,26 @@ func GetEvents(c *fiber.Ctx) error {
 	// Timetable events for user's zenturie
 	if user.ZenturienID != nil {
 		var timetables []models.Timetable
-		config.DB.Where("zenturien_id = ? AND start_time >= ? AND start_time <= ?",
+		config.DB.Preload("Room").Where("zenturien_id = ? AND start_time >= ? AND start_time <= ?",
 			*user.ZenturienID, startOfDay, endOfDay).Find(&timetables)
 
 		for _, tt := range timetables {
+			var roomStr *string
+			if tt.Room != nil {
+				roomStr = &tt.Room.RoomNumber
+			}
+
 			events = append(events, map[string]interface{}{
 				"event_type":   "timetable",
 				"title":        tt.Summary,
 				"start_time":   tt.StartTime.UTC().Format(time.RFC3339),
 				"end_time":     tt.EndTime.UTC().Format(time.RFC3339),
-				"location":     tt.Location,
+				"location":     roomStr,
 				"description":  tt.Description,
 				"uid":          tt.UID,
 				"professor":    tt.Professor,
 				"course_code":  tt.CourseCode,
-				"room":         tt.Location,
+				"room":         roomStr,
 				"color":        tt.Color,
 				"border_color": tt.BorderColor,
 			})
@@ -519,22 +524,27 @@ func ViewZenturieTimetable(c *fiber.Ctx) error {
 
 	// Get timetables
 	var timetables []models.Timetable
-	config.DB.Where("zenturien_id = ? AND start_time >= ? AND start_time <= ?",
+	config.DB.Preload("Room").Where("zenturien_id = ? AND start_time >= ? AND start_time <= ?",
 		zenturie.ID, startOfDay, endOfDay).Find(&timetables)
 
 	events := make([]map[string]interface{}, 0)
 	for _, tt := range timetables {
+		var roomStr *string
+		if tt.Room != nil {
+			roomStr = &tt.Room.RoomNumber
+		}
+
 		events = append(events, map[string]interface{}{
 			"event_type":   "timetable",
 			"title":        tt.Summary,
 			"start_time":   tt.StartTime.UTC().Format(time.RFC3339),
 			"end_time":     tt.EndTime.UTC().Format(time.RFC3339),
-			"location":     tt.Location,
+			"location":     roomStr,
 			"description":  tt.Description,
 			"uid":          tt.UID,
 			"professor":    tt.Professor,
 			"course_code":  tt.CourseCode,
-			"room":         tt.Location,
+			"room":         roomStr,
 			"color":        tt.Color,
 			"border_color": tt.BorderColor,
 		})

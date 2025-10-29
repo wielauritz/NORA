@@ -378,6 +378,16 @@ func ImportEventsToDatabase(eventsMap map[string][]TimetableEvent) (*ImportStati
 				roomID, extraLocation = findOrCreateRoom(roomLocation)
 			}
 
+			// Extract professor from description if not already set
+			// PRIORITY: Extract from Description field (format: "Dozent: Prof. Dr. Müller")
+			// FALLBACK: Use extractMetadata result (from Summary field)
+			if event.Professor == "" && event.Description != "" {
+				professorFromDesc := extractProfessorFromDescription(event.Description)
+				if professorFromDesc != "" {
+					event.Professor = professorFromDesc
+				}
+			}
+
 			// Check if event already exists (by UID AND ZenturienID)
 			// This allows the same UID to exist for different zenturien (Wahlpflichtmodule)
 			var existing models.Timetable
@@ -554,6 +564,66 @@ func extractCourseName(summary string) string {
 	}
 
 	return strings.TrimSpace(summary)
+}
+
+// extractProfessorFromDescription extracts the professor from the description field
+// Format: "Veranstaltung: ...\nDozent: Prof. Dr. Müller\nPause: ...\n..."
+// Returns the professor string after "Dozent: " up to the next newline
+func extractProfessorFromDescription(description string) string {
+	if description == "" {
+		return ""
+	}
+
+	// Search for "Dozent: " (case-sensitive as ICS files are consistent)
+	professorPrefix := "Dozent: "
+	idx := strings.Index(description, professorPrefix)
+	if idx == -1 {
+		// Try alternative: "Dozent:" without space
+		professorPrefix = "Dozent:"
+		idx = strings.Index(description, professorPrefix)
+		if idx == -1 {
+			return ""
+		}
+	}
+
+	// Extract everything after "Dozent: "
+	afterProfessor := description[idx+len(professorPrefix):]
+
+	// Find the next newline (handle both literal \n and actual newline)
+	var professor string
+
+	// Check for literal backslash-n first (common in ICS)
+	literalNewlineIdx := strings.Index(afterProfessor, "\\n")
+	actualNewlineIdx := strings.Index(afterProfessor, "\n")
+
+	// Use whichever comes first
+	newlineIdx := -1
+	if literalNewlineIdx != -1 && actualNewlineIdx != -1 {
+		if literalNewlineIdx < actualNewlineIdx {
+			newlineIdx = literalNewlineIdx
+		} else {
+			newlineIdx = actualNewlineIdx
+		}
+	} else if literalNewlineIdx != -1 {
+		newlineIdx = literalNewlineIdx
+	} else if actualNewlineIdx != -1 {
+		newlineIdx = actualNewlineIdx
+	}
+
+	if newlineIdx != -1 {
+		professor = afterProfessor[:newlineIdx]
+	} else {
+		// No newline found, take everything until the end
+		professor = afterProfessor
+	}
+
+	// Trim whitespace and handle "-" which means "no professor"
+	professor = strings.TrimSpace(professor)
+	if professor == "-" || professor == "" {
+		return ""
+	}
+
+	return professor
 }
 
 // extractRoomFromDescription extracts the room from the description field
