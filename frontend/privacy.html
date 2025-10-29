@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Datenschutzerklärung - NORA</title>
+    <meta name="description" content="Erweiterte DSGVO-Datenschutzerklärung für NORA – Nordakademie Organizer & Room Assistant (Website, Web-App, iOS/Android-Apps und API).">
+    <script src="js/dark-mode.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3cd2ff',
+                        secondary: '#003a79',
+                        accent: '#ffa064',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="css/common.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #3cd2ff 0%, #003a79 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Table of contents styling */
+        .toc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .toc-grid li {
+            margin: 0;
+        }
+
+        .toc-grid a {
+            display: block;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s;
+        }
+
+        .toc-grid a:hover {
+            background-color: rgba(60, 210, 255, 0.1);
+        }
+
+        /* Table styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border: 1px solid;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            html:not(.light) th,
+            html:not(.light) td {
+                border-color: #334155;
+            }
+
+            html:not(.light) th {
+                background-color: #1e293b;
+            }
+        }
+
+        th, td {
+            border-color: #e5e7eb;
+        }
+
+        th {
+            background-color: #f9fafb;
+            font-weight: 600;
+        }
+
+        code {
+            background-color: rgba(60, 210, 255, 0.1);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-800 min-h-screen">
+
+    <!-- Simple Header with Logo -->
+    <nav class="glass-effect shadow-lg fixed top-0 left-0 right-0 z-50 w-full" style="padding-top: max(0.5rem, env(safe-area-inset-top)); padding-bottom: 0.5rem;">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-12">
+                <div class="flex items-center space-x-3">
+                    <a href="/index.html" class="hover:cursor-pointer">
+                        <img src="https://cdn.nora-nak.de/img/logo.png" alt="NORA Logo" class="h-8">
+                    </a>
+                </div>
+                <a href="/index.html" class="px-4 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+                    Zurück
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style="padding-top: 6rem; padding-bottom: 3rem;">
+
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                <span class="gradient-text">Datenschutzerklärung</span>
+            </h1>
+            <p class="text-gray-600 dark:text-gray-400 mb-2">für <strong>NORA – Nordakademie Organizer & Room Assistant</strong></p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+                <span class="inline-block px-3 py-1 bg-primary/10 text-primary rounded-full">
+                    Geltungsbereich: <code>https://nora-nak.de</code>, <code>https://*.nora-nak.de</code> inkl. <code>https://api.nora-nak.de</code>
+                </span>
+            </p>
+        </div>
+
+        <!-- Table of Contents -->
+        <div class="glass-effect dark:bg-slate-800/95 rounded-2xl p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Inhaltsverzeichnis</h2>
+            <ol class="toc-grid list-decimal list-inside text-gray-700 dark:text-gray-300 text-sm">
+                <li><a href="#begriff">Begriffsbestimmungen</a></li>
+                <li><a href="#verantwortlicher">Verantwortlicher</a></li>
+                <li><a href="#kontakt">Kontaktmöglichkeiten</a></li>
+                <li><a href="#grundlagen">Rechtsgrundlagen & Zwecke</a></li>
+                <li><a href="#kategorien">Kategorien personenbezogener Daten</a></li>
+                <li><a href="#pflichtbereitstellung">Pflicht zur Bereitstellung</a></li>
+                <li><a href="#quellen">Datenquellen</a></li>
+                <li><a href="#empfaenger">Empfänger / Auftragsverarbeiter</a></li>
+                <li><a href="#drittlaender">Drittländerübermittlung</a></li>
+                <li><a href="#speicherdauer">Speicherdauer & Löschung</a></li>
+                <li><a href="#technologien">Cookies & lokale Speichertechnologien</a></li>
+                <li><a href="#serverlogs">Server-/Logdaten</a></li>
+                <li><a href="#auth">Registrierung, Login & Authentifizierung</a></li>
+                <li><a href="#kalender">Kalenderfunktionen & ICS/Webcal-Feeds</a></li>
+                <li><a href="#freunde">Freundesfunktionen</a></li>
+                <li><a href="#apps">Mobile Apps (iOS/Android)</a></li>
+                <li><a href="#profiling">Automatisierte Entscheidungen / Profiling</a></li>
+                <li><a href="#sicherheit">Technische & organisatorische Maßnahmen</a></li>
+                <li><a href="#rechte">Rechte der betroffenen Personen</a></li>
+                <li><a href="#widerruf">Widerruf von Einwilligungen</a></li>
+                <li><a href="#aufsicht">Beschwerderecht bei Aufsichtsbehörden</a></li>
+                <li><a href="#aenderungen">Änderungen dieser Erklärung</a></li>
+            </ol>
+        </div>
+
+        <!-- Main Content Card -->
+        <div class="glass-effect dark:bg-slate-800/95 rounded-2xl p-8 space-y-8">
+
+            <section id="begriff">
+                <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-3">0. Begriffsbestimmungen</h2>
+                <p class="text-gray-700 dark:text-gray-300">
+                    Diese Erklärung verwendet die in Art. 4 DSGVO definierten Begriffe, insbesondere „personenbezogene Daten", „Verarbeitung", „Verantwortlicher", „Auftragsverarbeiter", „Empfänger", „Drittländer", „Einwilligung".
+                </p>
+            </section>
+
+            <hr class="border-gray-200 dark:border-slate-700">
+
+            <section id="verantwortlicher">
+                <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-3">1. Verantwortlicher</h2>
+                <p class="text-gray-700 dark:text-gray-300">
+                    <strong>WWWIEBUSCH – NORA Team</strong><br>
+                    Lauritz Wiebusch<br>
+                    Luhner Weg 19<br>
+                    27383 Scheeßel<br>
+                    Niedersachsen, Deutschland
+                </p>
+                <p class="text-gray-700 dark:text-gray-300 mt-2">
+                    <strong>E-Mail:</strong> <a href="mailto:team@nora-nak.de" class="text-primary hover:text-secondary transition-colors">team@nora-nak.de</a><br>
+                    <strong>Website:</strong> <a href="https://nora-nak.de" class="text-primary hover:text-secondary transition-colors" target="_blank" rel="noopener">https://nora-nak.de</a>
+                </p>
+            </section>
+
+            <hr class="border-gray-200 dark:border-slate-700">
+
+            <section id="kontakt">
+                <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-3">2. Kontaktmöglichkeiten</h2>
+                <p class="text-gray-700 dark:text-gray-300">
+                    Für Datenschutzanfragen wenden Sie sich bitte an <a href="mailto:team@nora-nak.de" class="text-primary hover:text-secondary transition-colors">team@nora-nak.de</a>. Wir beantworten Anfragen gemäß Art. 12 ff. DSGVO fristgerecht.
+                </p>
+            </section>
+
+            <hr class="border-gray-200 dark:border-slate-700">
+
+            <section id="grundlagen">
+                <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-3">3. Rechtsgrundlagen & Zwecke</h2>
+                <div class="overflow-x-auto">
+                    <table class="text-gray-700 dark:text-gray-300">
+                        <thead>
+                            <tr>
+                                <th>Zweck</th>
+                                <th>Rechtsgrundlage</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Betrieb & Bereitstellung der Dienste (Login, Stundenplan, Räume, Klausuren, Kalender-Feeds)</td>
+                                <td>Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung)</td>
+                            </tr>
+                            <tr>
+                                <td>Technischer Betrieb, IT-Sicherheit, Missbrauchsvermeidung (Server-Logs, Fehleranalyse, Authentifizierung)</td>
+                                <td>Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse)</td>
+                            </tr>
+                            <tr>
+                                <td>Kommunikation mit Nutzer:innen (Support, Verifizierung, Passwort-Reset)</td>
+                                <td>Art. 6 Abs. 1 lit. b DSGVO</td>
+                            </tr>
+                            <tr>
+                                <td>Einhaltung gesetzlicher Pflichten (z. B. Nachweispflichten zur IT-Sicherheit)</td>
+                                <td>Art. 6 Abs. 1 lit. c DSGVO</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <hr class="border-gray-200 dark:border-slate-700">
+
+            <section id="kategorien">
+                <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-3">4. Kategorien personenbezogener Daten</h2>
+                <ul class="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-2">
+                    <li><strong>Kontodaten:</strong> E-Mail-Adresse (<code>@nordakademie.de</code>), Vor-/Nachname, Passwort-Hash, Zenturie, Abo-/Subscription-UUID.</li>
+                    <li><strong>Sitzungsdaten:</strong> Session-ID (UUID), Login-/Logout-Zeitpunkte, Token-Gültigkeit.</li>
+                    <li><strong>Studien-/Organisationsdaten:</strong> Stundenplan-, Raum-, Klausur- und selbst erstellte <em>Custom-Event</em>-Informationen.</li>
+                    <li><strong>Soziale Daten:</strong> Freundschaftsanfragen und bestätigte Freundschaften (nur Meta-Daten: Name/Initialen/Zenturie).</li>
+                    <li><strong>Technische Daten:</strong> IP-Adresse, User-Agent, angefragte Ressourcen/URLs, Zeitstempel (serverseitige Logdateien).</li>
+                </ul>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-3">
+                    Es erfolgt keine Verarbeitung besonderer Kategorien personenbezogener Daten i.S.d. Art. 9 DSGVO.
+                </p>
+            </section>
+
+            <hr class="border-gray-200 dark:border-slate-700">
+
+            <section id="pflichtbereitstellung">
+                <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-3">5. Pflicht zur Bereitstellung / Erforderlichkeit</h2>
+                <p class="text-gray-700 dark:text-gray-300">
+                    Die Bereitstellung einer gültigen <code>@nordakademie.de</code>-E-Mail und eines Passworts ist erforderlich. Ohne Authentifizierung sind personalisierte Funktionen nicht nutzbar.
+                </p>
+            </section>
+
+            <hr class="border-gray-200 dark:border-slate-700">
+
+            <section id="quellen">
+                <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-3">6. Datenquellen</h2>
+                <p class="text-gray-700 dark:text-gray-300">
+                    Personenbezogene Daten erhalten wir in der Regel unmittelbar von Ihnen (Registrierung, Login, Nutzung). System- und Logdaten fallen automatisch bei Zugriffen auf <code>nora-nak.de</code> bzw. <code>api.nora-nak.de</code> an.
+                </p>
+            </section>
+
+            <hr class="border-gray-200 dark:border-slate-700">
+
+            <section id="empfaenger">
+                <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-3">7. Empfänger / Auftragsverarbeiter</h2>
+                <p class="text-gray-700 dark:text-gray-300">
+                    Eine Weitergabe erfolgt ausschließlich an Hosting-/Infrastruktur-Dienstleister (Serverbetrieb, E-Mail-Versand) innerhalb der EU/EWR sowie an Behörden, wenn wir rechtlich verpflichtet sind. Es bestehen Auftragsverarbeitungsverträge gemäß Art. 28 DSGVO, sofern erforderlich.
+                </p>
+            </section>
+
+            <hr class="border-gray-200 dark:border-slate-700">
+
+            <section id="drittlaender">
+                <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-3">8. Drittländerübermittlung</h2>
+                <p class="text-gray-700 dark:text-gray-300">
+                    Es findet keine Übermittlung in Drittländer außerhalb der EU/EWR statt.
+                </p>
+            </section>
+
+            <hr class="border-gray-200 dark:border-slate-700">
+
+            <section id="speicherdauer">
+                <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-3">9. Speicherdauer & Löschung</h2>
+                <ul class="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-2">
+                    <li>Kontodaten: bis zur Kontolöschung.</li>
+                    <li>Sessions/Token: bis zum Logout bzw. Ablauf.</li>
+                    <li>Server-Logs: zweckgebundene Kurzzeitspeicherung mit anschließender Löschung/Anonymisierung.</li>
+                    <li>Backups: rollierend, werden turnusmäßig überschrieben.</li>
+                </ul>
+            </section>
+
+            <hr class="border-gray-200 dark:border-slate-700">
+
+            <section id="technologien">
+                <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-3">10. Cookies & lokale Speichertechnologien</h2>
+                <ul class="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-2">
+                    <li><strong>Session-Token:</strong> UUID-basierter <code>session_id</code>-Wert (Cookie oder LocalStorage) zur Authentifizierung.</li>
+                    <li><strong>UI-/App-Einstellungen:</strong> optionale lokale Einstellungen (z. B. Theme).</li>
+                </ul>
+                <p class="text-gray-700 dark:text-gray-300 mt-3">
+                    Es werden keine Tracking-, Analyse- oder Marketing-Cookies eingesetzt. Ein Consent-Banner ist daher nicht erforderlich.
+                </p>
+            </section>
+
+            <hr class="border-gray-200 dark:border-slate-700">
+
+            <section id="serverlogs">
+                <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-3">11. Server-/Logdaten</h2>
+                <p class="text-gray-700 dark:text-gray-300">
+                    Bei jedem Zugriff auf <code>nora-nak.de</code> und <code>api.nora-nak.de</code> verarbeiten wir u. a. IP-Adresse, Datum/Uhrzeit, angefragte URL/Ressource, Referrer (falls vorhanden), Browser/Device-Informationen. Verarbeitung zur Stabilität und Sicherheit, Art. 6 Abs. 1 lit. f DSGVO.
+                </p>
+            </section>
+
+            <hr class="border-gray-200 dark:border-slate-700">
+
+            <section id="auth">
+                <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-3">12. Registrierung, Login & Authentifizierung</h2>
+                <ul class="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-2">
+                    <li>Registrierung ausschließlich mit <code>@nordakademie.de</code>-E-Mail.</li>
+                    <li>Passwörter werden mittels <strong>bcrypt</strong> gehasht (kein Klartextzugriff).</li>
+                    <li>API-Aufrufe verwenden eine <strong>UUID-Session-ID</strong> als <code>session_id</code> (Query-Parameter oder Body).</li>
+                    <li>Verifizierung, Passwort-Reset & Login ausschließlich über TLS-verschlüsselte Verbindungen.</li>
+                </ul>
+            </section>
+
+            <hr class="border-gray-200 dark:border-slate-700">
+
+            <section id="kalender">
+                <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-3">13. Kalenderfunktionen & ICS/Webcal-Feeds</h2>
+                <p class="text-gray-700 dark:text-gray-300">
+                    NORA stellt eigene Kalenderereignisse (z. B. Stundenplan, Prüfungen, Custom Events) bereit und ermöglicht deren Abruf via ICS/Webcal. Diese Feeds werden über eine nicht rückverfolgbare <strong>UUID</strong> bereitgestellt; Sie können die UUID jederzeit regenerieren, um Zugriffe zu widerrufen.
+                </p>
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mt-4 mb-2">Externe Ursprungsdaten der NORDAKADEMIE</h3>
+                <p class="text-gray-700 dark:text-gray-300">
+                    Sofern in NORA Stundenplan- oder Veranstaltungsinformationen der <strong>NORDAKADEMIE Hochschule der Wirtschaft</strong> angezeigt oder als Grundlage verwendet werden, bleibt die NORDAKADEMIE für die ursprüngliche Erhebung/Verarbeitung dieser Daten <em>eigenständig Verantwortliche</em>. Hinweise zur Datenverarbeitung der NORDAKADEMIE finden Sie in deren Datenschutzhinweisen unter <a href="https://www.nordakademie.de/datenschutz/" target="_blank" rel="noopener" class="text-primary hover:text-secondary transition-colors">https://www.nordakademie.de/datenschutz/</a>.
+                </p>
+                <p class="text-gray-700 dark:text-gray-300 mt-2">
+                    Der optionale <em>Export</em> in Ihre persönliche Kalender-App (Apple, Google, Outlook etc.) erfolgt erst nach Ihrer Wahl und unterliegt anschließend den Datenschutzbedingungen des jeweiligen Anbieters bzw. Ihrer Endgeräte. NORA hat auf diese externe Verarbeitung keinen Einfluss.
+                </p>
+            </section>
+
+            <hr class="border-gray-200 dark:border-slate-700">
+
+            <section id="freunde">
+                <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-3">14. Freundesfunktionen</h2>
+                <ul class="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-2">
+                    <li>Bidirektionales Anfragen-/Bestätigungsverfahren; angezeigte Daten: Name, Initialen, Zenturie.</li>
+                    <li>Bei <code>custom_hour_blocked</code> sind Details für Dritte aus Datenschutzgründen ausgeblendet.</li>
+                </ul>
+            </section>
+
+            <hr class="border-gray-200 dark:border-slate-700">
+
+            <section id="apps">
+                <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-3">15. Mobile Apps (iOS/Android)</h2>
+                <p class="text-gray-700 dark:text-gray-300">
+                    Die Apps (Capacitor) kommunizieren ausschließlich verschlüsselt mit <code>https://api.nora-nak.de</code>. Es erfolgt kein Zugriff auf Kamera, Kontakte, Standort oder vergleichbare Funktionen ohne Ihre ausdrückliche Einwilligung. Lokale App-Daten werden mit der Deinstallation entfernt.
+                </p>
+            </section>
+
+            <hr class="border-gray-200 dark:border-slate-700">
+
+            <section id="profiling">
+                <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-3">16. Automatisierte Entscheidungen / Profiling</h2>
+                <p class="text-gray-700 dark:text-gray-300">
+                    Es findet keine automatisierte Entscheidungsfindung i.S.d. Art. 22 DSGVO und kein Profiling statt.
+                </p>
+            </section>
+
+            <hr class="border-gray-200 dark:border-slate-700">
+
+            <section id="sicherheit">
+                <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-3">17. Technische & organisatorische Maßnahmen</h2>
+                <ul class="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-2">
+                    <li>Transportverschlüsselung (TLS/SSL)</li>
+                    <li>Passwort-Hashing (bcrypt)</li>
+                    <li>Rechte- und Zugriffskonzepte</li>
+                    <li>Regelmäßige Updates, Sicherheitsprüfungen, Monitoring</li>
+                    <li>Serverstandort EU (DE/EU) und AV-Verträge mit Dienstleistern</li>
+                </ul>
+            </section>
+
+            <hr class="border-gray-200 dark:border-slate-700">
+
+            <section id="rechte">
+                <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-3">18. Rechte der betroffenen Personen</h2>
+                <p class="text-gray-700 dark:text-gray-300">
+                    Sie haben die Rechte aus Art. 15–21 DSGVO (Auskunft, Berichtigung, Löschung, Einschränkung, Datenübertragbarkeit, Widerspruch). Kontakt: <a href="mailto:team@nora-nak.de" class="text-primary hover:text-secondary transition-colors">team@nora-nak.de</a>.
+                </p>
+            </section>
+
+            <hr class="border-gray-200 dark:border-slate-700">
+
+            <section id="widerruf">
+                <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-3">19. Widerruf von Einwilligungen / Widerspruchsrecht</h2>
+                <p class="text-gray-700 dark:text-gray-300">
+                    Erteilte Einwilligungen können jederzeit mit Wirkung für die Zukunft widerrufen werden. Sie können Verarbeitungen auf Grundlage von Art. 6 Abs. 1 lit. f DSGVO aus Gründen, die sich aus Ihrer besonderen Situation ergeben, widersprechen.
+                </p>
+            </section>
+
+            <hr class="border-gray-200 dark:border-slate-700">
+
+            <section id="aufsicht">
+                <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-3">20. Beschwerderecht bei Aufsichtsbehörden</h2>
+                <p class="text-gray-700 dark:text-gray-300">
+                    Sie haben das Recht, sich bei einer Datenschutz-Aufsichtsbehörde zu beschweren, insbesondere in dem Mitgliedstaat Ihres Aufenthaltsorts, Arbeitsplatzes oder des Orts des mutmaßlichen Verstoßes. Für unseren Sitz ist z. B. zuständig: Landesbeauftragte für den Datenschutz Niedersachsen, Prinzenstraße 5, 30159 Hannover, <a href="https://lfd.niedersachsen.de" target="_blank" rel="noopener" class="text-primary hover:text-secondary transition-colors">lfd.niedersachsen.de</a>.
+                </p>
+            </section>
+
+            <hr class="border-gray-200 dark:border-slate-700">
+
+            <section id="aenderungen">
+                <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-3">21. Änderungen dieser Erklärung</h2>
+                <p class="text-gray-700 dark:text-gray-300">
+                    Wir behalten uns vor, diese Datenschutzerklärung anzupassen, wenn technische oder rechtliche Änderungen dies erforderlich machen. Es gilt stets die auf dieser Seite veröffentlichte Fassung.
+                </p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-3">Stand: 29. Oktober 2025</p>
+            </section>
+
+            <hr class="border-gray-200 dark:border-slate-700">
+
+            <footer class="text-sm text-gray-500 dark:text-gray-400">
+                <p>Kontakt: <a href="mailto:team@nora-nak.de" class="text-primary hover:text-secondary transition-colors">team@nora-nak.de</a> • API: <code>https://api.nora-nak.de</code></p>
+            </footer>
+
+        </div>
+
+    </main>
+
+</body>
+</html>

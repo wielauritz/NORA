@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Impressum - NORA</title>
+    <meta name="description" content="Impressum für NORA – Nordakademie Organizer & Room Assistant.">
+    <script src="js/dark-mode.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3cd2ff',
+                        secondary: '#003a79',
+                        accent: '#ffa064',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="css/common.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #3cd2ff 0%, #003a79 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-800 min-h-screen">
+
+    <!-- Simple Header with Logo -->
+    <nav class="glass-effect shadow-lg fixed top-0 left-0 right-0 z-50 w-full" style="padding-top: max(0.5rem, env(safe-area-inset-top)); padding-bottom: 0.5rem;">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-12">
+                <div class="flex items-center space-x-3">
+                    <a href="/index.html" class="hover:cursor-pointer">
+                        <img src="https://cdn.nora-nak.de/img/logo.png" alt="NORA Logo" class="h-8">
+                    </a>
+                </div>
+                <a href="/index.html" class="px-4 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+                    Zurück
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style="padding-top: 6rem; padding-bottom: 3rem;">
+
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                <span class="gradient-text">Impressum</span>
+            </h1>
+            <p class="text-gray-600 dark:text-gray-400">Angaben gemäß § 5 TMG / § 18 MStV</p>
+        </div>
+
+        <!-- Content Card -->
+        <div class="glass-effect dark:bg-slate-800/95 rounded-2xl p-8 space-y-6">
+
+            <section>
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">WWWIEBUSCH – NORA Team</h2>
+                <p class="text-gray-700 dark:text-gray-300">
+                    Lauritz Wiebusch<br>
+                    Luhner Weg 19<br>
+                    27383 Scheeßel<br>
+                    Niedersachsen, Deutschland
+                </p>
+            </section>
+
+            <section>
+                <p class="text-gray-700 dark:text-gray-300">
+                    <strong>E-Mail:</strong> <a href="mailto:team@nora-nak.de" class="text-primary hover:text-secondary transition-colors">team@nora-nak.de</a><br>
+                    <strong>Website:</strong> <a href="https://nora-nak.de" class="text-primary hover:text-secondary transition-colors" target="_blank" rel="noopener">https://nora-nak.de</a>
+                </p>
+            </section>
+
+            <hr class="border-gray-200 dark:border-slate-700">
+
+            <section>
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>
+                <p class="text-gray-700 dark:text-gray-300">
+                    Lauritz Wiebusch<br>
+                    Luhner Weg 19<br>
+                    27383 Scheeßel (DE)
+                </p>
+            </section>
+
+            <hr class="border-gray-200 dark:border-slate-700">
+
+            <section>
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">Haftungshinweis</h2>
+                <p class="text-gray-700 dark:text-gray-300">
+                    Die Inhalte dieser Website wurden mit größter Sorgfalt erstellt. Für Richtigkeit, Vollständigkeit und Aktualität kann jedoch keine Gewähr übernommen werden.
+                </p>
+            </section>
+
+            <section>
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">Haftung für Links</h2>
+                <p class="text-gray-700 dark:text-gray-300">
+                    Diese Website enthält ggf. Links zu externen Websites Dritter, auf deren Inhalte wir keinen Einfluss haben. Für diese Inhalte übernehmen wir keine Verantwortung; verantwortlich ist stets der jeweilige Anbieter.
+                </p>
+            </section>
+
+            <section>
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">Urheberrecht</h2>
+                <p class="text-gray-700 dark:text-gray-300">
+                    Die auf dieser Seite veröffentlichten Inhalte unterliegen dem deutschen Urheberrecht. Beiträge Dritter sind als solche gekennzeichnet. Jede Vervielfältigung oder Verbreitung außerhalb der engen Grenzen des Urheberrechts bedarf der schriftlichen Zustimmung der Rechteinhaber.
+                </p>
+            </section>
+
+            <hr class="border-gray-200 dark:border-slate-700">
+
+            <footer class="text-sm text-gray-500 dark:text-gray-400">
+                <p>Stand: Oktober 2025 • Kontakt: <a href="mailto:team@nora-nak.de" class="text-primary hover:text-secondary transition-colors">team@nora-nak.de</a></p>
+            </footer>
+
+        </div>
+
+    </main>
+
+</body>
+</html>

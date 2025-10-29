@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Einstellungen - NORA</title>
+    <script src="js/dark-mode.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3cd2ff',
+                        secondary: '#003a79',
+                        accent: '#ffa064',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="css/common.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #3cd2ff 0%, #003a79 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Custom select dropdown */
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            html:not(.light) select {
+                background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%9ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-800 min-h-screen">
+
+    <!-- Hide content immediately to prevent flash before preloader/content ready -->
+    <style>main { display: none; }</style>
+
+    <!-- Content Preloader (hidden by default) -->
+    <style id="content-loader-styles">
+        @keyframes slowSpin {
+            to { transform: rotate(360deg); }
+        }
+        #content-loader {
+            display: none !important;
+            pointer-events: auto;
+            z-index: 40 !important;
+        }
+        #content-loader.visible {
+            display: flex !important;
+        }
+    </style>
+    <div id="content-loader" class="fixed top-12 left-0 right-0 md:bottom-0 bottom-20 bg-white/85 dark:bg-slate-900/85 flex items-center justify-center backdrop-blur-xl">
+        <div class="text-center">
+            <div class="inline-block">
+                <div class="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full" style="animation: slowSpin 2s linear infinite;"></div>
+            </div>
+            <p class="mt-4 text-gray-700 dark:text-gray-300 font-medium text-sm">Lädt...</p>
+        </div>
+    </div>
+
+    <!-- Navigation Placeholder -->
+    <div id="navbar-placeholder"></div>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                <span class="gradient-text">Einstellungen</span>
+            </h1>
+            <p class="text-gray-600 dark:text-gray-400">Personalisiere deine NORA Erfahrung</p>
+        </div>
+
+        <!-- Settings Form -->
+        <div class="space-y-6">
+
+            <!-- Zenturie Selection -->
+            <div class="glass-effect dark:bg-slate-800/95 rounded-2xl p-6">
+                <div class="flex items-start mb-4">
+                    <div class="p-3 bg-primary/10 rounded-xl mr-4">
+                        <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">Zenturie</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Wähle deine Zenturie für den Stundenplan</p>
+                        <select id="zenturieSelect" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+                            <option value="">Wird geladen...</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Theme Selection -->
+            <div class="glass-effect dark:bg-slate-800/95 rounded-2xl p-6">
+                <div class="flex items-start mb-4">
+                    <div class="p-3 bg-accent/10 rounded-xl mr-4">
+                        <svg class="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">Design</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Wähle dein bevorzugtes Farbschema</p>
+                        <select id="themeSelect" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+                            <option value="auto">Automatisch (System)</option>
+                            <option value="hell">Hell</option>
+                            <option value="dunkel">Dunkel</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notification Preference -->
+            <div class="glass-effect dark:bg-slate-800/95 rounded-2xl p-6">
+                <div class="flex items-start mb-4">
+                    <div class="p-3 bg-secondary/10 rounded-xl mr-4">
+                        <svg class="w-6 h-6 text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">Benachrichtigungen</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Wie möchtest du benachrichtigt werden?</p>
+                        <select id="notificationSelect" class="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all">
+                            <option value="beide">E-Mail und Mobile</option>
+                            <option value="email">Nur E-Mail</option>
+                            <option value="mobile">Nur Mobile</option>
+                            <option value="keine">Keine Benachrichtigungen</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Save Button -->
+            <div class="flex justify-end space-x-4">
+                <button onclick="window.location.href='dashboard.html'" class="px-6 py-3 rounded-xl border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors font-medium">
+                    Abbrechen
+                </button>
+                <button id="saveButton" onclick="saveSettings()" class="px-6 py-3 rounded-xl bg-gradient-to-r from-primary to-secondary text-white hover:shadow-lg hover:scale-105 transition-all font-medium">
+                    Speichern
+                </button>
+            </div>
+
+        </div>
+
+        <!-- Logout Section -->
+        <div class="mt-8 glass-effect dark:bg-slate-800/95 rounded-2xl p-6 border-l-4 border-red-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">Abmelden</h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Von deinem Konto abmelden</p>
+                </div>
+                <button onclick="logout()" class="px-6 py-3 rounded-xl bg-red-500 hover:bg-red-600 text-white transition-colors font-medium">
+                    Abmelden
+                </button>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-16 pt-8 pb-4 border-t border-gray-200 dark:border-slate-700">
+            <div class="text-center text-gray-500 dark:text-gray-400 text-xs space-y-2">
+                <p>&copy; 2025 NORA – Nordakademie Organizer & Room Assistant</p>
+                <p class="space-x-3">
+                    <a href="/impressum.html" class="hover:text-primary transition-colors">Impressum</a>
+                    <span>•</span>
+                    <a href="/privacy.html" class="hover:text-primary transition-colors">Datenschutz</a>
+                </p>
+            </div>
+        </footer>
+
+    </main>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="hidden fixed bottom-24 md:bottom-8 left-1/2 transform -translate-x-1/2 px-6 py-4 rounded-xl shadow-lg glass-effect dark:bg-slate-800 border border-gray-200 dark:border-slate-700 z-50 transition-all">
+        <div class="flex items-center space-x-3">
+            <svg id="toastIcon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"></svg>
+            <p id="toastMessage" class="font-medium text-gray-900 dark:text-white"></p>
+        </div>
+    </div>
+
+    <!-- API Helper -->
+    <script src="js/storage-ios.js"></script>
+    <script src="js/storage-manager.js"></script>
+    <script src="js/persistent-storage.js"></script>
+    <script src="js/api-helper.js"></script>
+
+    <!-- Auth Helper -->
+    <script src="js/auth.js"></script>
+    <script src="js/app-updater.js"></script>
+
+    <!-- Navbar Component -->
+    <script src="js/navbar.js"></script>
+
+    <!-- Search -->
+    <script src="js/search.js"></script>
+
+    <!-- Settings Script -->
+    <script src="js/settings.js"></script>
+
+    <!-- Initialize Navbar -->
+    <script>
+        initNavbar('settings');
+    </script>
+
+</body>
+</html>

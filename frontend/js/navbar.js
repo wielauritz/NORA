@@ -35,22 +35,33 @@ function renderNavbar(activePage = '') {
                     <!-- Desktop User Menu -->
                     <div class="hidden md:flex items-center space-x-4">
                         <!-- Search -->
-                        <button onclick="showGlobalSearch()" class="p-2 rounded-lg hover:bg-gray-100 transition-colors" title="Suche (Strg+K)">
-                            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <button onclick="showGlobalSearch()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors" title="Suche (Strg+K)">
+                            <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                             </svg>
                         </button>
 
-                        <!-- User Profile -->
-                        <div class="flex items-center space-x-3">
-                            <div class="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center text-white font-semibold" id="userInitials">
-
-                            </div>
-                            <button class="p-2 rounded-lg hover:bg-gray-100 transition-colors" onclick="logout()" title="Logout">
-                                <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                                </svg>
+                        <!-- User Profile with Dropdown -->
+                        <div class="relative">
+                            <button onclick="toggleUserDropdown()" class="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center text-white font-semibold hover:ring-2 hover:ring-primary/50 transition-all" id="userInitials" title="Profil-Menü">
                             </button>
+
+                            <!-- Dropdown Menu -->
+                            <div id="userDropdown" class="hidden absolute right-0 mt-2 w-48 rounded-xl shadow-lg glass-effect dark:bg-slate-800 border border-gray-200 dark:border-slate-700 overflow-hidden z-50">
+                                <a href="settings.html" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+                                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    </svg>
+                                    Einstellungen
+                                </a>
+                                <button onclick="logout()" class="flex items-center w-full px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                                    </svg>
+                                    Abmelden
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -86,12 +97,13 @@ function renderNavbar(activePage = '') {
                     </svg>
                     <span class="text-xs font-medium whitespace-nowrap">Suche</span>
                 </button>
-                <button onclick="logout()" class="flex-1 flex flex-col items-center justify-center py-3 gap-1 text-gray-600 hover:text-red-600 transition-colors">
+                <a href="settings.html" class="flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-colors ${activePage === 'settings' ? 'text-primary' : 'text-gray-600 hover:text-gray-900'}">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
                     </svg>
-                    <span class="text-xs font-medium whitespace-nowrap">Logout</span>
-                </button>
+                    <span class="text-xs font-medium whitespace-nowrap">Einstellungen</span>
+                </a>
             </div>
         </nav>
     `;
@@ -221,4 +233,27 @@ function pageContentReady() {
     hideContentLoader();
 }
 
-// Mobile menu functions are no longer needed with bottom navigation bar
+/**
+ * Toggle user dropdown menu (desktop)
+ */
+function toggleUserDropdown() {
+    const dropdown = document.getElementById('userDropdown');
+    if (dropdown) {
+        dropdown.classList.toggle('hidden');
+    }
+}
+
+/**
+ * Close dropdown when clicking outside
+ */
+document.addEventListener('click', function(event) {
+    const dropdown = document.getElementById('userDropdown');
+    const userInitials = document.getElementById('userInitials');
+
+    if (dropdown && userInitials) {
+        // Check if click is outside both the dropdown and the user initials button
+        if (!dropdown.contains(event.target) && !userInitials.contains(event.target)) {
+            dropdown.classList.add('hidden');
+        }
+    }
+});
