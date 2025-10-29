@@ -188,18 +188,30 @@ func Login(c *fiber.Ctx) error {
 // VerifyEmail verifies user email address
 // GET /v1/verify?uuid=...
 func VerifyEmail(c *fiber.Ctx) error {
-	verificationUUID := c.Query("uuid")
-	if verificationUUID == "" {
+	verificationUUIDStr := c.Query("uuid")
+	if verificationUUIDStr == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"detail": "UUID required",
 		})
 	}
 
+	// Parse UUID string to uuid.UUID type
+	verificationUUID, err := uuid.Parse(verificationUUIDStr)
+	if err != nil {
+		fmt.Printf("[VERIFY] Invalid UUID format: %s, error: %v\n", verificationUUIDStr, err)
+		return c.Type("html").SendString(getInvalidVerificationCode())
+	}
+
+	fmt.Printf("[VERIFY] Looking for user with UUID: %s\n", verificationUUID.String())
+
 	// Find user with UUID
 	var user models.User
 	if err := config.DB.Where("uuid = ?", verificationUUID).First(&user).Error; err != nil {
+		fmt.Printf("[VERIFY] User not found with UUID: %s, error: %v\n", verificationUUID.String(), err)
 		return c.Type("html").SendString(getInvalidVerificationCode())
 	}
+
+	fmt.Printf("[VERIFY] User found: %s, Verified: %v\n", user.Mail, user.Verified)
 
 	// Check if verification link has expired
 	if user.VerificationExpiry != nil && time.Now().After(*user.VerificationExpiry) {

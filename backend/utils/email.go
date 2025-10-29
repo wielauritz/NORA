@@ -209,7 +209,7 @@ func (e *EmailService) SendICSImportNotification(filesDownloaded, eventsCreated,
 	status := "Erfolgreich"
 	statusColor := "#22c55e" // green
 	if errors > 0 {
-		status := "Mit Fehlern abgeschlossen"
+		status = "Mit Fehlern abgeschlossen"
 		statusColor = "#f59e0b" // orange
 	}
 	if filesDownloaded == 0 {
@@ -317,16 +317,16 @@ func (e *EmailService) SendICSImportNotification(filesDownloaded, eventsCreated,
         </table>
     </body>
     </html>`,
-    	logoBase64,
-    	statusColor,
-    	status,
-    	filesDownloaded,
-    	eventsCreated,
-    	eventsUpdated,
-    	errorColor,
-    	errors,
-    	time.Now().Format("02.01.2006 15:04:05"),
-    )
+		logoBase64,
+		statusColor,
+		status,
+		filesDownloaded,
+		eventsCreated,
+		eventsUpdated,
+		errorColor,
+		errors,
+		time.Now().Format("02.01.2006 15:04:05"),
+	)
 
 	return e.sendEmail(config.AppConfig.TeamEmail, subject, htmlBody)
 }
