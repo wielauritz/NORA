@@ -63,6 +63,20 @@ func main() {
 		Format: "[${time}] ${status} - ${method} ${path} (${latency})\n",
 	}))
 
+	// Custom middleware to clean trailing slashes from Origin header BEFORE CORS
+	app.Use(func(c *fiber.Ctx) error {
+		// Get Origin header from request
+		origin := c.Get("Origin")
+		if origin != "" {
+			// Remove all trailing slashes
+			for len(origin) > 1 && origin[len(origin)-1] == '/' {
+				origin = origin[:len(origin)-1]
+			}
+			c.Request().Header.Set("Origin", origin)
+		}
+		return c.Next()
+	})
+
 	// CORS Middleware - must be before routes (Allow all origins with credentials)
 	app.Use(cors.New(cors.Config{
 		AllowOriginsFunc: func(origin string) bool {

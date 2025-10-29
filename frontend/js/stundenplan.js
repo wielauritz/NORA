@@ -988,14 +988,12 @@ async function loadYearView() {
 }
 
 /**
- * Load year events asynchronously and update the calendar
+ * Load year events asynchronously and update the calendar incrementally
  */
 async function loadYearEventsAsync() {
     try {
-        const yearEvents = await loadYearEvents();
-
-        // Update each day with events
-        updateYearCalendarWithEvents(yearEvents);
+        // Load events with incremental updates
+        await loadYearEvents();
     } catch (error) {
         console.error('Error loading year events:', error);
     }
@@ -1003,76 +1001,156 @@ async function loadYearEventsAsync() {
 
 /**
  * Load events for entire year - loads all days to accurately mark events
+ * Uses throttled batching to avoid overwhelming the server (prevents logout)
  */
 async function loadYearEvents() {
     const year = currentYear.getFullYear();
     const eventsPerMonth = {};
 
-    const promises = [];
+    const allDates = [];
 
-    for (let monthIndex = 0; monthIndex < 12; monthIndex++) {
+    // Get current month to prioritize loading
+    const today = new Date();
+    const currentMonth = today.getFullYear() === year ? today.getMonth() : 0;
+
+    // Smart loading order:
+    // 1. Current month first
+    // 2. Then remaining months until year end (forward)
+    // 3. Then months from year start to current month (backward)
+
+    const monthsToLoad = [];
+
+    // Add current month first
+    monthsToLoad.push(currentMonth);
+
+    // Add remaining months until end of year (forward)
+    for (let monthIndex = currentMonth + 1; monthIndex < 12; monthIndex++) {
+        monthsToLoad.push(monthIndex);
+    }
+
+    // Add previous months from current back to start (backward)
+    for (let monthIndex = currentMonth - 1; monthIndex >= 0; monthIndex--) {
+        monthsToLoad.push(monthIndex);
+    }
+
+    // Process requests in batches to avoid server overload and prevent logout
+    const BATCH_SIZE = 20; // Process 20 days at a time
+    const BATCH_DELAY = 100; // 100ms delay between batches
+
+    // Process each month sequentially and update UI immediately
+    for (const monthIndex of monthsToLoad) {
         const firstDay = new Date(year, monthIndex, 1);
         const lastDay = new Date(year, monthIndex + 1, 0);
         const daysInMonth = lastDay.getDate();
 
-        // Load events for all days in the month
+        // Collect dates for this month
+        const monthDates = [];
         for (let day = 1; day <= daysInMonth; day++) {
             const date = new Date(year, monthIndex, day);
-            const dateStr = formatDateForAPI(date);
+            monthDates.push({ date, monthIndex, day });
+        }
 
-            let promise;
-            if (viewingFriend) {
-                promise = ScheduleAPI.getFriendSchedule(viewingFriend, dateStr)
-                    .then(events => ({ monthIndex, day, events }))
-                    .catch(() => ({ monthIndex, day, events: [] }));
-            } else {
-                promise = ScheduleAPI.getEvents(dateStr)
-                    .then(events => ({ monthIndex, day, events }))
-                    .catch(() => ({ monthIndex, day, events: [] }));
+        // Process this month's dates in batches
+        const monthResults = [];
+        for (let i = 0; i < monthDates.length; i += BATCH_SIZE) {
+            const batch = monthDates.slice(i, i + BATCH_SIZE);
+            const batchPromises = batch.map(({ date, monthIndex, day }) => {
+                const dateStr = formatDateForAPI(date);
+
+                let promise;
+                if (viewingFriend) {
+                    promise = ScheduleAPI.getFriendSchedule(viewingFriend, dateStr)
+                        .then(events => ({ monthIndex, day, events }))
+                        .catch((error) => {
+                            console.warn(`Failed to load events for ${dateStr}:`, error);
+                            return { monthIndex, day, events: [] };
+                        });
+                } else {
+                    promise = ScheduleAPI.getEvents(dateStr)
+                        .then(events => ({ monthIndex, day, events }))
+                        .catch((error) => {
+                            console.warn(`Failed to load events for ${dateStr}:`, error);
+                            return { monthIndex, day, events: [] };
+                        });
+                }
+
+                return promise;
+            });
+
+            // Execute this batch in parallel
+            const batchResults = await Promise.all(batchPromises);
+            monthResults.push(...batchResults);
+
+            // Add delay between batches
+            if (i + BATCH_SIZE < monthDates.length) {
+                await new Promise(resolve => setTimeout(resolve, BATCH_DELAY));
             }
-
-            promises.push(promise);
         }
+
+        // Organize events for this month
+        const monthEvents = {};
+        monthResults.forEach(result => {
+            if (result.events && result.events.length > 0) {
+                monthEvents[result.day] = true;
+            }
+        });
+
+        // Update calendar immediately for this month
+        updateMonthWithEvents(monthIndex, monthEvents);
+
+        // Small delay before processing next month
+        await new Promise(resolve => setTimeout(resolve, 50));
     }
-
-    // Execute all requests in parallel
-    const results = await Promise.all(promises);
-
-    // Organize events by month and day
-    results.forEach(result => {
-        if (!eventsPerMonth[result.monthIndex]) {
-            eventsPerMonth[result.monthIndex] = {};
-        }
-        if (result.events && result.events.length > 0) {
-            eventsPerMonth[result.monthIndex][result.day] = true;
-        }
-    });
-
-    return eventsPerMonth;
 }
 
 /**
- * Update year calendar with event data
+ * Update a single month with event data (for incremental loading)
+ */
+function updateMonthWithEvents(monthIndex, monthEventDays) {
+    const monthCards = document.querySelectorAll('.year-month-card');
+    if (monthCards[monthIndex]) {
+        // Find all day elements for this month and mark them with events
+        Object.keys(monthEventDays).forEach(day => {
+            const dayElements = monthCards[monthIndex].querySelectorAll('.year-day');
+            // Find the day element (accounting for offset)
+            dayElements.forEach(dayEl => {
+                if (dayEl.textContent == day && !dayEl.classList.contains('other-month')) {
+                    dayEl.classList.add('has-events');
+                }
+            });
+        });
+
+        // Update event count in the month card with subtle animation
+        const eventCount = Object.keys(monthEventDays).length;
+        const statsEl = monthCards[monthIndex].querySelector('.year-month-stats');
+        if (statsEl && eventCount > 0) {
+            statsEl.innerHTML = `
+                <span class="year-event-count" style="color: #3cd2ff; font-weight: 600;">
+                    <svg class="w-3 h-3 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    ${eventCount} ${eventCount === 1 ? 'Termin' : 'Termine'}
+                </span>
+            `;
+            // Add subtle fade-in effect
+            statsEl.style.opacity = '0';
+            setTimeout(() => {
+                statsEl.style.transition = 'opacity 0.3s ease-in';
+                statsEl.style.opacity = '1';
+            }, 10);
+        }
+    }
+}
+
+/**
+ * Update year calendar with event data (for bulk loading)
  */
 function updateYearCalendarWithEvents(yearEvents) {
     const year = currentYear.getFullYear();
 
     for (let monthIndex = 0; monthIndex < 12; monthIndex++) {
         const monthEventDays = yearEvents[monthIndex] || {};
-
-        // Find all day elements for this month and mark them with events
-        Object.keys(monthEventDays).forEach(day => {
-            const monthCards = document.querySelectorAll('.year-month-card');
-            if (monthCards[monthIndex]) {
-                const dayElements = monthCards[monthIndex].querySelectorAll('.year-day');
-                // Find the day element (accounting for offset)
-                dayElements.forEach(dayEl => {
-                    if (dayEl.textContent == day && !dayEl.classList.contains('other-month')) {
-                        dayEl.classList.add('has-events');
-                    }
-                });
-            }
-        });
+        updateMonthWithEvents(monthIndex, monthEventDays);
     }
 }
 
@@ -1114,21 +1192,6 @@ function renderYearCalendar(yearEvents = {}) {
 function createYearMonthCard(year, monthIndex, monthName, today, eventDays = {}) {
     const card = document.createElement('div');
     card.className = 'year-month-card';
-
-    // Click handler to switch to month view for this month
-    card.onclick = () => {
-        currentMonth = new Date(year, monthIndex, 1);
-        currentDate = new Date(currentMonth);
-        viewMode = 'month';
-
-        // Update view buttons
-        const weekBtn = document.getElementById('viewWeek');
-        const monthBtn = document.getElementById('viewMonth');
-        const yearBtn = document.getElementById('viewYear');
-        updateViewButtons([weekBtn, monthBtn, yearBtn], monthBtn);
-
-        loadCurrentView();
-    };
 
     // Header
     const header = document.createElement('div');
@@ -1187,7 +1250,7 @@ function createYearMonthCard(year, monthIndex, monthName, today, eventDays = {})
 
     card.appendChild(grid);
 
-    // Stats
+    // Stats - with click handler ONLY on this button
     const stats = document.createElement('div');
     stats.className = 'year-month-stats';
     stats.innerHTML = `
@@ -1198,6 +1261,23 @@ function createYearMonthCard(year, monthIndex, monthName, today, eventDays = {})
             Zum Monat
         </span>
     `;
+
+    // Click handler ONLY on the stats/button, not on the whole card
+    stats.onclick = (e) => {
+        e.stopPropagation(); // Prevent event bubbling
+        currentMonth = new Date(year, monthIndex, 1);
+        currentDate = new Date(currentMonth);
+        viewMode = 'month';
+
+        // Update view buttons
+        const weekBtn = document.getElementById('viewWeek');
+        const monthBtn = document.getElementById('viewMonth');
+        const yearBtn = document.getElementById('viewYear');
+        updateViewButtons([weekBtn, monthBtn, yearBtn], monthBtn);
+
+        loadCurrentView();
+    };
+
     card.appendChild(stats);
 
     return card;
@@ -1276,13 +1356,15 @@ function renderEventBlock(event) {
 
     // Different colors for different event types
     let bgColor, borderColor, textColor;
+    const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
 
     if (event.event_type === 'timetable') {
-        bgColor = event.color || '#3cd2ff';
-        borderColor = event.border_color || '#003a79';
+        // Use different blue in dark mode (less bright cyan, more of a purple-blue)
+        bgColor = isDarkMode ? '#5b9fd9' : (event.color || '#3cd2ff');
+        borderColor = isDarkMode ? '#7bb3e8' : (event.border_color || '#003a79');
     } else {
-        bgColor = '#ffa064';
-        borderColor = '#ff8040';
+        bgColor = isDarkMode ? '#ff9966' : '#ffa064';
+        borderColor = isDarkMode ? '#ffb399' : '#ff8040';
     }
 
     // Create event block HTML

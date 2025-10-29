@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Stundenplan - Stundenplan Dashboard</title>
+    <script src="js/dark-mode.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
@@ -817,9 +819,193 @@
                 font-size: 0.5625rem;
             }
         }
+
+        /* Dark Mode Support for Week View */
+        @media (prefers-color-scheme: dark) {
+            /* Calendar Container */
+            .calendar-container {
+                background: #1e293b;
+            }
+
+            /* Calendar Events - Week View */
+            .calendar-event {
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+            }
+
+            .calendar-event:hover {
+                box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6);
+            }
+
+            .calendar-event.timetable {
+                background: linear-gradient(135deg, rgba(60, 210, 255, 0.35), rgba(0, 58, 121, 0.25));
+                border-left-color: #60d5ff;
+                color: #e0f2fe;
+            }
+
+            .calendar-event.custom {
+                background: linear-gradient(135deg, rgba(255, 160, 100, 0.35), rgba(255, 128, 64, 0.25));
+                border-left-color: #ffb380;
+                color: #ffedd5;
+            }
+
+            .calendar-event-title {
+                color: #f1f5f9;
+            }
+
+            .calendar-event-time,
+            .calendar-event-location {
+                color: #cbd5e1;
+            }
+
+            /* Current Time Indicator */
+            .current-time-indicator {
+                background: linear-gradient(90deg, #60d5ff 0%, #3cd2ff 100%);
+                box-shadow: 0 0 12px rgba(60, 210, 255, 0.6);
+            }
+
+            .current-time-indicator::before {
+                background: #60d5ff;
+                border-color: #1e293b;
+                box-shadow: 0 0 8px rgba(60, 210, 255, 0.8);
+            }
+
+            .current-time-indicator::after {
+                border-left-color: #60d5ff;
+            }
+
+            /* Month View Grid Container */
+            .month-view-container {
+                background: #334155;
+                border-color: #334155;
+            }
+
+            /* Year View Container */
+            .year-view-container {
+                background: transparent;
+            }
+
+            /* Modal Overlay */
+            .modal-overlay {
+                background: rgba(0, 0, 0, 0.75);
+            }
+
+            .modal-content {
+                background: rgba(30, 41, 59, 0.95) !important;
+                backdrop-filter: blur(20px);
+                border: 1px solid rgba(148, 163, 184, 0.2);
+            }
+
+            /* Modal Text Colors */
+            #eventModalContent h2,
+            #eventModalContent h3,
+            #eventModalContent p,
+            #eventModalContent div {
+                color: #f1f5f9;
+            }
+
+            /* Modal Icons and Buttons */
+            #eventModalContent button {
+                color: #cbd5e1;
+            }
+
+            #eventModalContent button:hover {
+                background-color: #334155;
+            }
+
+            /* Modal Sections */
+            #eventModalContent .border-t {
+                border-color: #475569 !important;
+            }
+
+            #eventModalContent .bg-gray-50 {
+                background-color: #0f172a !important;
+            }
+
+            /* Legend */
+            .glass-effect h3 {
+                color: #f1f5f9;
+            }
+
+            .glass-effect span {
+                color: #cbd5e1;
+            }
+
+            /* Gradient Text - make it more visible in dark mode */
+            .gradient-text {
+                background: linear-gradient(135deg, #60d5ff 0%, #3cd2ff 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+            }
+
+            /* Preloader in Dark Mode */
+            #content-loader {
+                background: rgba(30, 41, 59, 0.95) !important;
+            }
+
+            #content-loader p {
+                color: #cbd5e1;
+            }
+
+            /* Weekend Toggle */
+            #weekendToggle {
+                background-color: #1e293b;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+            }
+
+            #weekendToggle span {
+                color: #cbd5e1;
+            }
+
+            /* View Switcher Buttons */
+            .flex.bg-white.rounded-lg.shadow {
+                background-color: #1e293b !important;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5) !important;
+            }
+
+            /* Action Buttons in Header */
+            button[onclick*="showAdd"] {
+                background-color: #1e293b;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+            }
+
+            button[onclick*="showAdd"]:hover {
+                background-color: #334155;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+            }
+
+            button[onclick*="showAdd"] svg {
+                color: #cbd5e1;
+            }
+
+            button[onclick*="showAdd"] span {
+                color: #f1f5f9;
+            }
+
+            /* Gradient buttons keep their gradients but with adjusted colors */
+            button[onclick*="showAddExam"] {
+                background: linear-gradient(to right, #fb923c, #f97316) !important;
+            }
+
+            /* Navigation Buttons */
+            #prevPeriod:hover,
+            #nextPeriod:hover,
+            button[id*="view"]:hover {
+                background-color: #334155;
+            }
+
+            /* Period Title and Subtitle */
+            #periodTitle {
+                color: #f1f5f9;
+            }
+
+            #periodSubtitle {
+                color: #cbd5e1;
+            }
+        }
     </style>
 </head>
-<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-800 min-h-screen">
 
 <!-- Hide content immediately to prevent flash before preloader/content ready -->
 <style>main { display: none; }</style>
