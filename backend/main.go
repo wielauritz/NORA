@@ -63,12 +63,14 @@ func main() {
 		Format: "[${time}] ${status} - ${method} ${path} (${latency})\n",
 	}))
 
-	// CORS Middleware - must be before routes (Allow all origins)
+	// CORS Middleware - must be before routes (Allow all origins with credentials)
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "*",
+		AllowOriginsFunc: func(origin string) bool {
+			return true // Allow all origins
+		},
 		AllowHeaders:     "Content-Type,Authorization,Accept,Origin,User-Agent,Cache-Control,Pragma",
 		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
-		AllowCredentials: false,
+		AllowCredentials: true,
 		ExposeHeaders:    "Content-Length,Content-Type",
 	}))
 
