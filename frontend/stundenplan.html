@@ -216,6 +216,12 @@
         }
 
         .calendar-event.custom {
+            background: linear-gradient(135deg, rgba(167, 139, 250, 0.15), rgba(124, 58, 237, 0.1));
+            border-left-color: #a78bfa;
+            color: #6b21a8;
+        }
+
+        .calendar-event.exam {
             background: linear-gradient(135deg, rgba(255, 160, 100, 0.15), rgba(255, 128, 64, 0.1));
             border-left-color: #ffa064;
             color: #b45309;
@@ -541,6 +547,10 @@
         }
 
         .month-event-dot.custom {
+            background: #a78bfa;
+        }
+
+        .month-event-dot.exam {
             background: #ffa064;
         }
 
@@ -568,6 +578,12 @@
         }
 
         .month-event-item.custom {
+            background: linear-gradient(135deg, rgba(167, 139, 250, 0.15), rgba(124, 58, 237, 0.1));
+            border-left: 2px solid #a78bfa;
+            color: #6b21a8;
+        }
+
+        .month-event-item.exam {
             background: linear-gradient(135deg, rgba(255, 160, 100, 0.15), rgba(255, 128, 64, 0.1));
             border-left: 2px solid #ffa064;
             color: #b45309;
@@ -660,6 +676,18 @@
         .year-day.has-events {
             font-weight: 600;
             border: 2px solid #3cd2ff;
+        }
+
+        .year-day.has-events-timetable {
+            border-color: #3cd2ff;
+        }
+
+        .year-day.has-events-custom {
+            border-color: #a78bfa;
+        }
+
+        .year-day.has-events-exam {
+            border-color: #ffa064;
         }
 
         .year-day.today.has-events {
@@ -843,6 +871,12 @@
             }
 
             html:not(.light) .calendar-event.custom {
+                background: linear-gradient(135deg, rgba(167, 139, 250, 0.35), rgba(124, 58, 237, 0.25));
+                border-left-color: #c4b5fd;
+                color: #e9d5ff;
+            }
+
+            html:not(.light) .calendar-event.exam {
                 background: linear-gradient(135deg, rgba(255, 160, 100, 0.35), rgba(255, 128, 64, 0.25));
                 border-left-color: #ffb380;
                 color: #ffedd5;
@@ -1150,11 +1184,11 @@
                 <span class="text-sm text-gray-700">Seminar</span>
             </div>
             <div class="flex items-center space-x-2">
-                <div class="w-4 h-4 bg-gradient-to-br from-purple-400 to-purple-600 rounded"></div>
+                <div class="w-4 h-4 bg-gradient-to-br from-orange-400 to-orange-600 rounded"></div>
                 <span class="text-sm text-gray-700">Klausur</span>
             </div>
             <div class="flex items-center space-x-2">
-                <div class="w-4 h-4 bg-gradient-to-br from-orange-400 to-orange-600 rounded"></div>
+                <div class="w-4 h-4 bg-gradient-to-br from-purple-400 to-purple-600 rounded"></div>
                 <span class="text-sm text-gray-700">Eigene Termine</span>
             </div>
         </div>

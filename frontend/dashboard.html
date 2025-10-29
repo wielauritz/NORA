@@ -15,6 +15,7 @@
                         primary: '#3cd2ff',
                         secondary: '#003a79',
                         accent: '#ffa064',
+                        purple: '#a78bfa',
                     }
                 }
             }
@@ -387,6 +388,15 @@
         </footer>
 
     </main>
+
+    <!-- Event Details Modal -->
+    <div id="eventModal" class="modal-overlay">
+        <div class="modal-content glass-effect rounded-3xl w-full max-w-2xl p-8 relative" onclick="event.stopPropagation()">
+            <div id="eventModalContent">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
 
     <!-- API Helper -->
     <script src="js/storage-ios.js"></script>

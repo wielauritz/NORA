@@ -196,11 +196,11 @@ nav > div {
     }
 
     /* Cards & Containers */
-    html:not(.light) .rounded-2xl,
+    /*html:not(.light) .rounded-2xl,
     html:not(.light) .rounded-xl,
     html:not(.light) .rounded-lg {
         background-color: inherit;
-    }
+    }*/
 
     html:not(.light) .glass-effect {
         background: rgba(30, 41, 59, 0.8) !important;
@@ -399,9 +399,15 @@ nav > div {
     }
 
     html:not(.light) .month-event-item.custom {
+        background: linear-gradient(135deg, rgba(167, 139, 250, 0.3), rgba(124, 58, 237, 0.2)) !important;
+        border-left-color: #a78bfa !important;
+        color: #c4b5fd !important;
+    }
+
+    html:not(.light) .month-event-item.exam {
         background: linear-gradient(135deg, rgba(255, 160, 100, 0.3), rgba(255, 128, 64, 0.2)) !important;
         border-left-color: #ffa064 !important;
-        color: #ffa064 !important;
+        color: #ffb380 !important;
     }
 
     html:not(.light) .month-weekday-header {
@@ -458,6 +464,18 @@ nav > div {
 
     html:not(.light) .year-day.has-events {
         border-color: #60d5ff !important;
+    }
+
+    html:not(.light) .year-day.has-events-timetable {
+        border-color: #60d5ff !important;
+    }
+
+    html:not(.light) .year-day.has-events-custom {
+        border-color: #c4b5fd !important;
+    }
+
+    html:not(.light) .year-day.has-events-exam {
+        border-color: #ffb380 !important;
     }
 
     html:not(.light) .year-day.today.has-events {
