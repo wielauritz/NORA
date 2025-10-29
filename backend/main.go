@@ -65,11 +65,10 @@ func main() {
 
 	// CORS Middleware - must be before routes
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "*",
-		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS,PATCH",
-		AllowHeaders:     "*",
-		AllowCredentials: false, // Must be false with AllowOrigins: "*"
-		ExposeHeaders:    "*",
+		AllowOrigins:     "https://new.nora-nak.de,https://nora-nak.de,http://localhost:3000,http://localhost:5173",
+		AllowHeaders:     "Content-Type,Authorization,Accept,Origin,User-Agent,Cache-Control,Pragma",
+		AllowCredentials: true,
+		ExposeHeaders:    "Content-Length,Content-Type",
 	}))
 
 	// Public routes (no authentication)
