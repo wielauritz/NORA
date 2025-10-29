@@ -205,8 +205,9 @@ func GetCourses(c *fiber.Ctx) error {
 	return c.JSON(response)
 }
 
-// GetEvents returns all events for a specific date (timetables + custom hours)
+// GetEvents returns all events for a specific date or date range (timetables + custom hours)
 // GET /v1/events?session_id=...&date=2025-01-20
+// GET /v1/events?session_id=...&date=2025-01-01&end=2025-12-01
 func GetEvents(c *fiber.Ctx) error {
 	user := middleware.GetCurrentUser(c)
 
@@ -217,7 +218,7 @@ func GetEvents(c *fiber.Ctx) error {
 		})
 	}
 
-	// Parse date in UTC
+	// Parse start date in UTC
 	eventDate, err := time.Parse("2006-01-02", dateStr)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -225,9 +226,35 @@ func GetEvents(c *fiber.Ctx) error {
 		})
 	}
 
-	// Start and end of day in UTC
+	// Start of day in UTC
 	startOfDay := time.Date(eventDate.Year(), eventDate.Month(), eventDate.Day(), 0, 0, 0, 0, time.UTC)
-	endOfDay := time.Date(eventDate.Year(), eventDate.Month(), eventDate.Day(), 23, 59, 59, 999999999, time.UTC)
+
+	// Check if end parameter is provided (for date range queries)
+	endStr := c.Query("end")
+	var endOfDay time.Time
+
+	if endStr != "" {
+		// Parse end date in UTC
+		endDate, err := time.Parse("2006-01-02", endStr)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"detail": "Ungültiges End-Datumsformat. Nutze YYYY-MM-DD",
+			})
+		}
+
+		// Validate that end date is not before start date
+		if endDate.Before(eventDate) {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"detail": "End-Datum darf nicht vor Start-Datum liegen",
+			})
+		}
+
+		// End of end date in UTC
+		endOfDay = time.Date(endDate.Year(), endDate.Month(), endDate.Day(), 23, 59, 59, 999999999, time.UTC)
+	} else {
+		// No end parameter: use end of start date (single day query - backward compatible)
+		endOfDay = time.Date(eventDate.Year(), eventDate.Month(), eventDate.Day(), 23, 59, 59, 999999999, time.UTC)
+	}
 
 	events := make([]map[string]interface{}, 0)
 
