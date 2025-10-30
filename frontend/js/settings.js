@@ -104,10 +104,10 @@ function populateZenturienDropdown() {
 
     // Add all zenturien
     allZenturien.forEach((zenturie, index) => {
-        console.log(`  ${index + 1}. ${zenturie.zenturie_name} (ID: ${zenturie.id})`);
+        console.log(`  ${index + 1}. ${zenturie.zenturie} (Year: ${zenturie.year})`);
         const option = document.createElement('option');
-        option.value = zenturie.id;
-        option.textContent = zenturie.zenturie_name;
+        option.value = zenturie.zenturie;
+        option.textContent = zenturie.zenturie;
         select.appendChild(option);
     });
 
@@ -120,8 +120,8 @@ function populateZenturienDropdown() {
 function populateForm() {
     // Set zenturie
     const zenturieSelect = document.getElementById('zenturieSelect');
-    if (zenturieSelect && currentSettings.zenturie_id) {
-        zenturieSelect.value = currentSettings.zenturie_id;
+    if (zenturieSelect && currentSettings.zenturie) {
+        zenturieSelect.value = currentSettings.zenturie;
     }
 
     // Set theme
@@ -162,9 +162,9 @@ async function saveSettings() {
         const updates = {};
 
         // Check zenturie change
-        const newZenturieId = zenturieValue ? parseInt(zenturieValue) : null;
-        if (newZenturieId !== currentSettings.zenturie_id) {
-            updates.zenturie_id = newZenturieId;
+        const newZenturie = zenturieValue || null;
+        if (newZenturie !== currentSettings.zenturie) {
+            updates.zenturie = newZenturie;
         }
 
         // Check theme change
@@ -189,8 +189,8 @@ async function saveSettings() {
         await UserAPI.updateSettings(updates);
 
         // Update current settings cache
-        if (updates.zenturie_id !== undefined) {
-            currentSettings.zenturie_id = updates.zenturie_id;
+        if (updates.zenturie !== undefined) {
+            currentSettings.zenturie = updates.zenturie;
         }
         if (updates.theme !== undefined) {
             currentSettings.theme = updates.theme;
