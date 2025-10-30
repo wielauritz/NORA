@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -8,15 +9,18 @@ import (
 	"github.com/nora-nak/backend/models"
 )
 
-// AuthMiddleware validates session_id from query parameter
 func AuthMiddleware(c *fiber.Ctx) error {
-	sessionID := c.Query("session_id")
+	// Session-Token aus dem Authorization Header lesen
+	authHeader := c.Get("Authorization")
 
-	if sessionID == "" {
+	if authHeader == "" {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"detail": "Session ID required",
 		})
 	}
+
+	// Optional: "Bearer " Präfix entfernen, falls vorhanden
+	sessionID := strings.TrimPrefix(authHeader, "Bearer ")
 
 	// Find session in database
 	var session models.Session

@@ -176,9 +176,10 @@ func setupProtectedRoutes(app *fiber.App) {
 	protected.Get("/exams", handlers.GetExams)
 
 	// Friends (v1 - deprecated, kept for backwards compatibility)
-	protected.Get("/friends", handlers.GetFriends)
-	protected.Post("/friends", handlers.AddFriend)
-	protected.Delete("/friends", handlers.RemoveFriend)
+	var path = "/friends"
+	protected.Get(path, handlers.GetFriends)
+	protected.Post(path, handlers.AddFriend)
+	protected.Delete(path, handlers.RemoveFriend)
 
 	// Custom Hours
 	protected.Post("/create", handlers.CreateCustomHour)
@@ -196,15 +197,14 @@ func setupProtectedRoutes(app *fiber.App) {
 
 	// V2 Protected Routes
 	protectedV2 := app.Group("/v2", middleware.AuthMiddleware)
-
 	// Friends V2 (bidirectional friend requests)
-	protectedV2.Post("/friends/request", middleware.FriendRequestRateLimiter(), handlers.SendFriendRequest) // Send friend request (with rate limiting)
-	protectedV2.Get("/friends/requests", handlers.GetFriendRequests)                                        // Get incoming/outgoing requests
-	protectedV2.Post("/friends/accept", handlers.AcceptFriendRequest)                                       // Accept request
-	protectedV2.Post("/friends/reject", handlers.RejectFriendRequest)                                       // Reject request
-	protectedV2.Delete("/friends/request", handlers.CancelFriendRequest)                                    // Cancel outgoing request
-	protectedV2.Get("/friends", handlers.GetFriendsV2)                                                      // Get accepted friends
-	protectedV2.Delete("/friends", handlers.RemoveFriendV2)                                                 // Remove friend
+	protectedV2.Post("/friends/request", middleware.FriendRequestRateLimiter(), handlers.SendFriendRequest)
+	protectedV2.Get("/friends/requests", handlers.GetFriendRequests)
+	protectedV2.Post("/friends/accept", handlers.AcceptFriendRequest)
+	protectedV2.Post("/friends/reject", handlers.RejectFriendRequest)
+	protectedV2.Delete("/friends/request", handlers.CancelFriendRequest)
+	protectedV2.Get(path, handlers.GetFriendsV2)
+	protectedV2.Delete(path, handlers.RemoveFriendV2)
 }
 
 func customErrorHandler(c *fiber.Ctx, err error) error {

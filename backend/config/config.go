@@ -60,12 +60,6 @@ func LoadConfig() *Config {
 	return AppConfig
 }
 
-// GetSessionExpiration returns the session expiration time
-// TODO
-//func GetSessionExpiration() time.Time {
-//	return time.Now().Add(time.Duration(AppConfig.SessionExpirationDays) * 24 * time.Hour)
-//}
-
 // getEnvConfig retrieves environment variable or returns default value
 func getEnvConfig(key, defaultValue string) string {
 	value := os.Getenv(key)

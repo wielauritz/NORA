@@ -241,7 +241,7 @@ const UserAPI = {
     async getProfile() {
         const sessionId = storage.getItem('token');
         if (!sessionId) throw new Error('Nicht eingeloggt');
-        return await apiRequest(`/user?session_id=${sessionId}`);
+        return await apiRequest(`/user`);
     },
 
     // Get all available Zenturien
@@ -253,7 +253,7 @@ const UserAPI = {
     async setZenturie(zenturie) {
         const sessionId = storage.getItem('token');
         if (!sessionId) throw new Error('Nicht eingeloggt');
-        return await apiRequest(`/zenturie?session_id=${sessionId}`, {
+        return await apiRequest(`/zenturie`, {
             method: 'POST',
             body: JSON.stringify({ zenturie }),
         });
@@ -263,14 +263,14 @@ const UserAPI = {
     async getSettings() {
         const sessionId = storage.getItem('token');
         if (!sessionId) throw new Error('Nicht eingeloggt');
-        return await apiRequest(`/user_settings?session_id=${sessionId}`);
+        return await apiRequest(`/user_settings`);
     },
 
     // Update user settings (zenturie_id, theme, notification_preference)
     async updateSettings(settings) {
         const sessionId = storage.getItem('token');
         if (!sessionId) throw new Error('Nicht eingeloggt');
-        return await apiRequest(`/user_settings?session_id=${sessionId}`, {
+        return await apiRequest(`/user_settings`, {
             method: 'POST',
             body: JSON.stringify(settings),
         });
@@ -287,7 +287,7 @@ const ScheduleAPI = {
         const sessionId = storage.getItem('token');
         if (!sessionId) throw new Error('Nicht eingeloggt');
 
-        let url = `/events?session_id=${sessionId}&date=${date}`;
+        let url = `/events?date=${date}`;
         if (endDate) {
             url += `&end=${endDate}`;
         }
@@ -315,14 +315,14 @@ const ExamsAPI = {
     async getUpcomingExams() {
         const sessionId = storage.getItem('token');
         if (!sessionId) throw new Error('Nicht eingeloggt');
-        return await apiRequest(`/exams?session_id=${sessionId}`);
+        return await apiRequest(`/exams`);
     },
 
     // Add new exam
     async addExam(course, start_time, duration, room = null) {
         const sessionId = storage.getItem('token');
         if (!sessionId) throw new Error('Nicht eingeloggt');
-        return await apiRequest(`/add?session_id=${sessionId}`, {
+        return await apiRequest(`/add`, {
             method: 'POST',
             body: JSON.stringify({ course, start_time, duration, room }),
         });
@@ -357,14 +357,14 @@ const FriendsAPI = {
     async getFriends() {
         const sessionId = storage.getItem('token');
         if (!sessionId) throw new Error('Nicht eingeloggt');
-        return await apiRequest(`/friends?session_id=${sessionId}`);
+        return await apiRequest(`/friends`);
     },
 
     // Add friend by email
     async addFriend(friendMail) {
         const sessionId = storage.getItem('token');
         if (!sessionId) throw new Error('Nicht eingeloggt');
-        return await apiRequest(`/friends?session_id=${sessionId}`, {
+        return await apiRequest(`/friends`, {
             method: 'POST',
             body: JSON.stringify({ friend_mail: friendMail }),
         });
@@ -374,7 +374,7 @@ const FriendsAPI = {
     async removeFriend(friendUserId) {
         const sessionId = storage.getItem('token');
         if (!sessionId) throw new Error('Nicht eingeloggt');
-        return await apiRequest(`/friends?session_id=${sessionId}&friend_user_id=${friendUserId}`, {
+        return await apiRequest(`/friends?friend_user_id=${friendUserId}`, {
             method: 'DELETE',
         });
     },
@@ -388,7 +388,7 @@ const CustomHoursAPI = {
     async createCustomHour(title, description, start_time, end_time, room = null, custom_location = null) {
         const sessionId = storage.getItem('token');
         if (!sessionId) throw new Error('Nicht eingeloggt');
-        return await apiRequest(`/create?session_id=${sessionId}`, {
+        return await apiRequest(`/create`, {
             method: 'POST',
             body: JSON.stringify({
                 title,
@@ -405,7 +405,7 @@ const CustomHoursAPI = {
     async updateCustomHour(custom_hour_id, updates) {
         const sessionId = storage.getItem('token');
         if (!sessionId) throw new Error('Nicht eingeloggt');
-        return await apiRequest(`/update?session_id=${sessionId}`, {
+        return await apiRequest(`/update`, {
             method: 'POST',
             body: JSON.stringify({
                 custom_hour_id,
@@ -418,7 +418,7 @@ const CustomHoursAPI = {
     async deleteCustomHour(custom_hour_id) {
         const sessionId = storage.getItem('token');
         if (!sessionId) throw new Error('Nicht eingeloggt');
-        return await apiRequest(`/delete?session_id=${sessionId}&custom_hour_id=${custom_hour_id}`, {
+        return await apiRequest(`/delete?custom_hour_id=${custom_hour_id}`, {
             method: 'DELETE',
         });
     },
@@ -432,7 +432,7 @@ const CoursesAPI = {
     async getAllCourses() {
         const sessionId = storage.getItem('token');
         if (!sessionId) throw new Error('Nicht eingeloggt');
-        return await apiRequest(`/courses?session_id=${sessionId}`);
+        return await apiRequest(`/courses`);
     },
 };
 
@@ -444,7 +444,7 @@ const SearchAPI = {
     async search(parameter) {
         const sessionId = storage.getItem('token');
         if (!sessionId) throw new Error('Nicht eingeloggt');
-        return await apiRequest(`/search?session_id=${sessionId}&parameter=${encodeURIComponent(parameter)}`);
+        return await apiRequest(`/search?parameter=${encodeURIComponent(parameter)}`);
     },
 };
 
