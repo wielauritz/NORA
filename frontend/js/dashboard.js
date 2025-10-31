@@ -3,9 +3,10 @@
  * Lädt und zeigt Dashboard-Daten vom NORA Backend
  */
 
-// Check for auto-login credentials in URL hash (from email verification or password reset)
-(async function handleAutoLogin() {
-    // Method 1: Check URL parameters (from email verification)
+// Initialize dashboard with auto-login support
+// This ensures auto-login completes BEFORE authentication check
+(async function initializeAuth() {
+    // Step 1: Check for auto-login credentials in URL parameters (from email verification)
     const urlParams = new URLSearchParams(window.location.search);
     const token = urlParams.get('token');
     const email = urlParams.get('email');
@@ -14,10 +15,13 @@
     if (token && email) {
         try {
             console.log('✅ Auto-login from email verification detected');
+            console.log('📧 Email:', email);
+            console.log('🔑 Token:', token.substring(0, 8) + '...');
 
             // Initialize persistent storage
             try {
                 await initPersistentStorage();
+                console.log('✅ Persistent storage initialized');
             } catch (e) {
                 console.warn('⚠️ Failed to initialize persistent storage:', e);
             }
@@ -27,13 +31,23 @@
                 await storeTokenPersistent(token);
                 console.log('✅ Token stored via persistent storage');
             } catch (e) {
-                console.error('❌ Error storing token:', e);
+                console.error('❌ Error storing token via persistent storage:', e);
                 // Fallback to localStorage only
                 try {
                     localStorage.setItem('token', token);
                     console.log('✅ Token stored to localStorage (fallback)');
                 } catch (storageError) {
                     console.error('❌ localStorage error:', storageError);
+                }
+            }
+
+            // Also store to StorageManager if available
+            if (typeof storage !== 'undefined' && storage.setItem) {
+                try {
+                    storage.setItem('token', token);
+                    console.log('✅ Token stored to StorageManager');
+                } catch (e) {
+                    console.warn('⚠️ StorageManager error:', e);
                 }
             }
 
@@ -63,48 +77,58 @@
             const cleanUrl = window.location.pathname;
             history.replaceState(null, '', cleanUrl);
 
-            return; // Stop here, continue with normal dashboard load
+            console.log('✅ Auto-login completed, token is ready for use');
         } catch (error) {
-            console.error('Error processing auto-login from URL params:', error);
+            console.error('❌ Error processing auto-login from URL params:', error);
             // Continue with normal auth check even if auto-login fails
         }
     }
 
-    // Method 2: Check URL hash (legacy method for password reset)
+    // Step 2: Check URL hash (legacy method for password reset)
     const hash = window.location.hash;
     if (hash && hash.startsWith('#auth=')) {
         try {
+            console.log('✅ Auto-login from hash detected (password reset)');
             // Extract and decode credentials from hash
             const encodedCreds = hash.substring(6); // Remove '#auth='
             const decodedCreds = atob(encodedCreds);
-            const { token, email } = JSON.parse(decodedCreds);
+            const { token: hashToken, email: hashEmail } = JSON.parse(decodedCreds);
 
-            if (token && email) {
+            if (hashToken && hashEmail) {
                 // Store token in localStorage
-                localStorage.setItem('token', token);
+                localStorage.setItem('token', hashToken);
+
+                // Also store to StorageManager if available
+                if (typeof storage !== 'undefined' && storage.setItem) {
+                    storage.setItem('token', hashToken);
+                }
 
                 // Extract user info from email
-                const userName = email.split('@')[0];
+                const userName = hashEmail.split('@')[0];
                 const userInfo = {
-                    email: email,
+                    email: hashEmail,
                     name: userName,
                 };
                 localStorage.setItem('user', JSON.stringify(userInfo));
 
                 // Remove hash from URL without reload
                 history.replaceState(null, '', window.location.pathname + window.location.search);
+
+                console.log('✅ Auto-login from hash completed');
             }
         } catch (error) {
-            console.error('Error processing auto-login hash:', error);
+            console.error('❌ Error processing auto-login hash:', error);
             // Continue with normal auth check even if auto-login fails
         }
     }
-})();
 
-// Check authentication on page load
-(async () => {
+    // Step 3: NOW check authentication (after auto-login is complete)
+    console.log('🔍 Checking authentication...');
     if (!(await checkAuth())) {
         // checkAuth() redirects to login if not authenticated
+        console.log('❌ Authentication check failed - redirecting to login');
+    } else {
+        console.log('✅ Authentication check passed');
     }
 })();
 

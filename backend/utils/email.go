@@ -2,9 +2,11 @@ package utils
 
 import (
 	"bytes"
+	"crypto/tls"
 	"fmt"
 	"html/template"
 	"log"
+	"net"
 	"time"
 
 	"github.com/nora-nak/backend/config"
@@ -354,8 +356,37 @@ func (e *EmailService) sendEmail(to, subject, htmlBody string) error {
 
 	log.Printf("[EMAIL] Using port: %d, SSL: %v", smtpPort, smtpPort == 465)
 
+	// Resolve SMTP host to IPv4 address only
+	// This ensures we connect via IPv4 instead of IPv6
+	log.Printf("[EMAIL] Resolving %s to IPv4 address", config.AppConfig.SMTPHost)
+
+	// Look up only IPv4 addresses (A records, not AAAA)
+	ipv4Addrs, err := net.LookupIP(config.AppConfig.SMTPHost)
+	if err != nil {
+		log.Printf("[EMAIL ERROR] Failed to resolve host: %v", err)
+		return fmt.Errorf("failed to resolve SMTP host: %w", err)
+	}
+
+	// Filter for IPv4 addresses only
+	var ipv4Addr string
+	for _, ip := range ipv4Addrs {
+		if ip.To4() != nil {
+			// This is an IPv4 address
+			ipv4Addr = ip.String()
+			log.Printf("[EMAIL] Resolved to IPv4 address: %s", ipv4Addr)
+			break
+		}
+	}
+
+	if ipv4Addr == "" {
+		log.Printf("[EMAIL ERROR] No IPv4 address found for %s", config.AppConfig.SMTPHost)
+		return fmt.Errorf("no IPv4 address found for SMTP host")
+	}
+
+	// Use the resolved IPv4 address instead of the hostname
+	// This forces gomail to connect via IPv4
 	d := gomail.NewDialer(
-		config.AppConfig.SMTPHost,
+		ipv4Addr, // Use IPv4 address instead of hostname
 		smtpPort,
 		config.AppConfig.SMTPUser,
 		config.AppConfig.SMTPPassword,
@@ -366,7 +397,13 @@ func (e *EmailService) sendEmail(to, subject, htmlBody string) error {
 		d.SSL = true
 	}
 
-	log.Printf("[EMAIL] Attempting to dial and send")
+	// Set TLS config with the original hostname for certificate verification
+	d.TLSConfig = &tls.Config{
+		ServerName:         config.AppConfig.SMTPHost, // Use original hostname for SNI and cert verification
+		InsecureSkipVerify: false,
+	}
+
+	log.Printf("[EMAIL] Attempting to dial and send via IPv4 (%s)", ipv4Addr)
 	if err := d.DialAndSend(m); err != nil {
 		log.Printf("[EMAIL ERROR] Failed to send email: %v", err)
 		return fmt.Errorf("failed to send email: %w", err)
