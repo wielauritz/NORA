@@ -4,7 +4,73 @@
  */
 
 // Check for auto-login credentials in URL hash (from email verification or password reset)
-(function handleAutoLogin() {
+(async function handleAutoLogin() {
+    // Method 1: Check URL parameters (from email verification)
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    const email = urlParams.get('email');
+    const verified = urlParams.get('verified');
+
+    if (token && email) {
+        try {
+            console.log('✅ Auto-login from email verification detected');
+
+            // Initialize persistent storage
+            try {
+                await initPersistentStorage();
+            } catch (e) {
+                console.warn('⚠️ Failed to initialize persistent storage:', e);
+            }
+
+            // Store token using persistent storage (filesystem + localStorage)
+            try {
+                await storeTokenPersistent(token);
+                console.log('✅ Token stored via persistent storage');
+            } catch (e) {
+                console.error('❌ Error storing token:', e);
+                // Fallback to localStorage only
+                try {
+                    localStorage.setItem('token', token);
+                    console.log('✅ Token stored to localStorage (fallback)');
+                } catch (storageError) {
+                    console.error('❌ localStorage error:', storageError);
+                }
+            }
+
+            // Extract user info from email
+            const userName = email.split('@')[0];
+            const userInfo = {
+                email: email,
+                name: userName,
+            };
+            try {
+                localStorage.setItem('user', JSON.stringify(userInfo));
+                console.log('✅ User info stored');
+            } catch (e) {
+                console.error('❌ Error storing user info:', e);
+            }
+
+            // Show success message if this was from email verification
+            if (verified === 'true') {
+                console.log('🎉 Email verification successful - user is now logged in');
+                // Optional: Show a toast notification
+                if (typeof showToast === 'function') {
+                    showToast('Email erfolgreich verifiziert! Du bist jetzt angemeldet.', 'success');
+                }
+            }
+
+            // Remove parameters from URL without reload
+            const cleanUrl = window.location.pathname;
+            history.replaceState(null, '', cleanUrl);
+
+            return; // Stop here, continue with normal dashboard load
+        } catch (error) {
+            console.error('Error processing auto-login from URL params:', error);
+            // Continue with normal auth check even if auto-login fails
+        }
+    }
+
+    // Method 2: Check URL hash (legacy method for password reset)
     const hash = window.location.hash;
     if (hash && hash.startsWith('#auth=')) {
         try {

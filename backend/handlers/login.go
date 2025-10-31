@@ -403,93 +403,80 @@ func ResendVerificationEmail(c *fiber.Ctx) error {
 // HTML Templates (simplified versions - should be in separate files in production)
 
 func getVerificationSuccessPage(sessionID, email string) string {
-	// Escape strings for JavaScript to prevent XSS
-	escapedEmail := strings.ReplaceAll(strings.ReplaceAll(email, "\\", "\\\\"), "'", "\\'")
-	escapedToken := strings.ReplaceAll(strings.ReplaceAll(sessionID, "\\", "\\\\"), "'", "\\'")
+	// URL encode the token and email for safe transmission as URL parameters
+	// This allows the frontend to handle token storage using its own persistent storage functions
+	encodedToken := sessionID // Token is already a UUID string, no special encoding needed
+	encodedEmail := email
 
-	// Extract user name from email
-	userName := strings.Split(escapedEmail, "@")[0]
-
-	// Redirect to new Ionic app with token stored exactly like during login
+	// Redirect to dashboard with token as URL parameter
+	// The frontend dashboard.html will detect the token parameter and store it properly
 	return fmt.Sprintf(`
 <!DOCTYPE html>
 <html>
 <head>
     <title>E-Mail bestätigt - NORA</title>
     <meta charset="UTF-8">
-    <script>
-        // Store token exactly like during login (matches frontend/js/persistent-storage.js)
-        async function storeTokenAndRedirect() {
-            const token = '%s';
-            const email = '%s';
-            const userName = '%s';
-
-            try {
-                // 1. Store token to localStorage (for current session)
-                try {
-                    localStorage.setItem('token', token);
-                    console.log('✅ Token stored to localStorage');
-                } catch (e) {
-                    console.warn('⚠️ localStorage not available:', e.message);
-                }
-
-                // 2. Store user info (exactly like login.js does)
-                const userInfo = {
-                    email: email,
-                    name: userName
-                };
-                try {
-                    localStorage.setItem('user', JSON.stringify(userInfo));
-                    console.log('✅ User info stored');
-                } catch (e) {
-                    console.error('❌ Error storing user info:', e);
-                }
-
-                // 3. Try to store in Capacitor filesystem (for iOS persistence)
-                if (typeof Capacitor !== 'undefined' && Capacitor.Plugins && Capacitor.Plugins.Filesystem) {
-                    console.log('🔄 Storing token to filesystem...');
-
-                    const data = {
-                        token: token,
-                        storedAt: new Date().toISOString()
-                    };
-
-                    try {
-                        await Capacitor.Plugins.Filesystem.writeFile({
-                            path: 'nora-auth/token.json',
-                            data: JSON.stringify(data),
-                            directory: 'Documents',
-                            encoding: 'utf8',
-                            recursive: true
-                        });
-                        console.log('✅ Token stored to persistent filesystem');
-                    } catch (e) {
-                        console.warn('⚠️ Filesystem storage error:', e.message);
-                    }
-                } else {
-                    console.log('ℹ️ Capacitor filesystem not available (browser mode)');
-                }
-
-            } catch (e) {
-                console.error('❌ Storage error:', e);
-            }
-
-            // 4. Redirect to dashboard (use replace for clean navigation)
-            console.log('✅ Redirecting to dashboard...');
-            window.location.replace('https://new.nora-nak.de/dashboard');
+    <meta http-equiv="refresh" content="0; url=https://new.nora-nak.de/dashboard?token=%s&email=%s&verified=true">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%);
+            color: white;
+            text-align: center;
         }
-
+        .container {
+            padding: 2rem;
+        }
+        .checkmark {
+            font-size: 64px;
+            margin-bottom: 1rem;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 0.5rem;
+        }
+        p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0%% { transform: rotate(0deg); }
+            100%% { transform: rotate(360deg); }
+        }
+    </style>
+    <script>
+        // Fallback redirect in case meta refresh doesn't work
         window.onload = function() {
-            storeTokenAndRedirect();
+            setTimeout(function() {
+                window.location.replace('https://new.nora-nak.de/dashboard?token=%s&email=%s&verified=true');
+            }, 100);
         };
     </script>
 </head>
 <body>
-    <h1>E-Mail erfolgreich bestätigt!</h1>
-    <p>Sie werden zum Dashboard weitergeleitet...</p>
+    <div class="container">
+        <div class="checkmark">✓</div>
+        <h1>E-Mail erfolgreich bestätigt!</h1>
+        <p>Sie werden zum Dashboard weitergeleitet...</p>
+        <div class="spinner"></div>
+    </div>
 </body>
 </html>
-`, escapedToken, escapedEmail, userName)
+`, encodedToken, encodedEmail, encodedToken, encodedEmail)
 }
 
 func getInvalidVerificationCode() string {
