@@ -241,7 +241,8 @@ func VerifyEmail(c *fiber.Ctx) error {
 
 	// Mark user as verified
 	user.Verified = true
-	// Keep UUID intact so the link can be reused (important for email clients that pre-fetch links)
+	// Clear UUID after successful verification (prevents reuse)
+	user.UUID = uuid.Nil
 	user.VerificationExpiry = nil // Clear expiry
 	config.DB.Save(&user)
 
@@ -403,80 +404,77 @@ func ResendVerificationEmail(c *fiber.Ctx) error {
 // HTML Templates (simplified versions - should be in separate files in production)
 
 func getVerificationSuccessPage(sessionID, email string) string {
-	// URL encode the token and email for safe transmission as URL parameters
-	// This allows the frontend to handle token storage using its own persistent storage functions
-	encodedToken := sessionID // Token is already a UUID string, no special encoding needed
-	encodedEmail := email
+	// Extract user name from email for display
+	userName := email
+	if idx := strings.Index(email, "@"); idx > 0 {
+		userName = email[:idx]
+	}
 
-	// Redirect to dashboard with token as URL parameter
-	// The frontend dashboard.html will detect the token parameter and store it properly
-	return fmt.Sprintf(`
-<!DOCTYPE html>
-<html>
+	// Use URL hash (not query parameters) for auto-login - matches old Python implementation
+	// Hash is not sent to server, making it more secure for credentials
+	// Format: #auth=base64({"token":"xxx","email":"yyy"})
+	return fmt.Sprintf(`<!DOCTYPE html>
+<html lang="de">
 <head>
-    <title>E-Mail bestätigt - NORA</title>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0; url=https://new.nora-nak.de/dashboard?token=%s&email=%s&verified=true">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Mail erfolgreich verifiziert</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
         body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%);
-            color: white;
-            text-align: center;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         }
-        .container {
-            padding: 2rem;
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
         }
-        .checkmark {
-            font-size: 64px;
-            margin-bottom: 1rem;
-        }
-        h1 {
-            font-size: 24px;
-            margin-bottom: 0.5rem;
-        }
-        p {
-            font-size: 14px;
-            opacity: 0.9;
-        }
-        .spinner {
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-top: 3px solid white;
-            border-radius: 50%%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-        @keyframes spin {
-            0%% { transform: rotate(0deg); }
-            100%% { transform: rotate(360deg); }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
     </style>
-    <script>
-        // Fallback redirect in case meta refresh doesn't work
-        window.onload = function() {
-            setTimeout(function() {
-                window.location.replace('https://new.nora-nak.de/dashboard?token=%s&email=%s&verified=true');
-            }, 100);
-        };
-    </script>
 </head>
-<body>
-    <div class="container">
-        <div class="checkmark">✓</div>
-        <h1>E-Mail erfolgreich bestätigt!</h1>
-        <p>Sie werden zum Dashboard weitergeleitet...</p>
-        <div class="spinner"></div>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-lg p-12 max-w-md w-full text-center space-y-4 fade-in">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-green-50 rounded-full">
+            <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+            </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900">E-Mail erfolgreich verifiziert!</h3>
+        <p class="text-sm text-gray-600">Willkommen, <strong>%s</strong>!</p>
+        <p class="text-xs text-gray-500">Du wirst weitergeleitet...</p>
     </div>
+
+    <script>
+        // Pass token and email to dashboard via URL hash (cross-domain safe)
+        // This matches the old Python implementation
+        const token = '%s';
+        const email = '%s';
+
+        if (token && email) {
+            // Encode credentials in URL hash (not sent to server, only client-side)
+            const credentials = btoa(JSON.stringify({ token, email }));
+            const redirectUrl = 'https://new.nora-nak.de/dashboard#auth=' + credentials;
+
+            console.log('✅ Email verified, redirecting with auth hash');
+            window.location.replace(redirectUrl);
+        } else {
+            console.log('❌ Missing credentials, redirecting to login');
+            window.location.replace('https://new.nora-nak.de/index.html');
+        }
+    </script>
 </body>
-</html>
-`, encodedToken, encodedEmail, encodedToken, encodedEmail)
+</html>`, userName, sessionID, email)
 }
 
 func getInvalidVerificationCode() string {

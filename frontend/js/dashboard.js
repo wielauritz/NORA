@@ -84,23 +84,51 @@
         }
     }
 
-    // Step 2: Check URL hash (legacy method for password reset)
+    // Step 2: Check URL hash (for email verification and password reset)
     const hash = window.location.hash;
     if (hash && hash.startsWith('#auth=')) {
         try {
-            console.log('✅ Auto-login from hash detected (password reset)');
+            console.log('✅ Auto-login from hash detected (email verification or password reset)');
             // Extract and decode credentials from hash
             const encodedCreds = hash.substring(6); // Remove '#auth='
             const decodedCreds = atob(encodedCreds);
             const { token: hashToken, email: hashEmail } = JSON.parse(decodedCreds);
 
             if (hashToken && hashEmail) {
-                // Store token in localStorage
-                localStorage.setItem('token', hashToken);
+                console.log('📧 Email:', hashEmail);
+                console.log('🔑 Token:', hashToken.substring(0, 8) + '...');
+
+                // Initialize persistent storage
+                try {
+                    await initPersistentStorage();
+                    console.log('✅ Persistent storage initialized');
+                } catch (e) {
+                    console.warn('⚠️ Failed to initialize persistent storage:', e);
+                }
+
+                // Store token using persistent storage (filesystem + localStorage)
+                try {
+                    await storeTokenPersistent(hashToken);
+                    console.log('✅ Token stored via persistent storage');
+                } catch (e) {
+                    console.error('❌ Error storing token via persistent storage:', e);
+                    // Fallback to localStorage only
+                    try {
+                        localStorage.setItem('token', hashToken);
+                        console.log('✅ Token stored to localStorage (fallback)');
+                    } catch (storageError) {
+                        console.error('❌ localStorage error:', storageError);
+                    }
+                }
 
                 // Also store to StorageManager if available
                 if (typeof storage !== 'undefined' && storage.setItem) {
-                    storage.setItem('token', hashToken);
+                    try {
+                        storage.setItem('token', hashToken);
+                        console.log('✅ Token stored to StorageManager');
+                    } catch (e) {
+                        console.warn('⚠️ StorageManager error:', e);
+                    }
                 }
 
                 // Extract user info from email
@@ -109,7 +137,12 @@
                     email: hashEmail,
                     name: userName,
                 };
-                localStorage.setItem('user', JSON.stringify(userInfo));
+                try {
+                    localStorage.setItem('user', JSON.stringify(userInfo));
+                    console.log('✅ User info stored');
+                } catch (e) {
+                    console.error('❌ Error storing user info:', e);
+                }
 
                 // Remove hash from URL without reload
                 history.replaceState(null, '', window.location.pathname + window.location.search);
