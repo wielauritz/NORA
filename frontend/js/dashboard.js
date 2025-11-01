@@ -6,12 +6,66 @@
 // Initialize dashboard with auto-login support
 // This ensures auto-login completes BEFORE authentication check
 (async function initializeAuth() {
-    // Check URL hash for auto-login (email verification and password reset)
+    // Check URL parameter for token (from email verification)
+    // Format: ?token=xxx
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+
+    if (token) {
+        try {
+            console.log('✅ Auto-login token detected from email verification');
+            console.log('🔑 Token:', token.substring(0, 8) + '...');
+
+            // Initialize persistent storage
+            try {
+                await initPersistentStorage();
+                console.log('✅ Persistent storage initialized');
+            } catch (e) {
+                console.warn('⚠️ Failed to initialize persistent storage:', e);
+            }
+
+            // Store token using persistent storage (filesystem + localStorage)
+            try {
+                await storeTokenPersistent(token);
+                console.log('✅ Token stored via persistent storage');
+            } catch (e) {
+                console.error('❌ Error storing token via persistent storage:', e);
+                // Fallback to localStorage only
+                try {
+                    localStorage.setItem('token', token);
+                    console.log('✅ Token stored to localStorage (fallback)');
+                } catch (storageError) {
+                    console.error('❌ localStorage error:', storageError);
+                }
+            }
+
+            // Also store to StorageManager if available
+            if (typeof storage !== 'undefined' && storage.setItem) {
+                try {
+                    storage.setItem('token', token);
+                    console.log('✅ Token stored to StorageManager');
+                } catch (e) {
+                    console.warn('⚠️ StorageManager error:', e);
+                }
+            }
+
+            // Remove token parameter from URL without reload
+            const cleanUrl = window.location.pathname;
+            history.replaceState(null, '', cleanUrl);
+
+            console.log('✅ Auto-login completed - token stored for all future requests');
+        } catch (error) {
+            console.error('❌ Error processing auto-login token:', error);
+            // Continue with normal auth check even if auto-login fails
+        }
+    }
+
+    // Check URL hash for auto-login (password reset legacy support)
     // Format: #auth=base64({"token":"xxx","email":"yyy"})
     const hash = window.location.hash;
     if (hash && hash.startsWith('#auth=')) {
         try {
-            console.log('✅ Auto-login from hash detected (email verification or password reset)');
+            console.log('✅ Auto-login from hash detected (password reset)');
             // Extract and decode credentials from hash
             const encodedCreds = hash.substring(6); // Remove '#auth='
             const decodedCreds = atob(encodedCreds);
@@ -29,13 +83,12 @@
                     console.warn('⚠️ Failed to initialize persistent storage:', e);
                 }
 
-                // Store token using persistent storage (filesystem + localStorage)
+                // Store token using persistent storage
                 try {
                     await storeTokenPersistent(hashToken);
                     console.log('✅ Token stored via persistent storage');
                 } catch (e) {
                     console.error('❌ Error storing token via persistent storage:', e);
-                    // Fallback to localStorage only
                     try {
                         localStorage.setItem('token', hashToken);
                         console.log('✅ Token stored to localStorage (fallback)');
@@ -78,7 +131,7 @@
         }
     }
 
-    // Step 3: NOW check authentication (after auto-login is complete)
+    // NOW check authentication (after auto-login is complete)
     console.log('🔍 Checking authentication...');
     if (!(await checkAuth())) {
         // checkAuth() redirects to login if not authenticated
