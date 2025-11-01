@@ -213,12 +213,14 @@ func VerifyEmail(c *fiber.Ctx) error {
 
 	fmt.Printf("[VERIFY] User found: %s, Verified: %v\n", user.Mail, user.Verified)
 
-	// Check if verification link has expired
-	if user.VerificationExpiry != nil && time.Now().After(*user.VerificationExpiry) {
+	// Check if verification link has expired (only if not yet verified)
+	// If already verified, allow re-login via same link (useful for email prefetching)
+	if !user.Verified && user.VerificationExpiry != nil && time.Now().After(*user.VerificationExpiry) {
+		fmt.Printf("[VERIFY] Verification link expired for user: %s\n", user.Mail)
 		return c.Type("html").SendString(getExpiredVerificationPage())
 	}
 
-	// Create session (for auto-login)
+	// Create session for auto-login (works for both first-time and repeat verification)
 	sessionID := uuid.New().String()
 	expiration := time.Now().Add(24 * time.Hour)
 
@@ -229,23 +231,25 @@ func VerifyEmail(c *fiber.Ctx) error {
 	}
 
 	if err := config.DB.Create(&session).Error; err != nil {
+		fmt.Printf("[VERIFY ERROR] Failed to create session: %v\n", err)
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"detail": "Failed to create session",
 		})
 	}
 
-	// If already verified, just return success page
-	if user.Verified {
-		return c.Type("html").SendString(getVerificationSuccessPage(sessionID, user.Mail))
+	// If NOT yet verified, mark as verified
+	if !user.Verified {
+		fmt.Printf("[VERIFY] Marking user as verified: %s\n", user.Mail)
+		user.Verified = true
+		// Keep UUID intact (allows link reuse for email prefetching)
+		// Clear expiry after successful verification
+		user.VerificationExpiry = nil
+		config.DB.Save(&user)
+	} else {
+		fmt.Printf("[VERIFY] User already verified, creating new session for auto-login: %s\n", user.Mail)
 	}
 
-	// Mark user as verified
-	user.Verified = true
-	// Clear UUID after successful verification (prevents reuse)
-	user.UUID = uuid.Nil
-	user.VerificationExpiry = nil // Clear expiry
-	config.DB.Save(&user)
-
+	// Return success page with auto-login (works for both first-time and repeat clicks)
 	return c.Type("html").SendString(getVerificationSuccessPage(sessionID, user.Mail))
 }
 

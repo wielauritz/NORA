@@ -6,85 +6,8 @@
 // Initialize dashboard with auto-login support
 // This ensures auto-login completes BEFORE authentication check
 (async function initializeAuth() {
-    // Step 1: Check for auto-login credentials in URL parameters (from email verification)
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
-    const email = urlParams.get('email');
-    const verified = urlParams.get('verified');
-
-    if (token && email) {
-        try {
-            console.log('✅ Auto-login from email verification detected');
-            console.log('📧 Email:', email);
-            console.log('🔑 Token:', token.substring(0, 8) + '...');
-
-            // Initialize persistent storage
-            try {
-                await initPersistentStorage();
-                console.log('✅ Persistent storage initialized');
-            } catch (e) {
-                console.warn('⚠️ Failed to initialize persistent storage:', e);
-            }
-
-            // Store token using persistent storage (filesystem + localStorage)
-            try {
-                await storeTokenPersistent(token);
-                console.log('✅ Token stored via persistent storage');
-            } catch (e) {
-                console.error('❌ Error storing token via persistent storage:', e);
-                // Fallback to localStorage only
-                try {
-                    localStorage.setItem('token', token);
-                    console.log('✅ Token stored to localStorage (fallback)');
-                } catch (storageError) {
-                    console.error('❌ localStorage error:', storageError);
-                }
-            }
-
-            // Also store to StorageManager if available
-            if (typeof storage !== 'undefined' && storage.setItem) {
-                try {
-                    storage.setItem('token', token);
-                    console.log('✅ Token stored to StorageManager');
-                } catch (e) {
-                    console.warn('⚠️ StorageManager error:', e);
-                }
-            }
-
-            // Extract user info from email
-            const userName = email.split('@')[0];
-            const userInfo = {
-                email: email,
-                name: userName,
-            };
-            try {
-                localStorage.setItem('user', JSON.stringify(userInfo));
-                console.log('✅ User info stored');
-            } catch (e) {
-                console.error('❌ Error storing user info:', e);
-            }
-
-            // Show success message if this was from email verification
-            if (verified === 'true') {
-                console.log('🎉 Email verification successful - user is now logged in');
-                // Optional: Show a toast notification
-                if (typeof showToast === 'function') {
-                    showToast('Email erfolgreich verifiziert! Du bist jetzt angemeldet.', 'success');
-                }
-            }
-
-            // Remove parameters from URL without reload
-            const cleanUrl = window.location.pathname;
-            history.replaceState(null, '', cleanUrl);
-
-            console.log('✅ Auto-login completed, token is ready for use');
-        } catch (error) {
-            console.error('❌ Error processing auto-login from URL params:', error);
-            // Continue with normal auth check even if auto-login fails
-        }
-    }
-
-    // Step 2: Check URL hash (for email verification and password reset)
+    // Check URL hash for auto-login (email verification and password reset)
+    // Format: #auth=base64({"token":"xxx","email":"yyy"})
     const hash = window.location.hash;
     if (hash && hash.startsWith('#auth=')) {
         try {
