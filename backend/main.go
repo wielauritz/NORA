@@ -148,6 +148,7 @@ func setupPublicRoutes(app *fiber.App) {
 	app.Post("/v1/reset", middleware.PasswordResetRateLimiter(), handlers.RequestPasswordReset)
 	app.Get("/v1/reset-password", handlers.ShowPasswordResetForm)
 	app.Post("/v1/reset-confirm", handlers.ConfirmPasswordReset)
+	app.Post("/v1/reset-password-code", middleware.PasswordResetRateLimiter(), handlers.ResetPasswordWithCode)
 	app.Post("/v1/resend-email", middleware.ResendEmailRateLimiter(), handlers.ResendVerificationEmail)
 
 	// Public endpoints (no auth required)

@@ -35,6 +35,13 @@ type VerifyCodeRequest struct {
 	Code string `json:"code" validate:"required,len=6"`
 }
 
+// ResetPasswordWithCodeRequest represents password reset with code
+type ResetPasswordWithCodeRequest struct {
+	Mail        string `json:"mail" validate:"required,email"`
+	Code        string `json:"code" validate:"required,len=6"`
+	NewPassword string `json:"new_password" validate:"required,min=8"`
+}
+
 // TokenResponse represents login response
 type TokenResponse struct {
 	Message string `json:"message"`
@@ -397,18 +404,127 @@ func RequestPasswordReset(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusNoContent)
 	}
 
-	// Generate reset UUID with 1 hour expiry
-	resetUUID := uuid.New().String()
+	// Generate reset code with 1 hour expiry
+	resetCode, err := utils.GenerateVerificationCode()
+	if err != nil {
+		// Return 204 even on error (security - don't reveal email existence)
+		return c.SendStatus(fiber.StatusNoContent)
+	}
 	resetExpiry := time.Now().Add(1 * time.Hour) // Expires in 1 hour
-	user.ResetUUID = &resetUUID
-	user.ResetUUIDExpiry = &resetExpiry
+	user.ResetCode = &resetCode
+	user.ResetCodeExpiry = &resetExpiry
 	config.DB.Save(&user)
 
-	// Send reset email (async)
+	// Send reset code email (async)
 	emailService := utils.NewEmailService()
-	go emailService.SendPasswordResetEmail(user.Mail, user.FirstName, resetUUID)
+	go emailService.SendPasswordResetCodeEmail(user.Mail, user.FirstName, resetCode)
 
 	return c.SendStatus(fiber.StatusNoContent)
+}
+
+// ResetPasswordWithCode resets password using 6-digit code
+// POST /v1/reset-password-code
+func ResetPasswordWithCode(c *fiber.Ctx) error {
+	var req ResetPasswordWithCodeRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Ungültige Anfrage",
+		})
+	}
+
+	// Normalize email
+	req.Mail = strings.ToLower(req.Mail)
+
+	// Validate request
+	if req.Mail == "" || req.Code == "" || req.NewPassword == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "E-Mail, Code und neues Passwort sind erforderlich",
+		})
+	}
+
+	if len(req.Code) != 6 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Code muss 6 Zeichen lang sein",
+		})
+	}
+
+	if len(req.NewPassword) < 8 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Passwort muss mindestens 8 Zeichen lang sein",
+		})
+	}
+
+	// Find user by email
+	var user models.User
+	if err := config.DB.Where("mail = ?", req.Mail).First(&user).Error; err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Ungültiger Reset-Code",
+		})
+	}
+
+	// Check if reset code exists
+	if user.ResetCode == nil || *user.ResetCode == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Kein Reset-Code gefunden",
+		})
+	}
+
+	// Check if code matches
+	if *user.ResetCode != req.Code {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Ungültiger Reset-Code",
+		})
+	}
+
+	// Check if reset code has expired (1 hour)
+	if user.ResetCodeExpiry != nil && time.Now().After(*user.ResetCodeExpiry) {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Reset-Code abgelaufen",
+		})
+	}
+
+	// Hash new password
+	passwordHash, err := utils.HashPassword(req.NewPassword)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Fehler beim Setzen des Passworts",
+		})
+	}
+
+	// Update password and clear reset code
+	user.PasswordHash = passwordHash
+	user.ResetCode = nil
+	user.ResetCodeExpiry = nil
+	if err := config.DB.Save(&user).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Fehler beim Speichern",
+		})
+	}
+
+	// Create session for auto-login (24 hours validity)
+	sessionID := uuid.New().String()
+	session := models.Session{
+		SessionID:      sessionID,
+		UserID:         user.ID,
+		ExpirationDate: time.Now().Add(24 * time.Hour),
+	}
+	if err := config.DB.Create(&session).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Fehler beim Erstellen der Session",
+		})
+	}
+
+	// Return success with token for automatic login
+	return c.JSON(fiber.Map{
+		"message": "Passwort erfolgreich zurückgesetzt",
+		"token":   sessionID,
+		"user": fiber.Map{
+			"id":         user.ID,
+			"mail":       user.Mail,
+			"first_name": user.FirstName,
+			"last_name":  user.LastName,
+		},
+	})
 }
 
 // ShowPasswordResetForm shows HTML form for password reset

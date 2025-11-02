@@ -216,6 +216,14 @@ const AuthAPI = {
         });
     },
 
+    // Reset password with 6-digit code
+    async resetPasswordWithCode(mail, code, new_password) {
+        return await apiRequest('/reset-password-code', {
+            method: 'POST',
+            body: JSON.stringify({ mail, code, new_password }),
+        });
+    },
+
     // Confirm password reset with new password
     async resetPasswordConfirm(uuid, new_password) {
         return await apiRequest('/reset-confirm', {

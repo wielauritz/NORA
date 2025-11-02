@@ -26,6 +26,8 @@ type User struct {
 	UUID               uuid.UUID  `gorm:"type:uuid;default:gen_random_uuid()" json:"uuid"`
 	VerificationCode   *string    `gorm:"size:6;index" json:"verification_code,omitempty"` // 6-digit verification code
 	VerificationExpiry *time.Time `gorm:"index" json:"verification_expiry,omitempty"`      // Expiry for email verification code
+	ResetCode          *string    `gorm:"size:6;index" json:"reset_code,omitempty"`        // 6-digit password reset code
+	ResetCodeExpiry    *time.Time `gorm:"index" json:"reset_code_expiry,omitempty"`        // Expiry for password reset code (1 hour)
 	ResetUUID          *string    `gorm:"size:255" json:"reset_uuid,omitempty"`
 	ResetUUIDExpiry    *time.Time `gorm:"index" json:"reset_uuid_expiry,omitempty"` // Expiry for password reset link
 	FirstName          string     `gorm:"size:255;not null" json:"first_name"`
