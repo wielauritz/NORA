@@ -78,7 +78,7 @@ class AppUpdater {
      * Zeigt Update-Benachrichtigung
      */
     async showUpdateNotification(newVersion) {
-        const message = `Eine neue Version (${newVersion}) ist verfügbar! Bitte aktualisieren Sie die App im App Store.`;
+        const message = `Eine neue Version (${newVersion}) ist verfügbar! Bitte aktualisiere die App im App Store.`;
 
         // Zeige native Alert (falls verfügbar)
         if (this.isCapacitor && window.Capacitor.Plugins.Dialog) {

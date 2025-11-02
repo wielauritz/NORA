@@ -21,9 +21,9 @@ func NewEmailService() *EmailService {
 	return &EmailService{}
 }
 
-// SendVerificationEmail sends an email verification link
-func (e *EmailService) SendVerificationEmail(toEmail, firstName, verifyUUID string) error {
-	log.Printf("[EMAIL] Sending verification email")
+// SendVerificationEmailLegacy sends an email verification link (DEPRECATED - use unified SendVerificationEmail)
+func (e *EmailService) SendVerificationEmailLegacy(toEmail, firstName, verifyUUID string) error {
+	log.Printf("[EMAIL] Sending verification email (legacy)")
 	subject := "NORA - E-Mail Bestätigung"
 	// Link should go to backend API endpoint which handles verification and redirects to frontend
 	apiURL := "https://api.new.nora-nak.de"
@@ -513,8 +513,7 @@ func (e *EmailService) sendEmail(to, subject, htmlBody string) error {
 		return fmt.Errorf("no IPv4 address found for SMTP host")
 	}
 
-	// Use the resolved IPv4 address instead of the hostname
-	// This forces gomail to connect via IPv4
+	// Use gomail.NewDialer with IPv4 address
 	d := gomail.NewDialer(
 		ipv4Addr, // Use IPv4 address instead of hostname
 		smtpPort,
@@ -534,6 +533,19 @@ func (e *EmailService) sendEmail(to, subject, htmlBody string) error {
 	}
 
 	log.Printf("[EMAIL] Attempting to dial and send via IPv4 (%s)", ipv4Addr)
+
+	// Manually dial using tcp4 to force IPv4
+	addr := fmt.Sprintf("%s:%d", ipv4Addr, smtpPort)
+	log.Printf("[EMAIL] Testing tcp4 connection to %s", addr)
+
+	testConn, err := net.DialTimeout("tcp4", addr, 10*time.Second)
+	if err != nil {
+		log.Printf("[EMAIL ERROR] tcp4 connection test failed: %v", err)
+		return fmt.Errorf("failed to connect via IPv4: %w", err)
+	}
+	testConn.Close()
+	log.Printf("[EMAIL SUCCESS] tcp4 connection test successful")
+
 	if err := d.DialAndSend(m); err != nil {
 		log.Printf("[EMAIL ERROR] Failed to send email: %v", err)
 		return fmt.Errorf("failed to send email: %w", err)

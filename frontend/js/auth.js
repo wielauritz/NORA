@@ -77,7 +77,7 @@ function showSuccess(title, message, buttonText = 'Zum Login', buttonLink = 'ind
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                 </svg>
             </div>
-            <h3 class="text-lg font-semibold text-secondary">${title}</h3>
+            <h3 class="text-lg font-semibold text-secondary dark:text-primary">${title}</h3>
             <p class="text-sm text-gray-600">${message}</p>
             <div class="pt-4">
                 <a href="${buttonLink}" class="btn-hover inline-block bg-gradient-to-r from-primary to-secondary text-white py-3 px-6 rounded-lg font-medium">
@@ -127,7 +127,7 @@ function showErrorState(title, message, buttonText = 'Zurück', buttonLink = 'in
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                 </svg>
             </div>
-            <h3 class="text-lg font-semibold text-secondary">${title}</h3>
+            <h3 class="text-lg font-semibold text-secondary dark:text-primary">${title}</h3>
             <p class="text-sm text-gray-600">${message}</p>
             <div class="pt-4">
                 <a href="${buttonLink}" class="btn-hover inline-block bg-gradient-to-r from-primary to-secondary text-white py-3 px-6 rounded-lg font-medium">
@@ -160,7 +160,7 @@ function showLoginSuccess(action, userName) {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
             </svg>
         </div>
-        <h3 class="text-lg font-semibold text-secondary">${action}!</h3>
+        <h3 class="text-lg font-semibold text-secondary dark:text-primary">${action}!</h3>
         <p class="text-sm text-gray-600">Willkommen, <strong>${userName}</strong>!</p>
         <p class="text-xs text-gray-500">Du wirst weitergeleitet...</p>
     `;
@@ -172,7 +172,9 @@ function showLoginSuccess(action, userName) {
 /**
  * Show verification required message (for index.html)
  */
-function showVerificationRequired(email) {
+function showVerificationRequired(email, authMode = "BOTH") {
+    console.log('[AUTH] showVerificationRequired called with:', { email, authMode });
+
     const form = document.getElementById('loginForm');
 
     if (!form || !form.parentElement) {
@@ -185,44 +187,137 @@ function showVerificationRequired(email) {
 
     const verifyDiv = document.createElement('div');
     verifyDiv.className = 'text-center space-y-4 fade-in';
-    verifyDiv.innerHTML = `
-        <div class="inline-flex items-center justify-center w-16 h-16 bg-yellow-50 rounded-full">
-            <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-            </svg>
-        </div>
-        <h3 class="text-lg font-semibold text-secondary">E-Mail-Verifizierung erforderlich</h3>
-        <p class="text-sm text-gray-600">
-            Wir haben einen 6-stelligen Verifizierungscode an <strong>${email}</strong> gesendet.<br>
-            Bitte gib den Code ein, um deine E-Mail-Adresse zu bestätigen.
-        </p>
-        <div class="space-y-3">
-            <input
-                type="text"
-                id="verificationCode"
-                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-center text-2xl tracking-widest font-mono"
-                placeholder="000000"
-                maxlength="6"
-                pattern="[0-9]{6}"
-                inputmode="numeric"
-                autocomplete="off"
-            />
-            <button id="verifyBtn" class="w-full btn-hover bg-gradient-to-r from-primary to-secondary text-white py-3 px-6 rounded-lg font-medium">
-                Code verifizieren
+
+    // Generate HTML based on AUTH_MODE
+    let contentHTML = '';
+    console.log('[AUTH] Generating UI for mode:', authMode);
+
+    if (authMode === "LINK") {
+        // LINK mode - no code input, just message to check email
+        contentHTML = `
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-50 rounded-full">
+                <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-secondary dark:text-primary">E-Mail-Verifizierung erforderlich</h3>
+            <p class="text-sm text-gray-600">
+                Wir haben eine Verifizierungs-E-Mail an <strong>${email}</strong> gesendet.<br>
+                <strong>Bitte klicke auf den Link in der E-Mail</strong>, um deine E-Mail-Adresse zu verifizieren.
+            </p>
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
+                <p>💡 <strong>Tipp:</strong> Überprüfe auch deinen Spam-Ordner, falls die E-Mail nicht im Posteingang erscheint.</p>
+            </div>
+            <p class="text-xs text-gray-500">
+                Keine E-Mail erhalten?
+            </p>
+            <button id="resendBtn" class="btn-hover bg-white border border-gray-300 text-gray-700 py-2 px-6 rounded-lg font-medium hover:bg-gray-50">
+                E-Mail erneut senden
             </button>
-        </div>
-        <p class="text-xs text-gray-500">
-            Keine E-Mail erhalten?
-        </p>
-        <button id="resendBtn" class="btn-hover bg-white border border-gray-300 text-gray-700 py-2 px-6 rounded-lg font-medium hover:bg-gray-50">
-            Code erneut senden
-        </button>
-        <div class="pt-4">
-            <a href="index.html" class="text-sm text-primary hover:text-secondary transition-colors">
-                Zurück zum Login
-            </a>
-        </div>
-    `;
+            <div class="pt-4">
+                <a href="index.html" class="text-sm text-primary hover:text-secondary transition-colors">
+                    Zurück zum Login
+                </a>
+            </div>
+        `;
+    } else if (authMode === "BOTH") {
+        // BOTH mode - Link is primary, code input is collapsible fallback
+        contentHTML = `
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-50 rounded-full">
+                <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-secondary dark:text-primary">E-Mail-Verifizierung erforderlich</h3>
+            <p class="text-sm text-gray-600">
+                Wir haben eine Verifizierungs-E-Mail an <strong>${email}</strong> gesendet.<br>
+                <strong>Bitte klicke auf den Link in der E-Mail</strong>, um deine E-Mail-Adresse zu verifizieren.
+            </p>
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
+                <p>💡 <strong>Tipp:</strong> Überprüfe auch deinen Spam-Ordner, falls die E-Mail nicht im Posteingang erscheint.</p>
+            </div>
+
+            <!-- Collapsible Code Input -->
+            <div class="mt-4">
+                <button id="toggleCodeBtn" class="text-sm text-gray-600 hover:text-primary transition-colors flex items-center justify-center gap-2 mx-auto">
+                    <span>Probleme mit dem Link? Code eingeben</span>
+                    <svg id="toggleIcon" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div id="codeInputSection" class="hidden mt-4 space-y-3">
+                    <p class="text-xs text-gray-600 text-center">Gib den 6-stelligen Code aus der E-Mail ein:</p>
+                    <input
+                        type="text"
+                        id="verificationCode"
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-center text-2xl tracking-widest font-mono"
+                        placeholder="000000"
+                        maxlength="6"
+                        pattern="[0-9]{6}"
+                        inputmode="numeric"
+                        autocomplete="off"
+                    />
+                    <button id="verifyBtn" class="w-full btn-hover bg-gradient-to-r from-primary to-secondary text-white py-3 px-6 rounded-lg font-medium">
+                        Code verifizieren
+                    </button>
+                </div>
+            </div>
+
+            <p class="text-xs text-gray-500 mt-4">
+                Keine E-Mail erhalten?
+            </p>
+            <button id="resendBtn" class="btn-hover bg-white border border-gray-300 text-gray-700 py-2 px-6 rounded-lg font-medium hover:bg-gray-50">
+                E-Mail erneut senden
+            </button>
+            <div class="pt-4">
+                <a href="index.html" class="text-sm text-primary hover:text-secondary transition-colors">
+                    Zurück zum Login
+                </a>
+            </div>
+        `;
+    } else {
+        // OTP mode - show code input directly
+        contentHTML = `
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-yellow-50 rounded-full">
+                <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-secondary dark:text-primary">E-Mail-Verifizierung erforderlich</h3>
+            <p class="text-sm text-gray-600">
+                Wir haben einen 6-stelligen Verifizierungscode an <strong>${email}</strong> gesendet.<br>
+                Bitte gib den Code ein, um deine E-Mail-Adresse zu bestätigen.
+            </p>
+            <div class="space-y-3">
+                <input
+                    type="text"
+                    id="verificationCode"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-center text-2xl tracking-widest font-mono"
+                    placeholder="000000"
+                    maxlength="6"
+                    pattern="[0-9]{6}"
+                    inputmode="numeric"
+                    autocomplete="off"
+                />
+                <button id="verifyBtn" class="w-full btn-hover bg-gradient-to-r from-primary to-secondary text-white py-3 px-6 rounded-lg font-medium">
+                    Code verifizieren
+                </button>
+            </div>
+            <p class="text-xs text-gray-500">
+                Keine E-Mail erhalten?
+            </p>
+            <button id="resendBtn" class="btn-hover bg-white border border-gray-300 text-gray-700 py-2 px-6 rounded-lg font-medium hover:bg-gray-50">
+                E-Mail erneut senden
+            </button>
+            <div class="pt-4">
+                <a href="index.html" class="text-sm text-primary hover:text-secondary transition-colors">
+                    Zurück zum Login
+                </a>
+            </div>
+        `;
+    }
+
+    verifyDiv.innerHTML = contentHTML;
 
     container.innerHTML = '';
     container.appendChild(verifyDiv);
@@ -231,13 +326,33 @@ function showVerificationRequired(email) {
     const verifyBtn = document.getElementById('verifyBtn');
     const resendBtn = document.getElementById('resendBtn');
 
-    // Auto-format code input (only allow numbers)
-    codeInput.addEventListener('input', (e) => {
-        e.target.value = e.target.value.replace(/[^0-9]/g, '');
-    });
+    // Setup toggle for BOTH mode
+    if (authMode === "BOTH") {
+        const toggleCodeBtn = document.getElementById('toggleCodeBtn');
+        const codeInputSection = document.getElementById('codeInputSection');
+        const toggleIcon = document.getElementById('toggleIcon');
 
-    // Handle code verification
-    verifyBtn.addEventListener('click', async () => {
+        toggleCodeBtn.addEventListener('click', () => {
+            const isHidden = codeInputSection.classList.contains('hidden');
+            if (isHidden) {
+                codeInputSection.classList.remove('hidden');
+                toggleIcon.style.transform = 'rotate(180deg)';
+            } else {
+                codeInputSection.classList.add('hidden');
+                toggleIcon.style.transform = 'rotate(0deg)';
+            }
+        });
+    }
+
+    // Only setup code input handlers if not in LINK mode
+    if (authMode !== "LINK") {
+        // Auto-format code input (only allow numbers)
+        codeInput.addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/[^0-9]/g, '');
+        });
+
+        // Handle code verification
+        verifyBtn.addEventListener('click', async () => {
         const code = codeInput.value.trim();
 
         if (code.length !== 6) {
@@ -279,12 +394,13 @@ function showVerificationRequired(email) {
             verifyBtn.disabled = false;
             verifyBtn.textContent = originalText;
         }
-    });
+        });
+    } // End of authMode !== "LINK" check
 
-    // Function to start countdown
+    // Function to start countdown (available in all modes)
     const startResendCountdown = (sendEmail = false) => {
         resendBtn.disabled = true;
-        const originalText = 'Code erneut senden';
+        const originalText = 'E-Mail erneut senden';
         let countdown = 30;
 
         // Update button text with countdown

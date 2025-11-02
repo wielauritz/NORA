@@ -33,6 +33,9 @@ type Config struct {
 
 	// Logging
 	LogLevel string // debug, info, warning, error
+
+	// Authentication Mode (LINK, OTP, BOTH)
+	AuthMode string
 }
 
 var AppConfig *Config
@@ -55,9 +58,25 @@ func LoadConfig() *Config {
 		ICSBaseURL:            getEnvConfig("ICS_BASE_URL", "https://cis.nordakademie.de/fileadmin/Infos/Stundenplaene"),
 		SessionExpirationDays: 7,
 		LogLevel:              getEnvConfig("LOG_LEVEL", "info"), // debug, info, warning, error
+		AuthMode:              normalizeAuthMode(getEnvConfig("AUTH_MODE", "BOTH")),
 	}
 
 	return AppConfig
+}
+
+// normalizeAuthMode validates and normalizes the authentication mode
+func normalizeAuthMode(mode string) string {
+	switch mode {
+	case "LINK", "link":
+		return "LINK"
+	case "OTP", "otp":
+		return "OTP"
+	case "BOTH", "both":
+		return "BOTH"
+	default:
+		// Default to BOTH if invalid value provided
+		return "BOTH"
+	}
 }
 
 // getEnvConfig retrieves environment variable or returns default value

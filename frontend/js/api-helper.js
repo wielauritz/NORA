@@ -100,7 +100,9 @@ async function apiRequest(endpoint, options = {}) {
             // Handle errors
             if (status >= 400) {
                 const errorMessage = typeof data === 'object' ? (data.detail || data.message) : data;
-                throw new Error(errorMessage || `HTTP ${status}: API Request failed`);
+                const error = new Error(errorMessage || `HTTP ${status}: API Request failed`);
+                error.data = data; // Preserve full response data
+                throw error;
             }
 
             return data;
@@ -151,13 +153,17 @@ async function apiRequest(endpoint, options = {}) {
 
             if (contentType && contentType.includes('application/json')) {
                 data = await response.json();
+                console.log('[API] Parsed JSON data:', data);
             } else {
                 data = await response.text();
+                console.log('[API] Parsed text data:', data);
             }
 
             if (!response.ok) {
                 const errorMessage = typeof data === 'object' ? (data.detail || data.message) : data;
-                throw new Error(errorMessage || `HTTP ${response.status}: API Request failed`);
+                const error = new Error(errorMessage || `HTTP ${response.status}: API Request failed`);
+                error.data = data; // Preserve full response data
+                throw error;
             }
 
             return data;

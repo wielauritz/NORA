@@ -87,7 +87,10 @@ function initLoginForm() {
             }, 1000);
         } else {
             // New user created, verification email sent
-            showVerificationRequired(email);
+            // Pass auth_mode from backend response (defaults to "BOTH" if not provided)
+            const authMode = data.auth_mode || "BOTH";
+            console.log('[LOGIN] New user - auth_mode from response:', data.auth_mode, 'Using:', authMode);
+            showVerificationRequired(email, authMode);
         }
     } catch (error) {
         console.error('Login Error:', error);
@@ -97,7 +100,10 @@ function initLoginForm() {
 
         if (errorMessage.includes('verifiziert') || errorMessage.includes('verified')) {
             // Email not verified
-            showVerificationRequired(email);
+            // Try to get auth_mode from error data, fall back to "BOTH"
+            const authMode = error.data?.auth_mode || "BOTH";
+            console.log('[LOGIN] Unverified user - error.data:', error.data, 'auth_mode:', authMode);
+            showVerificationRequired(email, authMode);
         } else if (errorMessage.includes('Ungültige Zugangsdaten') || errorMessage.includes('401')) {
             showError('Ungültige E-Mail oder Passwort. Bitte überprüfe deine Eingaben.', 'loginForm');
         } else if (errorMessage.includes('E-Mail-Format') || errorMessage.includes('400')) {
