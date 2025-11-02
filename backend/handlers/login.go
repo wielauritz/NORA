@@ -227,12 +227,22 @@ func VerifyEmail(c *fiber.Ctx) error {
 
 	// Mark user as verified
 	user.Verified = true
-	// Delete UUID - makes link invalid for future use (single-use link)
-	user.UUID = uuid.Nil
 	user.VerificationExpiry = nil
 	config.DB.Save(&user)
 
 	fmt.Printf("[VERIFY] User verified successfully: %s\n", user.Mail)
+
+	// Delete UUID after 2 minutes (async) - prevents pre-checking by email scanners
+	userID := user.ID
+	go func() {
+		time.Sleep(2 * time.Minute)
+		var u models.User
+		if err := config.DB.First(&u, userID).Error; err == nil {
+			u.UUID = uuid.Nil
+			config.DB.Save(&u)
+			fmt.Printf("[VERIFY] UUID deleted after 2 minutes for user ID: %d\n", userID)
+		}
+	}()
 
 	// Create session for auto-login
 	sessionID := uuid.New().String()
@@ -344,11 +354,24 @@ func ConfirmPasswordReset(c *fiber.Ctx) error {
 		})
 	}
 
-	// Update password and clear reset UUID + expiry
+	// Update password and expire reset link immediately (prevents reuse)
 	user.PasswordHash = passwordHash
-	user.ResetUUID = nil
-	user.ResetUUIDExpiry = nil
+	expiredTime := time.Now().Add(-1 * time.Hour) // Set to past to invalidate immediately
+	user.ResetUUIDExpiry = &expiredTime
 	config.DB.Save(&user)
+
+	// Delete Reset UUID after 2 minutes (async) - prevents pre-checking by email scanners
+	userID := user.ID
+	go func() {
+		time.Sleep(2 * time.Minute)
+		var u models.User
+		if err := config.DB.First(&u, userID).Error; err == nil {
+			u.ResetUUID = nil
+			u.ResetUUIDExpiry = nil
+			config.DB.Save(&u)
+			fmt.Printf("[RESET] Reset UUID deleted after 2 minutes for user ID: %d\n", userID)
+		}
+	}()
 
 	// Create session (auto-login)
 	sessionID := uuid.New().String()
