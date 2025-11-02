@@ -202,11 +202,82 @@ function setupCodeFormListeners() {
 
     // Back to email button
     document.getElementById('backToEmailBtn').addEventListener('click', () => {
-        location.reload();
+        showEmailForm();
     });
 
     // Start initial countdown immediately (without sending email)
     startResendCountdown(false);
+}
+
+/**
+ * Show email input form again
+ */
+function showEmailForm() {
+    const container = document.querySelector('.bg-white');
+
+    container.innerHTML = `
+        <form id="resetForm" class="space-y-5">
+
+            <!-- E-Mail Input -->
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
+                    E-Mail-Adresse
+                </label>
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    required
+                    autocomplete="email"
+                    class="input-focus block w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none transition-all bg-white"
+                    placeholder="vorname.nachname@nordakademie.de"
+                    value="${resetEmail}"
+                >
+            </div>
+
+            <!-- Submit Button -->
+            <button
+                type="submit"
+                class="btn-hover w-full bg-gradient-to-r from-primary to-secondary text-white py-3 px-4 rounded-lg font-medium"
+            >
+                Reset-Link senden
+            </button>
+
+        </form>
+    `;
+
+    // Re-attach event listener
+    document.getElementById('resetForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const email = document.getElementById('email').value;
+        resetEmail = email;
+
+        // Disable submit button
+        const submitBtn = e.target.querySelector('button[type="submit"]');
+        const originalText = disableSubmitButton(submitBtn, 'Wird gesendet...');
+
+        try {
+            // API Call - Backend sends 6-digit code via email
+            await AuthAPI.resetPassword(email);
+
+            // Show code verification form
+            document.getElementById('resetForm').classList.add('hidden');
+            showCodeVerificationForm(email);
+        } catch (error) {
+            console.error('Reset Error:', error);
+            // Even on error, show code form (backend returns 204 for security)
+            // But if there's a network error, show it
+            if (error.message && error.message.includes('fetch')) {
+                alert('Netzwerkfehler: Bitte überprüfe deine Internetverbindung.');
+                enableSubmitButton(submitBtn, originalText);
+            } else {
+                // For any other error, still show code form
+                document.getElementById('resetForm').classList.add('hidden');
+                showCodeVerificationForm(email);
+            }
+        }
+    });
 }
 
 /**
