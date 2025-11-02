@@ -291,15 +291,21 @@ func VerifyEmailWithCode(c *fiber.Ctx) error {
 		})
 	}
 
+	// Normalize email
+	req.Mail = strings.ToLower(req.Mail)
+
 	// Validate request
-	if err := validate.Struct(req); err != nil {
+	if req.Mail == "" || req.Code == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Ungültige Daten",
+			"error": "E-Mail und Code sind erforderlich",
 		})
 	}
 
-	// Normalize email
-	req.Mail = strings.ToLower(req.Mail)
+	if len(req.Code) != 6 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Code muss 6 Zeichen lang sein",
+		})
+	}
 
 	// Find user by email
 	var user models.User
