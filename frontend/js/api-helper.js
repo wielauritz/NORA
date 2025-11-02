@@ -200,6 +200,14 @@ const AuthAPI = {
         });
     },
 
+    // Verify email with 6-digit code
+    async verifyEmailWithCode(mail, code) {
+        return await apiRequest('/verify-code', {
+            method: 'POST',
+            body: JSON.stringify({ mail, code }),
+        });
+    },
+
     // Request password reset
     async resetPassword(mail) {
         return await apiRequest('/reset', {

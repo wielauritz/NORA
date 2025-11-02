@@ -193,14 +193,29 @@ function showVerificationRequired(email) {
         </div>
         <h3 class="text-lg font-semibold text-secondary">E-Mail-Verifizierung erforderlich</h3>
         <p class="text-sm text-gray-600">
-            Deine E-Mail-Adresse muss verifiziert werden.<br>
-            Bitte überprüfe dein Postfach (<strong>${email}</strong>) und klicke auf den Verifizierungslink.
+            Wir haben einen 6-stelligen Verifizierungscode an <strong>${email}</strong> gesendet.<br>
+            Bitte gib den Code ein, um deine E-Mail-Adresse zu bestätigen.
         </p>
+        <div class="space-y-3">
+            <input
+                type="text"
+                id="verificationCode"
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-center text-2xl tracking-widest font-mono"
+                placeholder="000000"
+                maxlength="6"
+                pattern="[0-9]{6}"
+                inputmode="numeric"
+                autocomplete="off"
+            />
+            <button id="verifyBtn" class="w-full btn-hover bg-gradient-to-r from-primary to-secondary text-white py-3 px-6 rounded-lg font-medium">
+                Code verifizieren
+            </button>
+        </div>
         <p class="text-xs text-gray-500">
             Keine E-Mail erhalten?
         </p>
-        <button id="resendBtn" class="btn-hover bg-gradient-to-r from-primary to-secondary text-white py-2 px-6 rounded-lg font-medium">
-            Verifizierungs-E-Mail erneut senden
+        <button id="resendBtn" class="btn-hover bg-white border border-gray-300 text-gray-700 py-2 px-6 rounded-lg font-medium hover:bg-gray-50">
+            Code erneut senden
         </button>
         <div class="pt-4">
             <a href="index.html" class="text-sm text-primary hover:text-secondary transition-colors">
@@ -212,8 +227,61 @@ function showVerificationRequired(email) {
     container.innerHTML = '';
     container.appendChild(verifyDiv);
 
-    // Add event listener for resend button
+    const codeInput = document.getElementById('verificationCode');
+    const verifyBtn = document.getElementById('verifyBtn');
     const resendBtn = document.getElementById('resendBtn');
+
+    // Auto-format code input (only allow numbers)
+    codeInput.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/[^0-9]/g, '');
+    });
+
+    // Handle code verification
+    verifyBtn.addEventListener('click', async () => {
+        const code = codeInput.value.trim();
+
+        if (code.length !== 6) {
+            showError('Bitte gib einen 6-stelligen Code ein.');
+            return;
+        }
+
+        // Disable button and show loading
+        verifyBtn.disabled = true;
+        const originalText = verifyBtn.textContent;
+        verifyBtn.textContent = 'Wird verifiziert...';
+
+        try {
+            const data = await AuthAPI.verifyEmailWithCode(email, code);
+
+            // Verification successful - store token and redirect
+            if (data.token) {
+                await storeToken(data.token);
+
+                // Store user info
+                const userInfo = {
+                    email: email,
+                    name: data.user?.first_name || email.split('@')[0],
+                };
+                try {
+                    localStorage.setItem('user', JSON.stringify(userInfo));
+                } catch (e) {
+                    console.error('Error storing user info:', e);
+                }
+
+                // Show success and redirect
+                showLoginSuccess('E-Mail erfolgreich verifiziert! Du wirst weitergeleitet...', userInfo.name);
+                setTimeout(() => {
+                    window.location.replace('dashboard.html');
+                }, 1500);
+            }
+        } catch (error) {
+            showError(error.message || 'Ungültiger Verifizierungscode');
+            verifyBtn.disabled = false;
+            verifyBtn.textContent = originalText;
+        }
+    });
+
+    // Add event listener for resend button
     resendBtn.addEventListener('click', async () => {
         // Disable button and start countdown
         resendBtn.disabled = true;
@@ -236,9 +304,9 @@ function showVerificationRequired(email) {
 
         try {
             await AuthAPI.resendVerificationEmail(email);
-            showError('Verifizierungs-E-Mail wurde erneut gesendet. Bitte überprüfe dein Postfach.');
+            showError('Neuer Verifizierungscode wurde gesendet. Bitte überprüfe dein Postfach.');
         } catch (error) {
-            showError('Fehler beim Senden der E-Mail: ' + error.message);
+            showError('Fehler beim Senden des Codes: ' + error.message);
             // If error occurs, stop countdown and re-enable button
             clearInterval(countdownInterval);
             resendBtn.disabled = false;

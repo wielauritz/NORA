@@ -29,6 +29,12 @@ type ResetPasswordRequest struct {
 	NewPassword string `json:"new_password" validate:"required,min=8"`
 }
 
+// VerifyCodeRequest represents email verification code request
+type VerifyCodeRequest struct {
+	Mail string `json:"mail" validate:"required,email"`
+	Code string `json:"code" validate:"required,len=6"`
+}
+
 // TokenResponse represents login response
 type TokenResponse struct {
 	Message string `json:"message"`
@@ -84,14 +90,20 @@ func Login(c *fiber.Ctx) error {
 		}
 
 		// Create new user
-		verificationUUID := uuid.New()
+		verificationCode, err := utils.GenerateVerificationCode()
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"detail": "Fehler beim Generieren des Verifizierungscodes",
+			})
+		}
 		subscriptionUUID := uuid.New().String()
 		verificationExpiry := time.Now().Add(24 * time.Hour) // Expires in 24 hours
 
 		user = models.User{
 			Mail:               req.Mail,
 			PasswordHash:       passwordHash,
-			UUID:               verificationUUID,
+			UUID:               uuid.New(), // Keep UUID for other purposes
+			VerificationCode:   &verificationCode,
 			VerificationExpiry: &verificationExpiry,
 			Verified:           false,
 			FirstName:          firstName,
@@ -106,15 +118,17 @@ func Login(c *fiber.Ctx) error {
 			if err := config.DB.Where("mail = ?", req.Mail).First(&existingUser).Error; err == nil {
 				// User already exists - check if verified
 				if !existingUser.Verified {
-					// User exists but is not verified - resend verification email
-					newUUID := uuid.New()
-					newVerificationExpiry := time.Now().Add(24 * time.Hour)
-					existingUser.UUID = newUUID
-					existingUser.VerificationExpiry = &newVerificationExpiry
-					config.DB.Save(&existingUser)
+					// User exists but is not verified - resend verification code
+					newCode, err := utils.GenerateVerificationCode()
+					if err == nil {
+						newVerificationExpiry := time.Now().Add(24 * time.Hour)
+						existingUser.VerificationCode = &newCode
+						existingUser.VerificationExpiry = &newVerificationExpiry
+						config.DB.Save(&existingUser)
 
-					emailService := utils.NewEmailService()
-					go emailService.SendVerificationEmail(existingUser.Mail, existingUser.FirstName, newUUID.String())
+						emailService := utils.NewEmailService()
+						go emailService.SendVerificationCodeEmail(existingUser.Mail, existingUser.FirstName, newCode)
+					}
 
 					return c.Status(fiber.StatusConflict).JSON(fiber.Map{
 						"detail": "Benutzer existiert bereits. Eine neue Verifizierungs-E-Mail wurde gesendet.",
@@ -132,9 +146,9 @@ func Login(c *fiber.Ctx) error {
 			})
 		}
 
-		// Send verification email (async)
+		// Send verification code email (async)
 		emailService := utils.NewEmailService()
-		go emailService.SendVerificationEmail(user.Mail, user.FirstName, verificationUUID.String())
+		go emailService.SendVerificationCodeEmail(user.Mail, user.FirstName, verificationCode)
 
 		return c.JSON(TokenResponse{
 			Message: "Benutzer erstellt. Bitte überprüfen Sie Ihre E-Mail zur Verifizierung.",
@@ -265,6 +279,98 @@ func VerifyEmail(c *fiber.Ctx) error {
 
 	// Return success page with redirect to dashboard with token parameter
 	return c.Type("html").SendString(getVerificationSuccessPage(sessionID))
+}
+
+// VerifyEmailWithCode verifies email using 6-digit code and returns auth token
+// POST /v1/verify-code
+func VerifyEmailWithCode(c *fiber.Ctx) error {
+	var req VerifyCodeRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Ungültige Anfrage",
+		})
+	}
+
+	// Validate request
+	if err := validate.Struct(req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "Ungültige Daten",
+		})
+	}
+
+	// Normalize email
+	req.Mail = strings.ToLower(req.Mail)
+
+	// Find user by email
+	var user models.User
+	if err := config.DB.Where("mail = ?", req.Mail).First(&user).Error; err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Ungültiger Verifizierungscode",
+		})
+	}
+
+	// Check if already verified
+	if user.Verified {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": "E-Mail bereits verifiziert",
+		})
+	}
+
+	// Check if verification code exists
+	if user.VerificationCode == nil || *user.VerificationCode == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Kein Verifizierungscode gefunden",
+		})
+	}
+
+	// Check if code matches
+	if *user.VerificationCode != req.Code {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Ungültiger Verifizierungscode",
+		})
+	}
+
+	// Check if verification code has expired (24 hours)
+	if user.VerificationExpiry != nil && time.Now().After(*user.VerificationExpiry) {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": "Verifizierungscode abgelaufen",
+		})
+	}
+
+	// Mark user as verified and clear verification code
+	user.Verified = true
+	user.VerificationCode = nil
+	user.VerificationExpiry = nil
+	if err := config.DB.Save(&user).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Fehler beim Verifizieren",
+		})
+	}
+
+	// Create session for auto-login (24 hours validity)
+	sessionID := uuid.New().String()
+	session := models.Session{
+		SessionID:      sessionID,
+		UserID:         user.ID,
+		ExpirationDate: time.Now().Add(24 * time.Hour),
+	}
+	if err := config.DB.Create(&session).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Fehler beim Erstellen der Session",
+		})
+	}
+
+	// Return token for automatic login
+	return c.JSON(fiber.Map{
+		"message": "E-Mail erfolgreich verifiziert",
+		"token":   sessionID,
+		"user": fiber.Map{
+			"id":         user.ID,
+			"mail":       user.Mail,
+			"first_name": user.FirstName,
+			"last_name":  user.LastName,
+		},
+	})
 }
 
 // RequestPasswordReset requests a password reset
@@ -416,16 +522,21 @@ func ResendVerificationEmail(c *fiber.Ctx) error {
 		return c.SendStatus(fiber.StatusNoContent)
 	}
 
-	// Generate new verification UUID and expiry
-	newUUID := uuid.New()
+	// Generate new verification code and expiry
+	newCode, err := utils.GenerateVerificationCode()
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Fehler beim Generieren des Verifizierungscodes",
+		})
+	}
 	verificationExpiry := time.Now().Add(24 * time.Hour) // Expires in 24 hours
-	user.UUID = newUUID
+	user.VerificationCode = &newCode
 	user.VerificationExpiry = &verificationExpiry
 	config.DB.Save(&user)
 
-	// Send verification email (async)
+	// Send verification code email (async)
 	emailService := utils.NewEmailService()
-	go emailService.SendVerificationEmail(user.Mail, user.FirstName, newUUID.String())
+	go emailService.SendVerificationCodeEmail(user.Mail, user.FirstName, newCode)
 
 	return c.JSON(fiber.Map{
 		"message": "Verifizierungs-E-Mail wurde erneut gesendet. Bitte überprüfen Sie Ihre E-Mails.",

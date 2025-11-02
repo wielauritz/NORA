@@ -144,6 +144,7 @@ func setupPublicRoutes(app *fiber.App) {
 	// Login Service (with rate limiting)
 	app.Post("/v1/login", middleware.LoginRateLimiter(), handlers.Login)
 	app.Get("/v1/verify", handlers.VerifyEmail)
+	app.Post("/v1/verify-code", middleware.LoginRateLimiter(), handlers.VerifyEmailWithCode)
 	app.Post("/v1/reset", middleware.PasswordResetRateLimiter(), handlers.RequestPasswordReset)
 	app.Get("/v1/reset-password", handlers.ShowPasswordResetForm)
 	app.Post("/v1/reset-confirm", handlers.ConfirmPasswordReset)
