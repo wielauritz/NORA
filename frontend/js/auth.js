@@ -281,11 +281,10 @@ function showVerificationRequired(email) {
         }
     });
 
-    // Add event listener for resend button
-    resendBtn.addEventListener('click', async () => {
-        // Disable button and start countdown
+    // Function to start countdown
+    const startResendCountdown = (sendEmail = false) => {
         resendBtn.disabled = true;
-        const originalText = resendBtn.textContent;
+        const originalText = 'Code erneut senden';
         let countdown = 30;
 
         // Update button text with countdown
@@ -302,17 +301,29 @@ function showVerificationRequired(email) {
             }
         }, 1000);
 
-        try {
-            await AuthAPI.resendVerificationEmail(email);
-            showError('Neuer Verifizierungscode wurde gesendet. Bitte überprüfe dein Postfach.');
-        } catch (error) {
-            showError('Fehler beim Senden des Codes: ' + error.message);
-            // If error occurs, stop countdown and re-enable button
-            clearInterval(countdownInterval);
-            resendBtn.disabled = false;
-            resendBtn.textContent = originalText;
+        // Only send email if explicitly requested
+        if (sendEmail) {
+            AuthAPI.resendVerificationEmail(email)
+                .then(() => {
+                    showError('Neuer Verifizierungscode wurde gesendet. Bitte überprüfe dein Postfach.');
+                })
+                .catch((error) => {
+                    showError('Fehler beim Senden des Codes: ' + error.message);
+                    // If error occurs, stop countdown and re-enable button
+                    clearInterval(countdownInterval);
+                    resendBtn.disabled = false;
+                    resendBtn.textContent = originalText;
+                });
         }
+    };
+
+    // Add event listener for resend button
+    resendBtn.addEventListener('click', () => {
+        startResendCountdown(true);
     });
+
+    // Start initial countdown immediately (without sending email)
+    startResendCountdown(false);
 }
 
 /**

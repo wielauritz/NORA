@@ -196,12 +196,17 @@ function setupCodeFormListeners() {
     document.getElementById('codeVerifyForm').addEventListener('submit', handleCodeVerification);
 
     // Resend code button
-    document.getElementById('resendCodeBtn').addEventListener('click', handleResendCode);
+    document.getElementById('resendCodeBtn').addEventListener('click', () => {
+        startResendCountdown(true);
+    });
 
     // Back to email button
     document.getElementById('backToEmailBtn').addEventListener('click', () => {
         location.reload();
     });
+
+    // Start initial countdown immediately (without sending email)
+    startResendCountdown(false);
 }
 
 /**
@@ -270,9 +275,9 @@ async function handleCodeVerification(e) {
 }
 
 /**
- * Handle resend code with countdown
+ * Start resend countdown
  */
-async function handleResendCode() {
+function startResendCountdown(sendEmail = false) {
     const resendBtn = document.getElementById('resendCodeBtn');
     const resendTimer = document.getElementById('resendTimer');
 
@@ -280,40 +285,43 @@ async function handleResendCode() {
     resendBtn.disabled = true;
     resendBtn.classList.add('opacity-50', 'cursor-not-allowed');
 
-    try {
-        // Request new code
-        await AuthAPI.resetPassword(resetEmail);
+    // Start countdown (30 seconds)
+    let countdown = 30;
+    resendTimer.classList.remove('hidden');
+    resendTimer.textContent = `Du kannst in ${countdown}s einen neuen Code anfordern`;
 
-        // Show success message
-        const container = document.querySelector('.bg-white');
-        const tempMessage = document.createElement('div');
-        tempMessage.className = 'text-center text-sm text-green-600 font-medium fade-in';
-        tempMessage.textContent = 'Neuer Code wurde gesendet!';
-        container.insertBefore(tempMessage, container.firstChild);
+    const countdownInterval = setInterval(() => {
+        countdown--;
+        if (countdown > 0) {
+            resendTimer.textContent = `Du kannst in ${countdown}s einen neuen Code anfordern`;
+        } else {
+            clearInterval(countdownInterval);
+            resendTimer.classList.add('hidden');
+            resendBtn.disabled = false;
+            resendBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+    }, 1000);
 
-        setTimeout(() => tempMessage.remove(), 3000);
+    // Only send email if explicitly requested
+    if (sendEmail) {
+        AuthAPI.resetPassword(resetEmail)
+            .then(() => {
+                // Show success message
+                const container = document.querySelector('.bg-white');
+                const tempMessage = document.createElement('div');
+                tempMessage.className = 'text-center text-sm text-green-600 font-medium fade-in';
+                tempMessage.textContent = 'Neuer Code wurde gesendet!';
+                container.insertBefore(tempMessage, container.firstChild);
 
-        // Start countdown (30 seconds)
-        let countdown = 30;
-        resendTimer.classList.remove('hidden');
-        resendTimer.textContent = `Du kannst in ${countdown}s einen neuen Code anfordern`;
-
-        const countdownInterval = setInterval(() => {
-            countdown--;
-            if (countdown > 0) {
-                resendTimer.textContent = `Du kannst in ${countdown}s einen neuen Code anfordern`;
-            } else {
+                setTimeout(() => tempMessage.remove(), 3000);
+            })
+            .catch((error) => {
+                console.error('Resend code error:', error);
+                // Enable button again on error
                 clearInterval(countdownInterval);
                 resendTimer.classList.add('hidden');
                 resendBtn.disabled = false;
                 resendBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-            }
-        }, 1000);
-
-    } catch (error) {
-        console.error('Resend code error:', error);
-        // Enable button again on error
-        resendBtn.disabled = false;
-        resendBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            });
     }
 }
