@@ -13,6 +13,12 @@ let userData = null;
  */
 async function initSettings() {
     try {
+        // Check authentication first
+        const isAuthenticated = await checkAuth();
+        if (!isAuthenticated) {
+            return; // Redirect to login handled by checkAuth()
+        }
+
         restorePreloaderIfNeeded();
         showContentLoader();
 
@@ -37,7 +43,6 @@ async function initSettings() {
         updateUserDisplay();
 
         // Populate form with current settings
-        populateZenturienDropdown();
         populateForm();
 
         pageContentReady();
@@ -63,78 +68,155 @@ function updateUserDisplay() {
 }
 
 /**
- * Populate zenturien dropdown
+ * Show zenturie dropdown
  */
-function populateZenturienDropdown() {
-    const select = document.getElementById('zenturieSelect');
-    if (!select) {
-        console.error('❌ Zenturie select element not found');
-        return;
+function showZenturieDropdown() {
+    const dropdown = document.getElementById('zenturieDropdown');
+    if (dropdown) {
+        // Populate with all zenturien initially
+        filterZenturien();
+        dropdown.classList.remove('hidden');
     }
+}
 
-    // Clear existing options
-    select.innerHTML = '';
+/**
+ * Filter zenturien based on input
+ */
+function filterZenturien() {
+    const input = document.getElementById('zenturieInput');
+    const dropdown = document.getElementById('zenturieDropdown');
 
-    // Add "keine Zenturie" option
-    const noneOption = document.createElement('option');
-    noneOption.value = '';
-    noneOption.textContent = 'Keine Zenturie';
-    select.appendChild(noneOption);
+    if (!input || !dropdown) return;
 
-    // Debug: Check if allZenturien is an array and has items
-    console.log('📋 All Zenturien:', allZenturien);
-    console.log('📋 Zenturien type:', typeof allZenturien);
-    console.log('📋 Is array:', Array.isArray(allZenturien));
-    console.log('📋 Length:', allZenturien?.length);
+    const searchTerm = input.value.toLowerCase();
 
-    // Check if allZenturien is valid
-    if (!allZenturien || !Array.isArray(allZenturien)) {
-        console.error('❌ allZenturien is not an array:', allZenturien);
-        return;
-    }
-
-    if (allZenturien.length === 0) {
-        console.warn('⚠️ No zenturien available');
-        const noOption = document.createElement('option');
-        noOption.value = '';
-        noOption.textContent = 'Keine Zenturien verfügbar';
-        select.appendChild(noOption);
-        return;
-    }
-
-    // Add all zenturien
-    allZenturien.forEach((zenturie, index) => {
-        console.log(`  ${index + 1}. ${zenturie.zenturie} (Year: ${zenturie.year})`);
-        const option = document.createElement('option');
-        option.value = zenturie.zenturie;
-        option.textContent = zenturie.zenturie;
-        select.appendChild(option);
+    // Filter zenturien
+    const filtered = allZenturien.filter(zenturie => {
+        return zenturie.zenturie.toLowerCase().includes(searchTerm);
     });
 
-    console.log(`✅ ${allZenturien.length} Zenturien added to dropdown`);
+    // Populate dropdown
+    dropdown.innerHTML = '';
+
+    if (filtered.length === 0) {
+        dropdown.innerHTML = '<div class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">Keine Zenturien gefunden</div>';
+    } else {
+        // Add "Keine Zenturie" option if search is empty
+        if (searchTerm === '') {
+            const noneItem = document.createElement('div');
+            noneItem.className = 'px-4 py-3 hover:bg-primary/10 dark:hover:bg-primary/20 cursor-pointer transition-colors text-sm';
+            noneItem.innerHTML = `
+                <div class="font-medium text-gray-900 dark:text-white">Keine Zenturie</div>
+            `;
+            noneItem.onclick = () => selectZenturie(null);
+            dropdown.appendChild(noneItem);
+        }
+
+        filtered.forEach(zenturie => {
+            const item = document.createElement('div');
+            item.className = 'px-4 py-3 hover:bg-primary/10 dark:hover:bg-primary/20 cursor-pointer transition-colors text-sm';
+
+            const displayText = zenturie.year
+                ? `${zenturie.zenturie} (Jahrgang ${zenturie.year})`
+                : zenturie.zenturie;
+
+            item.innerHTML = `
+                <div class="font-medium text-gray-900 dark:text-white">${displayText}</div>
+            `;
+
+            item.onclick = () => selectZenturie(zenturie);
+            dropdown.appendChild(item);
+        });
+    }
+
+    dropdown.classList.remove('hidden');
 }
+
+/**
+ * Select a zenturie and auto-fill the field
+ */
+function selectZenturie(zenturie) {
+    const input = document.getElementById('zenturieInput');
+    const hiddenInput = document.getElementById('selectedZenturieValue');
+    const dropdown = document.getElementById('zenturieDropdown');
+
+    if (input && hiddenInput) {
+        if (zenturie === null) {
+            // "Keine Zenturie" selected
+            input.value = 'Keine Zenturie';
+            hiddenInput.value = '';
+        } else {
+            const displayText = zenturie.year
+                ? `${zenturie.zenturie} (Jahrgang ${zenturie.year})`
+                : zenturie.zenturie;
+            input.value = displayText;
+            hiddenInput.value = zenturie.zenturie;
+        }
+
+        // Hide dropdown
+        if (dropdown) dropdown.classList.add('hidden');
+    }
+}
+
+// Hide zenturie dropdown when clicking outside
+document.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('zenturieDropdown');
+    const input = document.getElementById('zenturieInput');
+
+    if (dropdown && input && !input.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.add('hidden');
+    }
+});
 
 /**
  * Populate form with current settings
  */
 function populateForm() {
+    console.log('📝 Populating form with settings:', currentSettings);
+
     // Set zenturie
-    const zenturieSelect = document.getElementById('zenturieSelect');
-    if (zenturieSelect && currentSettings.zenturie) {
-        zenturieSelect.value = currentSettings.zenturie;
+    const zenturieInput = document.getElementById('zenturieInput');
+    const zenturieHidden = document.getElementById('selectedZenturieValue');
+    if (zenturieInput && zenturieHidden) {
+        if (currentSettings.zenturie) {
+            console.log('  Setting zenturie to:', currentSettings.zenturie);
+
+            // Find the zenturie object to get the year
+            const zenturieObj = allZenturien.find(z => z.zenturie === currentSettings.zenturie);
+            if (zenturieObj) {
+                const displayText = zenturieObj.year
+                    ? `${zenturieObj.zenturie} (Jahrgang ${zenturieObj.year})`
+                    : zenturieObj.zenturie;
+                zenturieInput.value = displayText;
+                zenturieHidden.value = zenturieObj.zenturie;
+                console.log('✅ Zenturie value set successfully');
+            } else {
+                console.warn('⚠️ Zenturie not found in list!');
+                zenturieInput.value = currentSettings.zenturie;
+                zenturieHidden.value = currentSettings.zenturie;
+            }
+        } else {
+            console.log('  No zenturie set (user has no zenturie assigned)');
+            zenturieInput.value = 'Keine Zenturie';
+            zenturieHidden.value = '';
+        }
     }
 
     // Set theme
     const themeSelect = document.getElementById('themeSelect');
     if (themeSelect && currentSettings.theme) {
+        console.log('  Setting theme to:', currentSettings.theme);
         themeSelect.value = currentSettings.theme;
     }
 
     // Set notification preference
     const notificationSelect = document.getElementById('notificationSelect');
     if (notificationSelect && currentSettings.notification_preference) {
+        console.log('  Setting notification preference to:', currentSettings.notification_preference);
         notificationSelect.value = currentSettings.notification_preference;
     }
+
+    console.log('✅ Form populated');
 }
 
 /**
@@ -150,11 +232,11 @@ async function saveSettings() {
         saveButton.textContent = 'Speichern...';
 
         // Get form values
-        const zenturieSelect = document.getElementById('zenturieSelect');
+        const zenturieHidden = document.getElementById('selectedZenturieValue');
         const themeSelect = document.getElementById('themeSelect');
         const notificationSelect = document.getElementById('notificationSelect');
 
-        const zenturieValue = zenturieSelect.value;
+        const zenturieValue = zenturieHidden.value;
         const themeValue = themeSelect.value;
         const notificationValue = notificationSelect.value;
 

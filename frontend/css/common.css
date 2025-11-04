@@ -15,6 +15,11 @@ html.light {
     color-scheme: light !important;
 }
 
+/* Enable dark mode when .dark class is set */
+html.dark {
+    color-scheme: dark;
+}
+
 /* Enable dark mode based on system preference (only if .light is not set) */
 @media (prefers-color-scheme: dark) {
     html:not(.light) {
@@ -30,8 +35,13 @@ html, body {
     background: #f9fafb;
 }
 
+/* Dark mode background when .dark class is set */
+html.dark, html.dark body {
+    background: #0f172a;
+}
+
 @media (prefers-color-scheme: dark) {
-    html:not(.light), body {
+    html:not(.light), html:not(.light) body {
         background: #0f172a;
     }
 }
@@ -135,11 +145,135 @@ nav > div {
     background: #f8f8f8;
 }
 
+/* Dark glass effect when .dark class is set */
+html.dark .glass-effect {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.1);
+}
+
 @media (prefers-color-scheme: dark) {
     html:not(.light) .glass-effect {
         background: rgba(15, 23, 42, 0.8);
         border: 1px solid rgba(148, 163, 184, 0.1);
     }
+}
+
+/* Comprehensive Dark Mode Support - Apply when .dark class is present */
+html.dark .text-gray-900 { color: #f1f5f9 !important; }
+html.dark .text-gray-800 { color: #f1f5f9 !important; }
+html.dark .text-gray-700 { color: #cbd5e1 !important; }
+html.dark .text-gray-600 { color: #cbd5e1 !important; }
+html.dark .text-gray-500 { color: #cbd5e1 !important; }
+html.dark .text-gray-400 { color: #94a3b8 !important; }
+html.dark .text-gray-300 { color: #64748b !important; }
+
+/* Background Colors */
+html.dark .bg-white { background-color: #1e293b !important; }
+html.dark .bg-gray-50 { background-color: #0f172a !important; }
+html.dark .bg-gray-100 { background-color: #1e293b !important; }
+html.dark .bg-gray-200 { background-color: #334155 !important; }
+html.dark .bg-white\/85 { background-color: rgba(30, 41, 59, 0.85) !important; }
+html.dark .bg-white\/95 { background-color: rgba(30, 41, 59, 0.95) !important; }
+html.dark .bg-green-50 { background-color: rgba(6, 78, 59, 0.2) !important; }
+
+/* Border Colors */
+html.dark .border-gray-200 { border-color: #334155 !important; }
+html.dark .border-gray-300 { border-color: #475569 !important; }
+html.dark .border-gray-400 { border-color: #64748b !important; }
+html.dark .border-gray-100 { border-color: #1e293b !important; }
+
+/* Input Fields */
+html.dark input[type="text"],
+html.dark input[type="email"],
+html.dark input[type="password"],
+html.dark input[type="number"],
+html.dark input[type="search"],
+html.dark select,
+html.dark textarea {
+    background-color: #1e293b !important;
+    color: #f1f5f9 !important;
+    border-color: #475569 !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+    color: #94a3b8 !important;
+}
+
+/* Buttons */
+html.dark button {
+    color: inherit;
+}
+
+/* Glass effect */
+html.dark .glass-effect {
+    background: rgba(30, 41, 59, 0.8) !important;
+    border-color: rgba(148, 163, 184, 0.1) !important;
+}
+
+html.dark .divider-text {
+    background: #192332;
+}
+
+/* Modal Overlays */
+html.dark .modal-overlay {
+    background-color: rgba(0, 0, 0, 0.7) !important;
+}
+
+html.dark .modal-overlay .bg-white {
+    background-color: #1e293b !important;
+}
+
+/* Preloader */
+html.dark #content-loader {
+    background-color: rgba(30, 41, 59, 0.85) !important;
+}
+
+/* Navbar Text */
+html.dark nav {
+    color: #f1f5f9;
+}
+
+html.dark nav a {
+    color: #cbd5e1;
+}
+
+html.dark nav a:hover {
+    color: #f1f5f9;
+    background-color: rgba(148, 163, 184, 0.1) !important;
+}
+
+/* Active nav items */
+html.dark nav a.text-primary,
+html.dark nav .text-primary {
+    color: #3cd2ff !important;
+}
+
+html.dark nav img[src*="logo"] {
+    filter: brightness(0) invert(1);
+}
+
+/* Hover States */
+html.dark .hover\:bg-gray-50:hover { background-color: #1e293b !important; }
+html.dark .hover\:bg-gray-100:hover { background-color: #334155 !important; }
+html.dark .hover\:bg-gray-200:hover { background-color: #475569 !important; }
+
+/* Shadow adjustments */
+html.dark .shadow { box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.5) !important; }
+html.dark .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.7) !important; }
+html.dark .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8) !important; }
+
+/* Text colors */
+html.dark .text-green-600 { color: #4ade80 !important; }
+html.dark .text-green-700 { color: #22c55e !important; }
+html.dark .text-red-700 { color: #ef4444 !important; }
+
+html.dark .bg-green-100 .text-green-600 {
+    color: #4ade80 !important;
+}
+
+html.dark .bg-green-100 .text-green-700 {
+    color: #22c55e !important;
 }
 
 /* Comprehensive Dark Mode Support (only if .light is not set) */
