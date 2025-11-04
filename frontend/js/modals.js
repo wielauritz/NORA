@@ -1484,7 +1484,7 @@ async function createZenturieSelectionModal() {
                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary"
                                oninput="filterModalZenturien()"
                                onfocus="showModalZenturieDropdown()">
-                        <div id="modalZenturieDropdown" class="hidden absolute z-[200] w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                        <div id="modalZenturieDropdown" class="hidden absolute z-[200] w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-40 overflow-y-auto">
                             <!-- Dropdown items will be populated dynamically -->
                         </div>
                         <input type="hidden" id="selectedModalZenturieValue" value="">
