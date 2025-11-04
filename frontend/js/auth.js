@@ -139,6 +139,37 @@ function showErrorState(title, message, buttonText = 'Zurück', buttonLink = 'lo
 }
 
 /**
+ * Format email-based name to proper capitalization
+ * Examples:
+ * - hanna-marie.obst -> Hanna-Marie Obst
+ * - finn.kionka-lewin -> Finn Kionka-Lewin
+ * - max.mustermann -> Max Mustermann
+ */
+function formatName(email) {
+    // Extract name part before @
+    const namePart = email.includes('@') ? email.split('@')[0] : email;
+
+    // Split by dot (vorname.nachname)
+    const parts = namePart.split('.');
+
+    // Capitalize each part (handles hyphens too)
+    const formatted = parts.map(part => {
+        // Split by hyphen
+        const subParts = part.split('-');
+        // Capitalize each sub-part
+        const capitalizedSubParts = subParts.map(sub => {
+            if (sub.length === 0) return sub;
+            return sub.charAt(0).toUpperCase() + sub.slice(1).toLowerCase();
+        });
+        // Join with hyphen
+        return capitalizedSubParts.join('-');
+    });
+
+    // Join with space instead of dot
+    return formatted.join(' ');
+}
+
+/**
  * Show login success message (for index.html)
  */
 function showLoginSuccess(action, userName) {
@@ -373,9 +404,10 @@ function showVerificationRequired(email, authMode = "BOTH") {
                 await storeToken(data.token);
 
                 // Store user info
+                const userName = data.user?.first_name || email.split('@')[0];
                 const userInfo = {
                     email: email,
-                    name: data.user?.first_name || email.split('@')[0],
+                    name: formatName(userName),
                 };
                 try {
                     localStorage.setItem('user', JSON.stringify(userInfo));

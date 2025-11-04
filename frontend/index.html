@@ -9,6 +9,19 @@
     <script src="js/storage-manager.js"></script>
     <script src="js/persistent-storage.js"></script>
     <script src="js/app-updater.js"></script>
+    <style>
+        /* Prevent white flash in dark mode during app initialization */
+        @media (prefers-color-scheme: dark) {
+            html, body {
+                background-color: #0f172a;
+            }
+        }
+
+        /* Also support manual dark mode class (set by dark-mode.js) */
+        html.dark, html.dark body {
+            background-color: #0f172a;
+        }
+    </style>
 </head>
 <body>
     <script>

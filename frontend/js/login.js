@@ -67,9 +67,10 @@ function initLoginForm() {
 
             // Extract user info from email
             const userName = email.split('@')[0];
+            const formattedName = formatName(userName);
             const userInfo = {
                 email: email,
-                name: userName,
+                name: formattedName,
             };
             try {
                 localStorage.setItem('user', JSON.stringify(userInfo));
@@ -79,7 +80,7 @@ function initLoginForm() {
             }
 
             // Zeige Success-Nachricht
-            showLoginSuccess('Login erfolgreich', userName);
+            showLoginSuccess('Login erfolgreich', formattedName);
 
             // Weiterleitung zum Dashboard - nutze replace() für saubere Weiterleitung
             setTimeout(() => {
