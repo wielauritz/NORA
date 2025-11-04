@@ -587,6 +587,7 @@ function storeToken(token) {
 /**
  * Check if user is authenticated
  * Uses persistent storage (filesystem first, then localStorage)
+ * Validates token with server to ensure it's not expired
  */
 async function checkAuth() {
     // Initialize persistent storage first
@@ -599,20 +600,48 @@ async function checkAuth() {
     // Try to load token from persistent storage (filesystem first, then localStorage)
     const token = await loadTokenPersistent();
 
-    if (token) {
-        console.log('✅ Token geladen - Benutzer ist authentifiziert');
-
-        // Load and apply user theme settings
-        loadAndApplyUserTheme().catch(e => {
-            console.warn('⚠️ Failed to load theme settings:', e);
-        });
-
-        return true;
+    if (!token) {
+        console.log('❌ Kein Token gefunden - Weiterleitung zum Login');
+        window.location.href = 'login.html';
+        return false;
     }
 
-    console.log('❌ Kein Token gefunden - Weiterleitung zum Login');
-    window.location.href = 'login.html';
-    return false;
+    // Validate token with server
+    try {
+        // Check if UserAPI is available (some pages may not have api-helper.js loaded yet)
+        if (typeof UserAPI !== 'undefined' && UserAPI.getProfile) {
+            console.log('🔍 Validating token with server...');
+
+            // Make API call to validate token
+            // If token is expired/invalid, this will throw an error (401 handler in api-helper.js)
+            await UserAPI.getProfile();
+
+            console.log('✅ Token validated - Benutzer ist authentifiziert');
+
+            // Load and apply user theme settings
+            loadAndApplyUserTheme().catch(e => {
+                console.warn('⚠️ Failed to load theme settings:', e);
+            });
+
+            return true;
+        } else {
+            // UserAPI not available yet - trust the token for now
+            // This can happen during page load before api-helper.js is loaded
+            console.warn('⚠️ UserAPI not available yet, skipping server validation');
+            console.log('✅ Token geladen - Benutzer ist (lokal) authentifiziert');
+
+            return true;
+        }
+    } catch (error) {
+        console.error('❌ Token validation failed:', error);
+
+        // Token is invalid/expired - clear it from storage
+        await clearTokenPersistent();
+
+        console.log('❌ Token ungültig oder abgelaufen - Weiterleitung zum Login');
+        window.location.href = 'login.html';
+        return false;
+    }
 }
 
 /**

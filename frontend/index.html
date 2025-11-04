@@ -8,21 +8,58 @@
     <script src="js/storage-ios.js"></script>
     <script src="js/storage-manager.js"></script>
     <script src="js/persistent-storage.js"></script>
+    <script src="js/app-updater.js"></script>
 </head>
 <body>
     <script>
+        // API Base URL
+        const API_BASE_URL = 'https://api.new.nora-nak.de/v1';
+
         (async function() {
             try {
-                // Initialize persistent storage
+                // 1. Check for content updates FIRST
+                // This may reload the page if new content is available
+                // Token is preserved in persistent storage
+                if (typeof appUpdater !== 'undefined') {
+                    await appUpdater.checkContentUpdates();
+                }
+
+                // 2. Initialize persistent storage
                 await initPersistentStorage();
 
-                // Check if user has a token
+                // 3. Check if user has a token
                 const token = await loadTokenPersistent();
 
-                // Redirect based on authentication status
-                if (token) {
-                    window.location.replace('dashboard.html');
-                } else {
+                if (!token) {
+                    // No token found, redirect to login
+                    window.location.replace('login.html');
+                    return;
+                }
+
+                // 4. Validate token with server before redirecting to dashboard
+                try {
+                    const response = await fetch(`${API_BASE_URL}/user`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (response.ok) {
+                        // Token is valid, redirect to dashboard
+                        console.log('✅ Token validated, redirecting to dashboard');
+                        window.location.replace('dashboard.html');
+                    } else {
+                        // Token is invalid (401, 403, etc.), clear and redirect to login
+                        console.log('❌ Token invalid, clearing and redirecting to login');
+                        await clearTokenPersistent();
+                        window.location.replace('login.html');
+                    }
+                } catch (error) {
+                    // Network error or token validation failed
+                    console.error('❌ Token validation failed:', error);
+                    await clearTokenPersistent();
                     window.location.replace('login.html');
                 }
             } catch (error) {
