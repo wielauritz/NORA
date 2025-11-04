@@ -493,6 +493,117 @@ html.dark .course-block .text-gray-600 {
     color: #cbd5e1 !important;
 }
 
+/* Secondary color adjustments for dark mode - EXACT COPY from media query */
+/* Freund hinzufügen Button */
+html.dark button[class*="bg-secondary/5"] {
+    background-color: rgba(17, 78, 92, 0.25) !important;
+}
+
+html.dark button[class*="bg-secondary/5"] .text-secondary {
+    color: #1ca9c9 !important;
+}
+
+html.dark button[class*="bg-secondary/5"]:hover {
+    background-color: rgba(28, 169, 201, 0.3) !important;
+}
+
+html.dark button[class*="bg-secondary/5"]:hover .text-secondary {
+    color: #2ba8d4 !important;
+}
+
+/* Freunde Icon Box */
+html.dark .bg-secondary\/10 {
+    background-color: rgba(28, 169, 201, 0.2) !important;
+}
+
+html.dark .bg-secondary\/10 .text-secondary {
+    color: #1ca9c9 !important;
+}
+
+/* Calendar Events - Week View */
+html.dark .calendar-event {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+html.dark .calendar-event:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.6);
+}
+
+html.dark .calendar-event.timetable {
+    background: linear-gradient(135deg, rgba(60, 210, 255, 0.35), rgba(0, 58, 121, 0.25)) !important;
+    border-left-color: #3cd2ff !important;
+}
+
+html.dark .calendar-event.custom {
+    background: linear-gradient(135deg, rgba(167, 139, 250, 0.35), rgba(124, 58, 237, 0.25)) !important;
+    border-left-color: #a78bfa !important;
+}
+
+html.dark .calendar-event.exam {
+    background: linear-gradient(135deg, rgba(255, 160, 100, 0.35), rgba(255, 128, 64, 0.25)) !important;
+    border-left-color: #ffa064 !important;
+}
+
+html.dark .calendar-event-title {
+    color: #f1f5f9 !important;
+}
+
+html.dark .calendar-event-time,
+html.dark .calendar-event-location {
+    color: #cbd5e1 !important;
+}
+
+/* Calendar Container */
+html.dark .calendar-container {
+    background: #1e293b !important;
+}
+
+/* Current Time Indicator */
+html.dark .current-time-indicator {
+    background: linear-gradient(90deg, #60d5ff 0%, #3cd2ff 100%);
+    box-shadow: 0 0 12px rgba(60, 210, 255, 0.6);
+}
+
+html.dark .current-time-indicator::before {
+    background: #60d5ff;
+    border-color: #1e293b;
+    box-shadow: 0 0 8px rgba(60, 210, 255, 0.8);
+}
+
+html.dark .current-time-indicator::after {
+    border-left-color: #60d5ff;
+}
+
+/* Month View Grid Container */
+html.dark .month-view-container {
+    background: #334155 !important;
+    border-color: #334155 !important;
+}
+
+/* Year View Container */
+html.dark .year-view-container {
+    background: transparent;
+}
+
+/* Modal Overlay */
+html.dark .modal-overlay {
+    background: rgba(0, 0, 0, 0.75) !important;
+}
+
+html.dark .modal-content {
+    background: rgba(30, 41, 59, 0.95) !important;
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+/* Modal Text Colors */
+html.dark #eventModalContent h2,
+html.dark #eventModalContent h3,
+html.dark #eventModalContent p,
+html.dark #eventModalContent div {
+    color: #f1f5f9 !important;
+}
+
 /* Comprehensive Dark Mode Support (only if .light is not set) */
 @media (prefers-color-scheme: dark) {
     /* Disable all dark mode styles if .light class is present */
