@@ -61,7 +61,7 @@ function showError(message, formId = null) {
 /**
  * Show success message (replaces form)
  */
-function showSuccess(title, message, buttonText = 'Zum Login', buttonLink = 'index.html') {
+function showSuccess(title, message, buttonText = 'Zum Login', buttonLink = 'login.html') {
     // Try multiple selectors for compatibility
     const container = document.querySelector('.bg-white') || document.querySelector('.glass-effect');
 
@@ -111,7 +111,7 @@ function showLoading(message = 'Wird verarbeitet...') {
 /**
  * Show error state (replaces content)
  */
-function showErrorState(title, message, buttonText = 'Zurück', buttonLink = 'index.html') {
+function showErrorState(title, message, buttonText = 'Zurück', buttonLink = 'login.html') {
     // Try multiple selectors for compatibility
     const container = document.querySelector('.bg-white') || document.querySelector('.glass-effect');
 
@@ -215,7 +215,7 @@ function showVerificationRequired(email, authMode = "BOTH") {
                 E-Mail erneut senden
             </button>
             <div class="pt-4">
-                <a href="index.html" class="text-sm text-primary hover:text-secondary transition-colors">
+                <a href="login.html" class="text-sm text-primary hover:text-secondary transition-colors">
                     Zurück zum Login
                 </a>
             </div>
@@ -270,7 +270,7 @@ function showVerificationRequired(email, authMode = "BOTH") {
                 E-Mail erneut senden
             </button>
             <div class="pt-4">
-                <a href="index.html" class="text-sm text-primary hover:text-secondary transition-colors">
+                <a href="login.html" class="text-sm text-primary hover:text-secondary transition-colors">
                     Zurück zum Login
                 </a>
             </div>
@@ -310,7 +310,7 @@ function showVerificationRequired(email, authMode = "BOTH") {
                 E-Mail erneut senden
             </button>
             <div class="pt-4">
-                <a href="index.html" class="text-sm text-primary hover:text-secondary transition-colors">
+                <a href="login.html" class="text-sm text-primary hover:text-secondary transition-colors">
                     Zurück zum Login
                 </a>
             </div>
@@ -611,7 +611,7 @@ async function checkAuth() {
     }
 
     console.log('❌ Kein Token gefunden - Weiterleitung zum Login');
-    window.location.href = 'index.html';
+    window.location.href = 'login.html';
     return false;
 }
 

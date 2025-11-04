@@ -824,7 +824,7 @@ func getVerificationSuccessPage(sessionID string) string {
             // Dashboard will receive token, store it persistently, and use for all requests
             window.location.replace('https://new.nora-nak.de/dashboard.html?token=' + token);
         } else {
-            window.location.replace('https://new.nora-nak.de/index.html');
+            window.location.replace('https://new.nora-nak.de/login.html');
         }
     </script>
 </body>

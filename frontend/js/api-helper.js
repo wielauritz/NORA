@@ -87,7 +87,7 @@ async function apiRequest(endpoint, options = {}) {
                         await clearTokenPersistent();
                     }
 
-                    window.location.href = '/index.html';
+                    window.location.href = '/login.html';
                     return null;
                 }
             }
@@ -138,7 +138,7 @@ async function apiRequest(endpoint, options = {}) {
                         await clearTokenPersistent();
                     }
 
-                    window.location.href = '/index.html';
+                    window.location.href = '/login.html';
                     return null;
                 }
             }
@@ -244,7 +244,7 @@ const AuthAPI = {
         await clearAuthStorage();
 
         // Redirect to login
-        window.location.href = '/index.html';
+        window.location.href = '/login.html';
     },
 
     // Health check

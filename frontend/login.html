@@ -2,14 +2,14 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Passwort zurücksetzen - Stundenplan Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Login - Stundenplan Dashboard</title>
     <script src="js/dark-mode.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
-            theme: {
+	theme: {
                 extend: {
                     colors: {
                         primary: '#3cd2ff',
@@ -24,29 +24,18 @@
 </head>
 <body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
 
-    <!-- Reset Container -->
+    <!-- Login Container -->
     <div class="w-full max-w-md">
-
-        <!-- Back Button -->
-        <a href="login.html" class="inline-flex items-center text-gray-600 hover:text-secondary mb-6 transition-colors text-sm">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-            </svg>
-            Zurück zum Login
-        </a>
 
         <!-- Logo/Header -->
         <div class="text-center mb-8">
-            <img src="https://cdn.nora-nak.de/img/logo.png" alt="NORA Logo" class="h-16 mx-auto mb-4">
-            <h1 class="text-xl font-semibold text-secondary mb-2">Passwort zurücksetzen</h1>
-            <p class="text-gray-600 text-sm">Wir senden dir einen Reset-Link per E-Mail</p>
+            <img src="https://cdn.nora-nak.de/img/logo.png" alt="NORA Logo" class="h-20 mx-auto mb-4">
+            <p class="text-gray-600 text-sm">Melde dich an oder erstelle einen Account</p>
         </div>
 
-        <!-- Reset Form -->
+        <!-- Login Form -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-
-            <!-- Form View -->
-            <form id="resetForm" class="space-y-5">
+            <form id="loginForm" class="space-y-5">
 
                 <!-- E-Mail Input -->
                 <div>
@@ -64,37 +53,44 @@
                     >
                 </div>
 
-                <!-- Submit Button -->
+                <!-- Passwort Input -->
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
+                        Passwort
+                    </label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        required
+                        autocomplete="current-password"
+                        minlength="6"
+                        class="input-focus block w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none transition-all bg-white"
+                        placeholder="Mindestens 6 Zeichen"
+                    >
+                </div>
+
+                <!-- Forgot Password -->
+                <div class="text-right">
+                    <a href="password-reset.html" class="text-sm font-medium text-primary hover:text-secondary transition-colors">
+                        Passwort vergessen?
+                    </a>
+                </div>
+
+                <!-- Login Button -->
                 <button
                     type="submit"
                     class="btn-hover w-full bg-gradient-to-r from-primary to-secondary text-white py-3 px-4 rounded-lg font-medium"
                 >
-                    Reset-Link senden
+                    Anmelden
                 </button>
 
+                <!-- Info Text -->
+                <p class="text-xs text-center text-gray-500 mt-4">
+                    Neuer Account? Wird automatisch bei erster Anmeldung erstellt
+                </p>
+
             </form>
-
-            <!-- Success Message (hidden by default) -->
-            <div id="successMessage" class="hidden success-message">
-                <div class="text-center space-y-4">
-                    <div class="inline-flex items-center justify-center w-16 h-16 bg-green-50 rounded-full">
-                        <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                        </svg>
-                    </div>
-                    <h3 class="text-lg font-semibold text-secondary">E-Mail gesendet</h3>
-                    <p class="text-sm text-gray-600">
-                        Falls ein Account mit der E-Mail <strong id="sentEmail"></strong> existiert, haben wir dir einen Reset-Link gesendet.
-                    </p>
-                    <p class="text-xs text-gray-500">
-                        Bitte prüfe auch deinen Spam-Ordner
-                    </p>
-                    <a href="login.html" class="inline-block text-primary hover:text-secondary transition-colors font-medium text-sm mt-4">
-                        Zurück zum Login
-                    </a>
-                </div>
-            </div>
-
         </div>
 
         <!-- Footer -->
@@ -109,12 +105,13 @@
 
     </div>
 
+    <script src="js/storage-ios.js"></script>
     <script src="js/storage-manager.js"></script>
     <script src="js/persistent-storage.js"></script>
     <script src="js/api-helper.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/app-updater.js"></script>
-    <script src="js/password-reset.js"></script>
+    <script src="js/login.js"></script>
 
 </body>
 </html>
