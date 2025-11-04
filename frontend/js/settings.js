@@ -88,9 +88,15 @@ function filterZenturien() {
 
     if (!input || !dropdown) return;
 
-    const searchTerm = input.value.toLowerCase();
+    // Extract only the zenturie name (before " (Jahrgang")
+    let searchTerm = input.value;
+    const jahrgangIndex = searchTerm.indexOf(' (Jahrgang');
+    if (jahrgangIndex !== -1) {
+        searchTerm = searchTerm.substring(0, jahrgangIndex);
+    }
+    searchTerm = searchTerm.toLowerCase().trim();
 
-    // Filter zenturien
+    // Filter zenturien - only match against zenturie name, not display text
     const filtered = allZenturien.filter(zenturie => {
         return zenturie.zenturie.toLowerCase().includes(searchTerm);
     });
