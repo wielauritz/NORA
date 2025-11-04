@@ -276,6 +276,223 @@ html.dark .bg-green-100 .text-green-700 {
     color: #22c55e !important;
 }
 
+/* Stundenplan/Calendar Dark Mode Styles for .dark class */
+/* Calendar Header - top borders */
+html.dark .calendar-header {
+    background: linear-gradient(to bottom, #0f172a, #1e293b) !important;
+    border-bottom: 2px solid #475569 !important;
+}
+
+/* Calendar Day Headers - week view */
+html.dark .calendar-day-header {
+    background-color: #1e293b !important;
+    color: #f1f5f9 !important;
+    border-right-color: #334155 !important;
+}
+
+html.dark .calendar-day-header:hover {
+    background-color: #334155 !important;
+}
+
+html.dark .calendar-day-header.today {
+    background: linear-gradient(135deg, rgba(60, 210, 255, 0.25), rgba(0, 58, 121, 0.15)) !important;
+}
+
+html.dark .calendar-day-name {
+    color: #f1f5f9 !important;
+}
+
+html.dark .calendar-day-name.today {
+    color: #3cd2ff !important;
+}
+
+html.dark .calendar-day-date {
+    color: #cbd5e1 !important;
+}
+
+html.dark .calendar-day-date.today {
+    color: #3cd2ff !important;
+}
+
+/* Month View */
+html.dark .month-view-container {
+    border-color: #334155 !important;
+}
+
+html.dark .month-day-cell {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #f1f5f9 !important;
+}
+
+html.dark .month-day-cell:hover {
+    background-color: #334155 !important;
+}
+
+html.dark .month-day-cell.other-month {
+    background-color: #0f172a !important;
+    color: #64748b !important;
+}
+
+html.dark .month-day-cell.today {
+    background: linear-gradient(135deg, rgba(60, 210, 255, 0.2), rgba(60, 210, 255, 0.1)) !important;
+    border-color: #3cd2ff !important;
+}
+
+html.dark .month-day-number {
+    color: #f1f5f9 !important;
+}
+
+html.dark .month-day-cell.today .month-day-number {
+    color: #3cd2ff !important;
+}
+
+html.dark .month-day-cell.other-month .month-day-number {
+    color: #64748b !important;
+}
+
+html.dark .month-event-item {
+    color: #f1f5f9 !important;
+}
+
+html.dark .month-event-item.timetable {
+    background: linear-gradient(135deg, rgba(60, 210, 255, 0.3), rgba(0, 58, 121, 0.2)) !important;
+    border-left-color: #3cd2ff !important;
+    color: #3cd2ff !important;
+}
+
+html.dark .month-event-item.custom {
+    background: linear-gradient(135deg, rgba(167, 139, 250, 0.3), rgba(124, 58, 237, 0.2)) !important;
+    border-left-color: #a78bfa !important;
+    color: #c4b5fd !important;
+}
+
+html.dark .month-event-item.exam {
+    background: linear-gradient(135deg, rgba(255, 160, 100, 0.3), rgba(255, 128, 64, 0.2)) !important;
+    border-left-color: #ffa064 !important;
+    color: #ffb380 !important;
+}
+
+html.dark .month-weekday-header {
+    background: linear-gradient(135deg, rgba(60, 210, 255, 0.25), rgba(0, 58, 121, 0.15)) !important;
+    color: #f1f5f9 !important;
+    border-bottom-color: #334155 !important;
+}
+
+html.dark .month-events-count {
+    color: #cbd5e1 !important;
+}
+
+/* Year View */
+html.dark .year-month-card {
+    background-color: #1e293b !important;
+    border: 1px solid #334155 !important;
+    color: #f1f5f9 !important;
+}
+
+html.dark .year-month-card:hover {
+    background-color: #334155 !important;
+    border-color: #60d5ff !important;
+}
+
+html.dark .year-month-header {
+    color: #f1f5f9 !important;
+    border-bottom-color: #334155 !important;
+}
+
+html.dark .year-weekday {
+    color: #cbd5e1 !important;
+}
+
+html.dark .year-day {
+    color: #cbd5e1 !important;
+}
+
+html.dark .year-day:hover {
+    background-color: #334155 !important;
+}
+
+html.dark .year-day.other-month {
+    color: #64748b !important;
+}
+
+html.dark .year-day.today {
+    background: linear-gradient(135deg, #3cd2ff, #003a79) !important;
+    color: white !important;
+}
+
+html.dark .year-day.has-events {
+    border-color: #60d5ff !important;
+}
+
+html.dark .year-day.has-events-timetable {
+    border-color: #60d5ff !important;
+}
+
+html.dark .year-day.has-events-custom {
+    border-color: #c4b5fd !important;
+}
+
+html.dark .year-day.has-events-exam {
+    border-color: #ffb380 !important;
+}
+
+html.dark .year-day.today.has-events {
+    border-color: white !important;
+}
+
+html.dark .year-month-stats {
+    color: #cbd5e1 !important;
+    border-top-color: #334155 !important;
+}
+
+html.dark .year-event-count {
+    color: #cbd5e1 !important;
+}
+
+/* Calendar grid and time lines */
+html.dark .calendar-grid {
+    background-color: #1e293b !important;
+}
+
+html.dark .calendar-day-column {
+    background-color: #1e293b !important;
+    border-right: 1px solid #334155 !important;
+}
+
+html.dark .calendar-hour-line {
+    background: #334155 !important;
+}
+
+html.dark .calendar-half-hour-line {
+    background: #475569 !important;
+}
+
+html.dark .calendar-time-column {
+    background-color: #1e293b !important;
+    border-right: 2px solid #334155 !important;
+}
+
+html.dark .calendar-time-label {
+    color: #94a3b8 !important;
+    background-color: #1e293b !important;
+    border-right: 1px solid #334155 !important;
+}
+
+html.dark .calendar-time-slot {
+    color: #94a3b8 !important;
+    border-bottom: 1px solid #334155 !important;
+}
+
+/* Course blocks */
+html.dark .course-block .text-gray-900 {
+    color: #f1f5f9 !important;
+}
+
+html.dark .course-block .text-gray-600 {
+    color: #cbd5e1 !important;
+}
+
 /* Comprehensive Dark Mode Support (only if .light is not set) */
 @media (prefers-color-scheme: dark) {
     /* Disable all dark mode styles if .light class is present */

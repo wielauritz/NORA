@@ -173,27 +173,31 @@ document.addEventListener('click', (e) => {
  */
 function populateForm() {
     console.log('📝 Populating form with settings:', currentSettings);
+    console.log('📝 User data:', userData);
 
-    // Set zenturie
+    // Set zenturie (from userData, not currentSettings!)
     const zenturieInput = document.getElementById('zenturieInput');
     const zenturieHidden = document.getElementById('selectedZenturieValue');
     if (zenturieInput && zenturieHidden) {
-        if (currentSettings.zenturie) {
-            console.log('  Setting zenturie to:', currentSettings.zenturie);
+        // The zenturie is stored in userData, not in currentSettings
+        const userZenturie = userData?.zenturie;
+
+        if (userZenturie) {
+            console.log('  Setting zenturie to:', userZenturie);
 
             // Find the zenturie object to get the year
-            const zenturieObj = allZenturien.find(z => z.zenturie === currentSettings.zenturie);
+            const zenturieObj = allZenturien.find(z => z.zenturie === userZenturie);
             if (zenturieObj) {
                 const displayText = zenturieObj.year
                     ? `${zenturieObj.zenturie} (Jahrgang ${zenturieObj.year})`
                     : zenturieObj.zenturie;
                 zenturieInput.value = displayText;
                 zenturieHidden.value = zenturieObj.zenturie;
-                console.log('✅ Zenturie value set successfully');
+                console.log('✅ Zenturie value set successfully:', displayText);
             } else {
                 console.warn('⚠️ Zenturie not found in list!');
-                zenturieInput.value = currentSettings.zenturie;
-                zenturieHidden.value = currentSettings.zenturie;
+                zenturieInput.value = userZenturie;
+                zenturieHidden.value = userZenturie;
             }
         } else {
             console.log('  No zenturie set (user has no zenturie assigned)');
@@ -240,50 +244,55 @@ async function saveSettings() {
         const themeValue = themeSelect.value;
         const notificationValue = notificationSelect.value;
 
-        // Build update object - only include changed values
-        const updates = {};
+        // Check what changed
+        const zenturieChanged = zenturieValue !== (userData?.zenturie || '');
+        const themeChanged = themeValue !== currentSettings.theme;
+        const notificationChanged = notificationValue !== currentSettings.notification_preference;
 
-        // Check zenturie change
-        const newZenturie = zenturieValue || null;
-        if (newZenturie !== currentSettings.zenturie) {
-            updates.zenturie = newZenturie;
-        }
-
-        // Check theme change
-        if (themeValue !== currentSettings.theme) {
-            updates.theme = themeValue;
-        }
-
-        // Check notification preference change
-        if (notificationValue !== currentSettings.notification_preference) {
-            updates.notification_preference = notificationValue;
-        }
-
-        // If nothing changed, just show success message
-        if (Object.keys(updates).length === 0) {
+        // If nothing changed, just show info message
+        if (!zenturieChanged && !themeChanged && !notificationChanged) {
             showToast('Keine Änderungen vorgenommen', 'info');
             saveButton.disabled = false;
             saveButton.textContent = 'Speichern';
             return;
         }
 
-        // Send update to API
-        await UserAPI.updateSettings(updates);
+        // Save zenturie if changed (separate API call)
+        if (zenturieChanged) {
+            const newZenturie = zenturieValue || null;
+            console.log('📝 Updating zenturie to:', newZenturie);
+            await UserAPI.setZenturie(newZenturie);
+            // Update userData cache
+            if (userData) {
+                userData.zenturie = newZenturie;
+            }
+        }
 
-        // Update current settings cache
-        if (updates.zenturie !== undefined) {
-            currentSettings.zenturie = updates.zenturie;
-        }
-        if (updates.theme !== undefined) {
-            currentSettings.theme = updates.theme;
-        }
-        if (updates.notification_preference !== undefined) {
-            currentSettings.notification_preference = updates.notification_preference;
+        // Save theme/notification if changed (separate API call)
+        if (themeChanged || notificationChanged) {
+            const settingsUpdates = {};
+            if (themeChanged) {
+                settingsUpdates.theme = themeValue;
+            }
+            if (notificationChanged) {
+                settingsUpdates.notification_preference = notificationValue;
+            }
+
+            console.log('📝 Updating settings:', settingsUpdates);
+            await UserAPI.updateSettings(settingsUpdates);
+
+            // Update currentSettings cache
+            if (themeChanged) {
+                currentSettings.theme = themeValue;
+            }
+            if (notificationChanged) {
+                currentSettings.notification_preference = notificationValue;
+            }
         }
 
         // Apply theme change if needed
-        if (updates.theme !== undefined) {
-            applyTheme(updates.theme);
+        if (themeChanged) {
+            applyTheme(themeValue);
         }
 
         showToast('Einstellungen erfolgreich gespeichert', 'success');
