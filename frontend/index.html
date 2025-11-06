@@ -30,12 +30,13 @@
 
         (async function() {
             try {
-                // 1. Initialize app updater (includes notifyAppReady and update check)
-                // Run in background - DON'T await to prevent blocking app startup
+                // 1. Check for content updates FIRST
+                // This may reload the page if new content is available
                 // Token is preserved in persistent storage
+                // CRITICAL: NO await here - runs in background!
                 if (typeof appUpdater !== 'undefined') {
-                    appUpdater.initialize().catch(err => {
-                        console.error('[Init] AppUpdater failed:', err);
+                    appUpdater.checkContentUpdates().catch(err => {
+                        console.error('[Init] Content update check failed:', err);
                     });
                 }
 

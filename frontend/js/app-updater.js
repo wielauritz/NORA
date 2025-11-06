@@ -34,6 +34,38 @@ class AppUpdater {
     }
 
     /**
+     * Check for content updates at app startup
+     * Called from index.html during authentication check
+     * CRITICAL: Runs in background - does NOT block app startup
+     */
+    async checkContentUpdates() {
+        if (!this.isCapacitor) {
+            console.log('[AppUpdater] Not running in Capacitor, content updates disabled');
+            return;
+        }
+
+        try {
+            // Notify CapgoUpdater that app loaded successfully
+            const CapacitorUpdater = this.getUpdaterPlugin();
+            await CapacitorUpdater.notifyAppReady();
+            console.log('[AppUpdater] App ready notification sent');
+
+            // Check for updates in background (non-blocking)
+            // Do NOT await - let it run in background
+            this.checkForUpdates().catch(err =>
+                console.error('[AppUpdater] Background update check failed:', err)
+            );
+
+            // Set up background update listener for future updates
+            this.setupBackgroundUpdateListener().catch(err =>
+                console.error('[AppUpdater] Background listener setup failed:', err)
+            );
+        } catch (error) {
+            console.error('[AppUpdater] Content update check failed:', error);
+        }
+    }
+
+    /**
      * Initialize the updater
      * MUST be called on app startup
      */
