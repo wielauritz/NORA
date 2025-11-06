@@ -164,16 +164,20 @@ class AppUpdater {
 // Globale Instanz
 const appUpdater = new AppUpdater();
 
-// Auto-Check beim Laden
-document.addEventListener('DOMContentLoaded', () => {
-    // Verzögert starten, damit andere Initialisierungen zuerst laufen
-    setTimeout(() => {
-        // Force beim ersten Laden, um Interval zu umgehen
-        appUpdater.checkForUpdates(true);
-    }, 2000);
-});
-
-// Periodischer Check alle 10 Minuten (wenn App offen)
-setInterval(() => {
-    appUpdater.checkForUpdates(false);
-}, 600000);
+// DEAKTIVIERT: App Store Update-Check
+// Die App nutzt jetzt Content-Updates über checkContentUpdates()
+// Diese Funktion wird manuell in index.html aufgerufen
+//
+// // Auto-Check beim Laden
+// document.addEventListener('DOMContentLoaded', () => {
+//     // Verzögert starten, damit andere Initialisierungen zuerst laufen
+//     setTimeout(() => {
+//         // Force beim ersten Laden, um Interval zu umgehen
+//         appUpdater.checkForUpdates(true);
+//     }, 2000);
+// });
+//
+// // Periodischer Check alle 10 Minuten (wenn App offen)
+// setInterval(() => {
+//     appUpdater.checkForUpdates(false);
+// }, 600000);
