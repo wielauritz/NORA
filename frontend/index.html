@@ -33,11 +33,9 @@
                 // 1. Check for content updates FIRST
                 // This may reload the page if new content is available
                 // Token is preserved in persistent storage
-                // CRITICAL: NO await here - runs in background!
+                // CRITICAL: NO await here - function returns immediately
                 if (typeof appUpdater !== 'undefined') {
-                    appUpdater.checkContentUpdates().catch(err => {
-                        console.error('[Init] Content update check failed:', err);
-                    });
+                    appUpdater.checkContentUpdates();
                 }
 
                 // 2. Initialize persistent storage
