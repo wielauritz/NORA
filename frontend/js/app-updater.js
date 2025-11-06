@@ -101,17 +101,47 @@ class AppUpdater {
             console.log('[AppUpdater] Checking for content updates...');
 
             // Lade aktuelle Content-Version vom Server
-            // WICHTIG: Verwende absolute URL für Capacitor/iOS Apps
-            // Relative URLs laden aus dem lokalen App-Bundle!
+            // WICHTIG: Verwende absolute URL und Capacitor HTTP für native Apps
             // Verwende Timestamp um Caching zu verhindern
-            const response = await fetch(`https://new.nora-nak.de/version.json?t=${Date.now()}`);
+            const url = `https://new.nora-nak.de/version.json?t=${Date.now()}`;
 
-            if (!response.ok) {
-                console.log('[AppUpdater] version.json not found, skipping content update check');
-                return;
+            let response;
+            let serverData;
+
+            // Check if running in Capacitor native app
+            if (this.isCapacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.CapacitorHttp) {
+                console.log('[AppUpdater] Using Capacitor HTTP for native request');
+                const { CapacitorHttp } = window.Capacitor.Plugins;
+
+                response = await CapacitorHttp.request({
+                    url: url,
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                // CapacitorHttp response format: { status, data, headers }
+                if (response.status !== 200) {
+                    console.log('[AppUpdater] version.json not found (status:', response.status, ')');
+                    return;
+                }
+
+                // CapacitorHttp gibt data direkt als Object zurück (bereits JSON geparst)
+                serverData = response.data;
+            } else {
+                // Use fetch for browser
+                console.log('[AppUpdater] Using fetch for browser request');
+                response = await fetch(url);
+
+                if (!response.ok) {
+                    console.log('[AppUpdater] version.json not found, skipping content update check');
+                    return;
+                }
+
+                serverData = await response.json();
             }
 
-            const serverData = await response.json();
             const serverVersion = serverData.version;
 
             // Prüfe ob version-Feld existiert
