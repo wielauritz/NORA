@@ -101,8 +101,10 @@ class AppUpdater {
             console.log('[AppUpdater] Checking for content updates...');
 
             // Lade aktuelle Content-Version vom Server
+            // WICHTIG: Verwende absolute URL für Capacitor/iOS Apps
+            // Relative URLs laden aus dem lokalen App-Bundle!
             // Verwende Timestamp um Caching zu verhindern
-            const response = await fetch(`/version.json?t=${Date.now()}`);
+            const response = await fetch(`https://new.nora-nak.de/version.json?t=${Date.now()}`);
 
             if (!response.ok) {
                 console.log('[AppUpdater] version.json not found, skipping content update check');
@@ -111,6 +113,12 @@ class AppUpdater {
 
             const serverData = await response.json();
             const serverVersion = serverData.version;
+
+            // Prüfe ob version-Feld existiert
+            if (!serverVersion) {
+                console.error('[AppUpdater] version.json missing "version" field:', serverData);
+                return;
+            }
 
             // Hole gespeicherte lokale Version
             const localVersion = localStorage.getItem('content_version');
@@ -134,7 +142,7 @@ class AppUpdater {
 
                 // Hard reload (ohne Cache) um neue Contents zu laden
                 // Token bleibt erhalten (in persistent storage)
-                window.location.reload(true);
+                window.location.href = window.location.href;
             } else {
                 console.log('[AppUpdater] Content is up to date');
             }
