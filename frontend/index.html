@@ -31,10 +31,12 @@
         (async function() {
             try {
                 // 1. Initialize app updater (includes notifyAppReady and update check)
-                // This will download updates in background and apply them on next launch
+                // Run in background - DON'T await to prevent blocking app startup
                 // Token is preserved in persistent storage
                 if (typeof appUpdater !== 'undefined') {
-                    await appUpdater.initialize();
+                    appUpdater.initialize().catch(err => {
+                        console.error('[Init] AppUpdater failed:', err);
+                    });
                 }
 
                 // 2. Initialize persistent storage

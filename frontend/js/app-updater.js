@@ -17,6 +17,23 @@ class AppUpdater {
     }
 
     /**
+     * Get CapacitorUpdater plugin instance
+     * Uses direct plugin access to avoid import delays
+     */
+    getUpdaterPlugin() {
+        if (!this.isCapacitor) {
+            throw new Error('Not running in Capacitor');
+        }
+
+        const plugin = window.Capacitor?.Plugins?.CapacitorUpdater;
+        if (!plugin) {
+            throw new Error('CapacitorUpdater plugin not found');
+        }
+
+        return plugin;
+    }
+
+    /**
      * Initialize the updater
      * MUST be called on app startup
      */
@@ -27,17 +44,20 @@ class AppUpdater {
         }
 
         try {
-            // CRITICAL: Notify the plugin that the app loaded successfully
-            // Without this, the app will rollback to the previous version
-            const { CapacitorUpdater } = await import('@capgo/capacitor-updater');
+            // CRITICAL: Notify the plugin that the app loaded successfully ASAP
+            const CapacitorUpdater = this.getUpdaterPlugin();
             await CapacitorUpdater.notifyAppReady();
             console.log('[AppUpdater] App ready notification sent');
 
-            // Set up background update listener
-            this.setupBackgroundUpdateListener();
+            // Set up background update listener (non-blocking)
+            this.setupBackgroundUpdateListener().catch(err =>
+                console.error('[AppUpdater] Background listener setup failed:', err)
+            );
 
-            // Check for updates on startup
-            await this.checkForUpdates();
+            // Check for updates on startup (non-blocking)
+            this.checkForUpdates().catch(err =>
+                console.error('[AppUpdater] Update check failed:', err)
+            );
         } catch (error) {
             console.error('[AppUpdater] Initialization failed:', error);
         }
@@ -122,7 +142,7 @@ class AppUpdater {
         try {
             console.log(`[AppUpdater] Downloading update ${version} from ${url}...`);
 
-            const { CapacitorUpdater } = await import('@capgo/capacitor-updater');
+            const CapacitorUpdater = this.getUpdaterPlugin();
 
             // Download the bundle (zip file)
             const downloaded = await CapacitorUpdater.download({
@@ -159,7 +179,7 @@ class AppUpdater {
         try {
             console.log('[AppUpdater] Applying update...');
 
-            const { CapacitorUpdater } = await import('@capgo/capacitor-updater');
+            const CapacitorUpdater = this.getUpdaterPlugin();
 
             // Switch to the new bundle and reload
             await CapacitorUpdater.set(this.downloadedBundle);
@@ -175,8 +195,15 @@ class AppUpdater {
      * Set up listener to apply updates when app goes to background
      */
     async setupBackgroundUpdateListener() {
+        if (!this.isCapacitor) return;
+
         try {
-            const { App } = await import('@capacitor/app');
+            const App = window.Capacitor?.Plugins?.App;
+
+            if (!App) {
+                console.warn('[AppUpdater] App plugin not found, background updates disabled');
+                return;
+            }
 
             App.addListener('appStateChange', async (state) => {
                 if (!state.isActive && this.downloadedBundle) {
@@ -211,7 +238,7 @@ class AppUpdater {
         if (!this.isCapacitor) return null;
 
         try {
-            const { CapacitorUpdater } = await import('@capgo/capacitor-updater');
+            const CapacitorUpdater = this.getUpdaterPlugin();
             const info = await CapacitorUpdater.current();
             console.log('[AppUpdater] Current bundle:', info);
             return info;
@@ -228,7 +255,7 @@ class AppUpdater {
         if (!this.isCapacitor) return [];
 
         try {
-            const { CapacitorUpdater } = await import('@capgo/capacitor-updater');
+            const CapacitorUpdater = this.getUpdaterPlugin();
             const bundles = await CapacitorUpdater.list();
             console.log('[AppUpdater] All bundles:', bundles);
             return bundles;
@@ -246,7 +273,7 @@ class AppUpdater {
 
         try {
             console.log('[AppUpdater] Resetting to built-in bundle...');
-            const { CapacitorUpdater } = await import('@capgo/capacitor-updater');
+            const CapacitorUpdater = this.getUpdaterPlugin();
             await CapacitorUpdater.reset();
             localStorage.removeItem(VERSION_STORAGE_KEY);
             window.location.reload();
