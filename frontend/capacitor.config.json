@@ -7,6 +7,10 @@
     "SplashScreen": {
       "launchShowDuration": 2000,
       "backgroundColor": "#667eea"
+    },
+    "CapacitorUpdater": {
+      "autoUpdate": false,
+      "resetWhenUpdate": true
     }
   },
   "packageClassList": [

@@ -30,11 +30,11 @@
 
         (async function() {
             try {
-                // 1. Check for content updates FIRST
-                // This may reload the page if new content is available
+                // 1. Initialize app updater (includes notifyAppReady and update check)
+                // This will download updates in background and apply them on next launch
                 // Token is preserved in persistent storage
                 if (typeof appUpdater !== 'undefined') {
-                    await appUpdater.checkContentUpdates();
+                    await appUpdater.initialize();
                 }
 
                 // 2. Initialize persistent storage
