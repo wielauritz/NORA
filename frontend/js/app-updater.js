@@ -4,7 +4,7 @@
  */
 
 const APP_VERSION = '1.0.0';
-const UPDATE_CHECK_URL = 'https://new.nora-nak.de/updates/manifest.json';
+const UPDATE_CHECK_URL = 'https://api.new.nora-nak.de/v1/updates/manifest.json';
 const VERSION_STORAGE_KEY = 'installed_bundle_version';
 const LAST_CHECK_KEY = 'last_update_check';
 const UPDATE_CHECK_INTERVAL = 3600000; // 1 hour

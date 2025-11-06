@@ -18,6 +18,7 @@ import (
 	"github.com/nora-nak/backend/handlers"
 	"github.com/nora-nak/backend/middleware"
 	"github.com/nora-nak/backend/services"
+	"github.com/nora-nak/backend/utils"
 )
 
 func main() {
@@ -53,7 +54,7 @@ func main() {
 
 	// Create Fiber app
 	app := fiber.New(fiber.Config{
-		AppName:      "NORA-NAK Stundenplan API v2.0.0",
+		AppName:      "NORA-NAK Stundenplan API v" + utils.APIVersion,
 		ErrorHandler: customErrorHandler,
 	})
 
@@ -127,19 +128,26 @@ func setupPublicRoutes(app *fiber.App) {
 	app.Get("/v1/health", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
 			"message": "NORA API is running",
-			"version": "2.0.0",
+			"version": utils.APIVersion,
 		})
 	})
 
 	// App version for mobile apps
 	app.Get("/v1/app-version", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{
-			"version":            "1.0.0",
-			"required_version":   "1.0.0",
+			"version":            utils.AppVersion,
+			"required_version":   utils.MinAppVersion,
 			"update_url_android": "https://play.google.com/store/apps/details?id=de.nora.nak",
 			"update_url_ios":     "https://apps.apple.com/app/nora-stundenplan/id123456789",
 		})
 	})
+
+	// Version endpoints
+	app.Get("/v1/version", handlers.GetVersion)
+	app.Get("/v1/updates/manifest.json", handlers.GetUpdateManifest)
+
+	// Static file serving for ZIP bundles
+	app.Static("/v1/updates/bundles", "./updates/bundles")
 
 	// Login Service (with rate limiting)
 	app.Post("/v1/login", middleware.LoginRateLimiter(), handlers.Login)
