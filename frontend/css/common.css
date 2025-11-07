@@ -1351,20 +1351,35 @@ body > main {
     fill: #3cd2ff !important;
 }
 
-/* Flatpickr time increment/decrement */
+/* Flatpickr time increment/decrement - larger and more visible */
 .flatpickr-time .numInputWrapper span.arrowUp,
 .flatpickr-time .numInputWrapper span.arrowDown {
     border: none !important;
+    width: 20px !important;
+    height: 50% !important;
 }
 
 .flatpickr-time .numInputWrapper span.arrowUp:after,
 .flatpickr-time .numInputWrapper span.arrowDown:after {
-    border-bottom-color: #003a79 !important;
-    border-top-color: #003a79 !important;
+    border-left: 6px solid transparent !important;
+    border-right: 6px solid transparent !important;
 }
 
-.flatpickr-time .numInputWrapper span:hover:after {
+.flatpickr-time .numInputWrapper span.arrowUp:after {
+    border-bottom: 6px solid #003a79 !important;
+    border-top: none !important;
+}
+
+.flatpickr-time .numInputWrapper span.arrowDown:after {
+    border-top: 6px solid #003a79 !important;
+    border-bottom: none !important;
+}
+
+.flatpickr-time .numInputWrapper span.arrowUp:hover:after {
     border-bottom-color: #3cd2ff !important;
+}
+
+.flatpickr-time .numInputWrapper span.arrowDown:hover:after {
     border-top-color: #3cd2ff !important;
 }
 
@@ -1423,4 +1438,20 @@ body > main {
     background: #1e293b !important;
     border-color: #334155 !important;
     color: #e2e8f0 !important;
+}
+
+.dark .flatpickr-time .numInputWrapper span.arrowUp:after {
+    border-bottom-color: #3cd2ff !important;
+}
+
+.dark .flatpickr-time .numInputWrapper span.arrowDown:after {
+    border-top-color: #3cd2ff !important;
+}
+
+.dark .flatpickr-time .numInputWrapper span.arrowUp:hover:after {
+    border-bottom-color: #60dbff !important;
+}
+
+.dark .flatpickr-time .numInputWrapper span.arrowDown:hover:after {
+    border-top-color: #60dbff !important;
 }

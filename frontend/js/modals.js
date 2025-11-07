@@ -237,7 +237,7 @@ function createAddCustomHourModal() {
                                    placeholder="Bitte zuerst Datum und Zeiten auswählen..."
                                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary disabled:bg-gray-100 disabled:cursor-not-allowed">
                             <input type="hidden" id="customHourRoom" value="">
-                            <div id="customHourRoomDropdown" class="hidden absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                            <div id="customHourRoomDropdown" class="hidden absolute z-10 w-full mt-1 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-xl shadow-lg max-h-60 overflow-y-auto">
                                 <!-- Room items will be populated dynamically -->
                             </div>
                         </div>
@@ -393,9 +393,9 @@ async function loadRoomsForCustomHour() {
     searchInput.disabled = false;
     searchInput.placeholder = 'Raum suchen...';
 
-    // Combine date and time for API call
-    const startTime = `${dateInput.value}T${startTimeInput.value}:00`;
-    const endTime = `${dateInput.value}T${endTimeInput.value}:00`;
+    // Combine date and time for API call (ISO 8601 with Z)
+    const startTime = `${dateInput.value}T${startTimeInput.value}:00Z`;
+    const endTime = `${dateInput.value}T${endTimeInput.value}:00Z`;
 
     try {
         // Load free and all rooms
@@ -451,7 +451,7 @@ function filterCustomHourRooms() {
     dropdown.innerHTML = '';
 
     if (filtered.length === 0) {
-        dropdown.innerHTML = '<div class="px-4 py-3 text-sm text-gray-500">Keine Räume gefunden</div>';
+        dropdown.innerHTML = '<div class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">Keine Räume gefunden</div>';
     } else {
         filtered.forEach(room => {
             const isFree = customHourAvailableRooms.some(r => r.room_number === room.room_number);
@@ -462,11 +462,11 @@ function filterCustomHourRooms() {
                 <div class="flex items-center space-x-2 flex-1">
                     <span class="w-2 h-2 rounded-full ${isFree ? 'bg-green-500' : 'bg-red-500'}"></span>
                     <div>
-                        <div class="font-medium text-gray-900">${room.room_number}</div>
-                        ${room.room_name ? `<div class="text-xs text-gray-600">${room.room_name}</div>` : ''}
+                        <div class="font-medium text-gray-900 dark:text-white">${room.room_number}</div>
+                        ${room.room_name ? `<div class="text-xs text-gray-600 dark:text-gray-400">${room.room_name}</div>` : ''}
                     </div>
                 </div>
-                <span class="text-xs ${isFree ? 'text-green-600' : 'text-red-600'} font-medium">
+                <span class="text-xs ${isFree ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'} font-medium">
                     ${isFree ? 'Frei' : 'Belegt'}
                 </span>
             `;
@@ -750,7 +750,7 @@ async function createUpdateCustomHourModal(event) {
                                    placeholder="Raum suchen..."
                                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary">
                             <input type="hidden" id="updateCustomHourRoom" value="">
-                            <div id="updateCustomHourRoomDropdown" class="hidden absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                            <div id="updateCustomHourRoomDropdown" class="hidden absolute z-10 w-full mt-1 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-xl shadow-lg max-h-60 overflow-y-auto">
                                 <!-- Room items will be populated dynamically -->
                             </div>
                         </div>
@@ -949,8 +949,8 @@ async function loadRoomsForUpdateCustomHour(currentRoom = null) {
     searchInput.disabled = false;
     searchInput.placeholder = 'Raum suchen...';
 
-    const startTime = `${dateInput.value}T${startTimeInput.value}:00`;
-    const endTime = `${dateInput.value}T${endTimeInput.value}:00`;
+    const startTime = `${dateInput.value}T${startTimeInput.value}:00Z`;
+    const endTime = `${dateInput.value}T${endTimeInput.value}:00Z`;
 
     try {
         const [freeResponse, allRooms] = await Promise.all([
@@ -1006,7 +1006,7 @@ function filterUpdateCustomHourRooms() {
     dropdown.innerHTML = '';
 
     if (filtered.length === 0) {
-        dropdown.innerHTML = '<div class="px-4 py-3 text-sm text-gray-500">Keine Räume gefunden</div>';
+        dropdown.innerHTML = '<div class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">Keine Räume gefunden</div>';
     } else {
         filtered.forEach(room => {
             const isFree = updateCustomHourAvailableRooms.some(r => r.room_number === room.room_number);
@@ -1018,11 +1018,11 @@ function filterUpdateCustomHourRooms() {
                 <div class="flex items-center space-x-2 flex-1">
                     <span class="w-2 h-2 rounded-full ${isFree ? 'bg-green-500' : 'bg-red-500'}"></span>
                     <div>
-                        <div class="font-medium text-gray-900">${room.room_number}${isCurrent ? ' (aktuell)' : ''}</div>
-                        ${room.room_name ? `<div class="text-xs text-gray-600">${room.room_name}</div>` : ''}
+                        <div class="font-medium text-gray-900 dark:text-white">${room.room_number}${isCurrent ? ' (aktuell)' : ''}</div>
+                        ${room.room_name ? `<div class="text-xs text-gray-600 dark:text-gray-400">${room.room_name}</div>` : ''}
                     </div>
                 </div>
-                <span class="text-xs ${isFree ? 'text-green-600' : 'text-red-600'} font-medium">
+                <span class="text-xs ${isFree ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'} font-medium">
                     ${isFree ? 'Frei' : 'Belegt'}
                 </span>
             `;
@@ -1289,7 +1289,7 @@ function createAddExamModal() {
                                    placeholder="Raum suchen..."
                                    class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary">
                             <input type="hidden" id="examRoom" value="">
-                            <div id="examRoomDropdown" class="hidden absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                            <div id="examRoomDropdown" class="hidden absolute z-10 w-full mt-1 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 rounded-xl shadow-lg max-h-60 overflow-y-auto">
                                 <!-- Room items will be populated dynamically -->
                             </div>
                         </div>
@@ -1399,15 +1399,15 @@ function filterExamRooms() {
     dropdown.innerHTML = '';
 
     if (filtered.length === 0) {
-        dropdown.innerHTML = '<div class="px-4 py-3 text-sm text-gray-500">Keine Räume gefunden</div>';
+        dropdown.innerHTML = '<div class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">Keine Räume gefunden</div>';
     } else {
         filtered.forEach(room => {
             const item = document.createElement('div');
             item.className = 'px-4 py-3 hover:bg-primary/10 cursor-pointer transition-colors text-sm';
 
             item.innerHTML = `
-                <div class="font-medium text-gray-900">${room.room_number}</div>
-                ${room.room_name ? `<div class="text-xs text-gray-600">${room.room_name}</div>` : ''}
+                <div class="font-medium text-gray-900 dark:text-white">${room.room_number}</div>
+                ${room.room_name ? `<div class="text-xs text-gray-600 dark:text-gray-400">${room.room_name}</div>` : ''}
             `;
 
             item.onclick = () => selectExamRoom(room);
