@@ -98,7 +98,82 @@ func AutoMigrate() error {
 	DB.Exec("DROP INDEX IF EXISTS timetables_uid_key")
 	DB.Exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_uid_zenturie ON timetables(uid, zenturien_id)")
 
+	// Migration: Fix room numbers to exactly 4 characters (Letter + 3 digits)
+	// Removes trailing letters from room numbers like "A001E" -> "A001"
+	if err := fixRoomNumbers(); err != nil {
+		log.Printf("WARNING: Failed to fix room numbers: %v", err)
+	}
+
 	log.Println("Database migrations completed successfully")
+	return nil
+}
+
+// fixRoomNumbers fixes room numbers to exactly 4 characters (Letter + 3 digits)
+// Removes trailing letters from room numbers like "A001E" -> "A001"
+// Handles duplicates by merging relationships to the existing room
+func fixRoomNumbers() error {
+	log.Println("Checking for room numbers that need fixing...")
+
+	// Find all rooms with room_number longer than 4 characters
+	var roomsToFix []models.Room
+	if err := DB.Where("LENGTH(room_number) > 4").Find(&roomsToFix).Error; err != nil {
+		return fmt.Errorf("failed to find rooms to fix: %w", err)
+	}
+
+	if len(roomsToFix) == 0 {
+		log.Println("No room numbers need fixing")
+		return nil
+	}
+
+	log.Printf("Found %d room(s) with room_number longer than 4 characters", len(roomsToFix))
+
+	fixed := 0
+	merged := 0
+
+	for _, room := range roomsToFix {
+		// Truncate to 4 characters
+		newRoomNumber := room.RoomNumber
+		if len(newRoomNumber) > 4 {
+			newRoomNumber = newRoomNumber[:4]
+		}
+
+		log.Printf("Fixing room: %s -> %s", room.RoomNumber, newRoomNumber)
+
+		// Check if a room with the new number already exists
+		var existingRoom models.Room
+		result := DB.Where("room_number = ? AND id != ?", newRoomNumber, room.ID).First(&existingRoom)
+
+		if result.Error == nil {
+			// Room with truncated number already exists - merge relationships
+			log.Printf("Room %s already exists (ID: %d), merging room %s (ID: %d)",
+				newRoomNumber, existingRoom.ID, room.RoomNumber, room.ID)
+
+			// Update all timetables to reference the existing room
+			DB.Model(&models.Timetable{}).Where("room_id = ?", room.ID).Update("room_id", existingRoom.ID)
+
+			// Update all custom_hours to reference the existing room
+			DB.Model(&models.CustomHour{}).Where("room_id = ?", room.ID).Update("room_id", existingRoom.ID)
+
+			// Update all exams to reference the existing room
+			DB.Model(&models.Exam{}).Where("room_id = ?", room.ID).Update("room_id", existingRoom.ID)
+
+			// Delete the duplicate room
+			if err := DB.Delete(&room).Error; err != nil {
+				log.Printf("WARNING: Failed to delete duplicate room %s: %v", room.RoomNumber, err)
+			} else {
+				merged++
+			}
+		} else {
+			// No existing room with truncated number - just update the room_number
+			if err := DB.Model(&room).Update("room_number", newRoomNumber).Error; err != nil {
+				log.Printf("WARNING: Failed to update room %s: %v", room.RoomNumber, err)
+			} else {
+				fixed++
+			}
+		}
+	}
+
+	log.Printf("Room number migration complete: %d fixed, %d merged", fixed, merged)
 	return nil
 }
 
