@@ -288,6 +288,11 @@ function createAddCustomHourModal() {
     const timeStr = now.toTimeString().slice(0, 5);
     document.getElementById('customHourStartTime').value = timeStr;
 
+    // Set default end time to 1 hour after start time
+    const endTime = new Date(now.getTime() + 60 * 60 * 1000);
+    const endTimeStr = endTime.toTimeString().slice(0, 5);
+    document.getElementById('customHourEndTime').value = endTimeStr;
+
     // Add event listeners to update room list when date/time changes
     const dateInput = document.getElementById('customHourDate');
     const startTimeInput = document.getElementById('customHourStartTime');
@@ -315,28 +320,47 @@ function createAddCustomHourModal() {
             }
         });
 
-        // Start time picker
+        // End time picker (initialize first)
+        const endTimePicker = flatpickr('#customHourEndTime', {
+            enableTime: true,
+            noCalendar: true,
+            dateFormat: 'H:i',
+            time_24hr: true,
+            minuteIncrement: 15,
+            defaultDate: endTimeStr,
+            onChange: function() {
+                loadRoomsForCustomHour();
+            }
+        });
+
+        // Start time picker (with auto-update of end time)
         flatpickr('#customHourStartTime', {
             enableTime: true,
             noCalendar: true,
             dateFormat: 'H:i',
             time_24hr: true,
             minuteIncrement: 15,
-            defaultHour: now.getHours(),
-            defaultMinute: roundedMinutes,
-            onChange: function() {
-                loadRoomsForCustomHour();
-            }
-        });
+            defaultDate: timeStr,
+            onChange: function(selectedDates, dateStr) {
+                // Automatically set end time to 1 hour after start time
+                if (selectedDates.length > 0 && dateStr) {
+                    const [hours, minutes] = dateStr.split(':').map(Number);
+                    let endHours = hours + 1;
+                    let endMinutes = minutes;
 
-        // End time picker
-        flatpickr('#customHourEndTime', {
-            enableTime: true,
-            noCalendar: true,
-            dateFormat: 'H:i',
-            time_24hr: true,
-            minuteIncrement: 15,
-            onChange: function() {
+                    // Handle day overflow (23:00 -> 00:00 next day)
+                    if (endHours >= 24) {
+                        endHours = endHours - 24;
+                    }
+
+                    const endTimeString = `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+                    document.getElementById('customHourEndTime').value = endTimeString;
+
+                    // Create a proper date for flatpickr
+                    const endDate = new Date();
+                    endDate.setHours(endHours, endMinutes, 0, 0);
+                    endTimePicker.setDate(endDate);
+                }
                 loadRoomsForCustomHour();
             }
         });
@@ -814,8 +838,8 @@ async function createUpdateCustomHourModal(event) {
             }
         });
 
-        // Start time picker
-        flatpickr('#updateCustomHourStartTime', {
+        // End time picker (initialize first)
+        const updateEndTimePicker = flatpickr('#updateCustomHourEndTime', {
             enableTime: true,
             noCalendar: true,
             dateFormat: 'H:i',
@@ -826,14 +850,33 @@ async function createUpdateCustomHourModal(event) {
             }
         });
 
-        // End time picker
-        flatpickr('#updateCustomHourEndTime', {
+        // Start time picker (with auto-update of end time)
+        flatpickr('#updateCustomHourStartTime', {
             enableTime: true,
             noCalendar: true,
             dateFormat: 'H:i',
             time_24hr: true,
             minuteIncrement: 15,
-            onChange: function() {
+            onChange: function(selectedDates, dateStr) {
+                // Automatically set end time to 1 hour after start time
+                if (selectedDates.length > 0 && dateStr) {
+                    const [hours, minutes] = dateStr.split(':').map(Number);
+                    let endHours = hours + 1;
+                    let endMinutes = minutes;
+
+                    // Handle day overflow (23:00 -> 00:00 next day)
+                    if (endHours >= 24) {
+                        endHours = endHours - 24;
+                    }
+
+                    const endTimeString = `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+                    document.getElementById('updateCustomHourEndTime').value = endTimeString;
+
+                    // Create a proper date for flatpickr
+                    const endDate = new Date();
+                    endDate.setHours(endHours, endMinutes, 0, 0);
+                    updateEndTimePicker.setDate(endDate);
+                }
                 loadRoomsForUpdateCustomHour(currentRoom);
             }
         });
