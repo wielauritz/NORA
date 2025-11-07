@@ -573,27 +573,27 @@ function updateStatistics() {
         return endTime > now;
     });
 
-    // Total upcoming events today (timetable + custom hours) - now 1st card
+    // Total upcoming events today (timetable + custom hours) - 1st card
     const todayEventsCountEl = document.getElementById('todayEventsCount');
     if (todayEventsCountEl) {
         todayEventsCountEl.textContent = upcomingEvents.length;
     }
 
-    // Upcoming courses today (only timetable events, not custom hours) - now 2nd card
+    // Upcoming courses today (only timetable events, not custom hours) - 2nd card
     const coursesCount = upcomingEvents.filter(e => e.event_type === 'timetable').length;
-    const coursesEl = document.querySelectorAll('.glass-effect h3')[1];
+    const coursesEl = document.getElementById('coursesTodayCount');
     if (coursesEl) {
         coursesEl.textContent = coursesCount;
     }
 
-    // Upcoming exams (next 30 days) - now 3rd card
+    // Upcoming exams (next 30 days) - 3rd card
     const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
     const upcomingExamsCount = upcomingExams.filter(e => {
         const examDate = new Date(e.start_time);
         return examDate <= thirtyDaysFromNow;
     }).length;
 
-    const examsEl = document.querySelectorAll('.glass-effect h3')[2];
+    const examsEl = document.getElementById('upcomingExamsCount');
     if (examsEl) {
         examsEl.textContent = upcomingExamsCount;
     }
