@@ -728,12 +728,12 @@ function showCalendarSubscription() {
                             <label class="block text-sm font-medium text-gray-700 mb-2">
                                 Abonnement-URL:
                             </label>
-                            <div class="flex space-x-2">
+                            <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                                 <input type="text" readonly
                                        value="${subscriptionURL}"
                                        id="subscriptionURL"
-                                       class="flex-1 px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 text-sm font-mono">
-                                <button onclick="copySubscriptionURL()" class="px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-xl font-medium transition-colors">
+                                       class="w-full sm:flex-1 px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 text-sm font-mono overflow-x-auto">
+                                <button onclick="copySubscriptionURL()" class="w-full sm:w-auto px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-xl font-medium transition-colors whitespace-nowrap">
                                     Kopieren
                                 </button>
                             </div>
@@ -809,17 +809,25 @@ function showCalendarSubscription() {
 /**
  * Copy subscription URL to clipboard
  */
-function copySubscriptionURL() {
+async function copySubscriptionURL() {
     const input = document.getElementById('subscriptionURL');
-    input.select();
-    input.setSelectionRange(0, 99999); // For mobile
 
     try {
-        document.execCommand('copy');
+        // Modern Clipboard API
+        await navigator.clipboard.writeText(input.value);
         showToast('URL in Zwischenablage kopiert!', 'success');
     } catch (err) {
-        console.error('Copy failed:', err);
-        showToast('Kopieren fehlgeschlagen', 'error');
+        // Fallback for older browsers
+        console.log('Modern clipboard API failed, trying fallback:', err);
+        try {
+            input.select();
+            input.setSelectionRange(0, 99999); // For mobile
+            document.execCommand('copy');
+            showToast('URL in Zwischenablage kopiert!', 'success');
+        } catch (fallbackErr) {
+            console.error('Copy failed:', fallbackErr);
+            showToast('Kopieren fehlgeschlagen', 'error');
+        }
     }
 }
 

@@ -230,10 +230,17 @@ function createAddCustomHourModal() {
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             Raum
                         </label>
-                        <select id="customHourRoom" disabled
-                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary disabled:bg-gray-100 disabled:cursor-not-allowed">
-                            <option value="">Bitte zuerst Datum und Zeiten auswählen...</option>
-                        </select>
+                        <div class="relative">
+                            <input type="text" id="customHourRoomSearch" disabled autocomplete="off"
+                                   oninput="filterCustomHourRooms()"
+                                   onfocus="showCustomHourRoomDropdown()"
+                                   placeholder="Bitte zuerst Datum und Zeiten auswählen..."
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary disabled:bg-gray-100 disabled:cursor-not-allowed">
+                            <input type="hidden" id="customHourRoom" value="">
+                            <div id="customHourRoomDropdown" class="hidden absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                                <!-- Room items will be populated dynamically -->
+                            </div>
+                        </div>
                         <p class="text-xs text-gray-500 mt-1">💡 Wähle zuerst Datum, Start- und Endzeit aus</p>
                     </div>
 
@@ -295,6 +302,45 @@ function createAddCustomHourModal() {
     if (endTimeInput) {
         endTimeInput.addEventListener('change', loadRoomsForCustomHour);
     }
+
+    // Initialize Flatpickr for date and time inputs
+    if (typeof flatpickr !== 'undefined') {
+        // Date picker
+        flatpickr('#customHourDate', {
+            dateFormat: 'Y-m-d',
+            minDate: 'today',
+            locale: 'de',
+            onChange: function() {
+                loadRoomsForCustomHour();
+            }
+        });
+
+        // Start time picker
+        flatpickr('#customHourStartTime', {
+            enableTime: true,
+            noCalendar: true,
+            dateFormat: 'H:i',
+            time_24hr: true,
+            minuteIncrement: 15,
+            defaultHour: now.getHours(),
+            defaultMinute: roundedMinutes,
+            onChange: function() {
+                loadRoomsForCustomHour();
+            }
+        });
+
+        // End time picker
+        flatpickr('#customHourEndTime', {
+            enableTime: true,
+            noCalendar: true,
+            dateFormat: 'H:i',
+            time_24hr: true,
+            minuteIncrement: 15,
+            onChange: function() {
+                loadRoomsForCustomHour();
+            }
+        });
+    }
 }
 
 /**
@@ -315,13 +361,18 @@ function toggleLocationType(type) {
     }
 }
 
+// Global storage for custom hour rooms
+let customHourAvailableRooms = [];
+let customHourAllRooms = [];
+
 /**
  * Load rooms for custom hour dropdown
  * Loads only available rooms based on selected date and time
  */
 async function loadRoomsForCustomHour() {
-    const select = document.getElementById('customHourRoom');
-    if (!select) return;
+    const searchInput = document.getElementById('customHourRoomSearch');
+    const hiddenInput = document.getElementById('customHourRoom');
+    if (!searchInput) return;
 
     const dateInput = document.getElementById('customHourDate');
     const startTimeInput = document.getElementById('customHourStartTime');
@@ -329,53 +380,122 @@ async function loadRoomsForCustomHour() {
 
     // Check if date and times are filled
     if (!dateInput?.value || !startTimeInput?.value || !endTimeInput?.value) {
-        // Disable selector and show hint
-        select.disabled = true;
-        select.innerHTML = '<option value="">Bitte zuerst Datum und Zeiten auswählen...</option>';
+        // Disable search and reset
+        searchInput.disabled = true;
+        searchInput.placeholder = 'Bitte zuerst Datum und Zeiten auswählen...';
+        searchInput.value = '';
+        hiddenInput.value = '';
+        customHourAvailableRooms = [];
         return;
     }
 
-    // Enable selector and clear options
-    select.disabled = false;
-    select.innerHTML = '<option value="">Raum auswählen...</option>';
+    // Enable search
+    searchInput.disabled = false;
+    searchInput.placeholder = 'Raum suchen...';
 
     // Combine date and time for API call
     const startTime = `${dateInput.value}T${startTimeInput.value}:00`;
     const endTime = `${dateInput.value}T${endTimeInput.value}:00`;
 
     try {
-        // Load only free rooms for the selected time period
-        const response = await RoomAPI.getFreeRooms(startTime, endTime);
-        const rooms = response.free_rooms || [];
+        // Load free and all rooms
+        const [freeResponse, allRooms] = await Promise.all([
+            RoomAPI.getFreeRooms(startTime, endTime),
+            RoomAPI.getAllRooms()
+        ]);
 
-        if (rooms.length === 0) {
-            const option = document.createElement('option');
-            option.value = '';
-            option.textContent = 'Keine freien Räume verfügbar';
-            option.disabled = true;
-            select.appendChild(option);
-        } else {
-            rooms.forEach(room => {
-                const option = document.createElement('option');
-                option.value = room.room_number;
-                option.textContent = `${room.room_number}${room.room_name ? ' - ' + room.room_name : ''}`;
-                select.appendChild(option);
-            });
-        }
+        customHourAvailableRooms = freeResponse.free_rooms || [];
+        customHourAllRooms = allRooms || [];
+
+        console.log('✅ Rooms loaded for custom hour:', {
+            free: customHourAvailableRooms.length,
+            total: customHourAllRooms.length
+        });
     } catch (error) {
-        console.error('Error loading free rooms:', error);
-        // Fallback to all rooms on error
-        try {
-            const rooms = await RoomAPI.getAllRooms();
-            rooms.forEach(room => {
-                const option = document.createElement('option');
-                option.value = room.room_number;
-                option.textContent = `${room.room_number}${room.room_name ? ' - ' + room.room_name : ''}`;
-                select.appendChild(option);
-            });
-        } catch (fallbackError) {
-            console.error('Error loading fallback rooms:', fallbackError);
-        }
+        console.error('Error loading rooms:', error);
+        customHourAvailableRooms = [];
+        customHourAllRooms = [];
+    }
+}
+
+/**
+ * Show custom hour room dropdown
+ */
+function showCustomHourRoomDropdown() {
+    const dropdown = document.getElementById('customHourRoomDropdown');
+    if (dropdown && customHourAllRooms.length > 0) {
+        filterCustomHourRooms();
+        dropdown.classList.remove('hidden');
+    }
+}
+
+/**
+ * Filter rooms based on search input
+ */
+function filterCustomHourRooms() {
+    const searchInput = document.getElementById('customHourRoomSearch');
+    const dropdown = document.getElementById('customHourRoomDropdown');
+
+    if (!searchInput || !dropdown) return;
+
+    const searchTerm = searchInput.value.toLowerCase();
+
+    // Filter rooms
+    const filtered = customHourAllRooms.filter(room => {
+        const roomNumber = room.room_number.toLowerCase();
+        const roomName = room.room_name ? room.room_name.toLowerCase() : '';
+        return roomNumber.includes(searchTerm) || roomName.includes(searchTerm);
+    });
+
+    // Populate dropdown
+    dropdown.innerHTML = '';
+
+    if (filtered.length === 0) {
+        dropdown.innerHTML = '<div class="px-4 py-3 text-sm text-gray-500">Keine Räume gefunden</div>';
+    } else {
+        filtered.forEach(room => {
+            const isFree = customHourAvailableRooms.some(r => r.room_number === room.room_number);
+            const item = document.createElement('div');
+            item.className = 'px-4 py-3 hover:bg-primary/10 cursor-pointer transition-colors text-sm flex items-center justify-between';
+
+            item.innerHTML = `
+                <div class="flex items-center space-x-2 flex-1">
+                    <span class="w-2 h-2 rounded-full ${isFree ? 'bg-green-500' : 'bg-red-500'}"></span>
+                    <div>
+                        <div class="font-medium text-gray-900">${room.room_number}</div>
+                        ${room.room_name ? `<div class="text-xs text-gray-600">${room.room_name}</div>` : ''}
+                    </div>
+                </div>
+                <span class="text-xs ${isFree ? 'text-green-600' : 'text-red-600'} font-medium">
+                    ${isFree ? 'Frei' : 'Belegt'}
+                </span>
+            `;
+
+            item.onclick = () => selectCustomHourRoom(room);
+            dropdown.appendChild(item);
+        });
+    }
+
+    dropdown.classList.remove('hidden');
+}
+
+/**
+ * Select a room
+ */
+function selectCustomHourRoom(room) {
+    const searchInput = document.getElementById('customHourRoomSearch');
+    const hiddenInput = document.getElementById('customHourRoom');
+    const dropdown = document.getElementById('customHourRoomDropdown');
+
+    if (searchInput && hiddenInput) {
+        const displayText = room.room_name
+            ? `${room.room_number} - ${room.room_name}`
+            : room.room_number;
+
+        searchInput.value = displayText;
+        hiddenInput.value = room.room_number;
+
+        if (dropdown) dropdown.classList.add('hidden');
     }
 }
 
@@ -623,10 +743,17 @@ async function createUpdateCustomHourModal(event) {
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             Raum
                         </label>
-                        <select id="updateCustomHourRoom"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary disabled:bg-gray-100 disabled:cursor-not-allowed">
-                            <option value="">Raum auswählen...</option>
-                        </select>
+                        <div class="relative">
+                            <input type="text" id="updateCustomHourRoomSearch" autocomplete="off"
+                                   oninput="filterUpdateCustomHourRooms()"
+                                   onfocus="showUpdateCustomHourRoomDropdown()"
+                                   placeholder="Raum suchen..."
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary">
+                            <input type="hidden" id="updateCustomHourRoom" value="">
+                            <div id="updateCustomHourRoomDropdown" class="hidden absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                                <!-- Room items will be populated dynamically -->
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Custom Location -->
@@ -675,6 +802,43 @@ async function createUpdateCustomHourModal(event) {
         endTimeInput.addEventListener('change', () => loadRoomsForUpdateCustomHour(currentRoom));
     }
 
+    // Initialize Flatpickr for date and time inputs
+    if (typeof flatpickr !== 'undefined') {
+        // Date picker
+        flatpickr('#updateCustomHourDate', {
+            dateFormat: 'Y-m-d',
+            minDate: 'today',
+            locale: 'de',
+            onChange: function() {
+                loadRoomsForUpdateCustomHour(currentRoom);
+            }
+        });
+
+        // Start time picker
+        flatpickr('#updateCustomHourStartTime', {
+            enableTime: true,
+            noCalendar: true,
+            dateFormat: 'H:i',
+            time_24hr: true,
+            minuteIncrement: 15,
+            onChange: function() {
+                loadRoomsForUpdateCustomHour(currentRoom);
+            }
+        });
+
+        // End time picker
+        flatpickr('#updateCustomHourEndTime', {
+            enableTime: true,
+            noCalendar: true,
+            dateFormat: 'H:i',
+            time_24hr: true,
+            minuteIncrement: 15,
+            onChange: function() {
+                loadRoomsForUpdateCustomHour(currentRoom);
+            }
+        });
+    }
+
     // Populate with event data
     await populateUpdateCustomHourForm(event);
 }
@@ -720,8 +884,15 @@ async function populateUpdateCustomHourForm(event) {
         // Load available rooms first, passing the current room so it's always included
         await loadRoomsForUpdateCustomHour(event.room);
 
-        // Then set the selected room
-        document.getElementById('updateCustomHourRoom').value = event.room;
+        // Then set the selected room in both fields
+        const selectedRoom = updateCustomHourAllRooms.find(r => r.room_number === event.room);
+        if (selectedRoom) {
+            const displayText = selectedRoom.room_name
+                ? `${selectedRoom.room_number} - ${selectedRoom.room_name}`
+                : selectedRoom.room_number;
+            document.getElementById('updateCustomHourRoomSearch').value = displayText;
+            document.getElementById('updateCustomHourRoom').value = event.room;
+        }
     }
 
     // Hide error
@@ -746,93 +917,141 @@ function toggleUpdateLocationType(type) {
     }
 }
 
+// Global storage for update custom hour rooms
+let updateCustomHourAvailableRooms = [];
+let updateCustomHourAllRooms = [];
+let updateCustomHourCurrentRoom = null;
+
 /**
  * Load rooms for update custom hour dropdown
  * @param {string} currentRoom - The room currently assigned to this custom hour (to ensure it's always in the list)
  */
 async function loadRoomsForUpdateCustomHour(currentRoom = null) {
-    const select = document.getElementById('updateCustomHourRoom');
-    if (!select) return;
+    const searchInput = document.getElementById('updateCustomHourRoomSearch');
+    const hiddenInput = document.getElementById('updateCustomHourRoom');
+    if (!searchInput) return;
+
+    updateCustomHourCurrentRoom = currentRoom;
 
     const dateInput = document.getElementById('updateCustomHourDate');
     const startTimeInput = document.getElementById('updateCustomHourStartTime');
     const endTimeInput = document.getElementById('updateCustomHourEndTime');
 
     if (!dateInput?.value || !startTimeInput?.value || !endTimeInput?.value) {
-        select.disabled = true;
-        select.innerHTML = '<option value="">Bitte zuerst Datum und Zeiten auswählen...</option>';
+        searchInput.disabled = true;
+        searchInput.placeholder = 'Bitte zuerst Datum und Zeiten auswählen...';
+        searchInput.value = '';
+        hiddenInput.value = '';
+        updateCustomHourAvailableRooms = [];
         return;
     }
 
-    select.disabled = false;
-    const currentValue = select.value || currentRoom; // Remember current selection
-    select.innerHTML = '<option value="">Raum auswählen...</option>';
+    searchInput.disabled = false;
+    searchInput.placeholder = 'Raum suchen...';
 
     const startTime = `${dateInput.value}T${startTimeInput.value}:00`;
     const endTime = `${dateInput.value}T${endTimeInput.value}:00`;
 
     try {
-        const response = await RoomAPI.getFreeRooms(startTime, endTime);
-        let rooms = response.free_rooms || [];
+        const [freeResponse, allRooms] = await Promise.all([
+            RoomAPI.getFreeRooms(startTime, endTime),
+            RoomAPI.getAllRooms()
+        ]);
 
-        // If we have a current room and it's not in the free rooms list, add it
-        // This ensures the currently booked room is always available in the dropdown
-        if (currentRoom && !rooms.some(r => r.room_number === currentRoom)) {
-            try {
-                const allRooms = await RoomAPI.getAllRooms();
-                const currentRoomData = allRooms.find(r => r.room_number === currentRoom);
-                if (currentRoomData) {
-                    // Add current room at the beginning with a note
-                    rooms = [currentRoomData, ...rooms];
-                }
-            } catch (error) {
-                console.error('Error loading current room data:', error);
-            }
-        }
+        updateCustomHourAvailableRooms = freeResponse.free_rooms || [];
+        updateCustomHourAllRooms = allRooms || [];
 
-        if (rooms.length === 0) {
-            const option = document.createElement('option');
-            option.value = '';
-            option.textContent = 'Keine freien Räume verfügbar';
-            option.disabled = true;
-            select.appendChild(option);
-        } else {
-            rooms.forEach(room => {
-                const option = document.createElement('option');
-                option.value = room.room_number;
-                // Mark the current room if it's not in the free rooms list
-                const isCurrent = room.room_number === currentRoom;
-                const isInFreeRooms = response.free_rooms?.some(r => r.room_number === room.room_number);
-                const label = isCurrent && !isInFreeRooms
-                    ? `${room.room_number}${room.room_name ? ' - ' + room.room_name : ''} (aktuell gebucht)`
-                    : `${room.room_number}${room.room_name ? ' - ' + room.room_name : ''}`;
-                option.textContent = label;
-                select.appendChild(option);
-            });
-
-            // Restore previous selection if still available
-            if (currentValue && rooms.some(r => r.room_number === currentValue)) {
-                select.value = currentValue;
-            }
-        }
+        console.log('✅ Rooms loaded for update custom hour:', {
+            free: updateCustomHourAvailableRooms.length,
+            total: updateCustomHourAllRooms.length,
+            current: currentRoom
+        });
     } catch (error) {
-        console.error('Error loading free rooms:', error);
-        try {
-            const rooms = await RoomAPI.getAllRooms();
-            rooms.forEach(room => {
-                const option = document.createElement('option');
-                option.value = room.room_number;
-                option.textContent = `${room.room_number}${room.room_name ? ' - ' + room.room_name : ''}`;
-                select.appendChild(option);
-            });
+        console.error('Error loading rooms:', error);
+        updateCustomHourAvailableRooms = [];
+        updateCustomHourAllRooms = [];
+    }
+}
 
-            if (currentValue) {
-                select.value = currentValue;
-            }
-        } catch (error2) {
-            console.error('Error loading all rooms:', error2);
-            select.innerHTML = '<option value="">Fehler beim Laden der Räume</option>';
-        }
+/**
+ * Show update custom hour room dropdown
+ */
+function showUpdateCustomHourRoomDropdown() {
+    const dropdown = document.getElementById('updateCustomHourRoomDropdown');
+    if (dropdown && updateCustomHourAllRooms.length > 0) {
+        filterUpdateCustomHourRooms();
+        dropdown.classList.remove('hidden');
+    }
+}
+
+/**
+ * Filter rooms for update based on search input
+ */
+function filterUpdateCustomHourRooms() {
+    const searchInput = document.getElementById('updateCustomHourRoomSearch');
+    const dropdown = document.getElementById('updateCustomHourRoomDropdown');
+
+    if (!searchInput || !dropdown) return;
+
+    const searchTerm = searchInput.value.toLowerCase();
+
+    // Filter rooms
+    const filtered = updateCustomHourAllRooms.filter(room => {
+        const roomNumber = room.room_number.toLowerCase();
+        const roomName = room.room_name ? room.room_name.toLowerCase() : '';
+        return roomNumber.includes(searchTerm) || roomName.includes(searchTerm);
+    });
+
+    // Populate dropdown
+    dropdown.innerHTML = '';
+
+    if (filtered.length === 0) {
+        dropdown.innerHTML = '<div class="px-4 py-3 text-sm text-gray-500">Keine Räume gefunden</div>';
+    } else {
+        filtered.forEach(room => {
+            const isFree = updateCustomHourAvailableRooms.some(r => r.room_number === room.room_number);
+            const isCurrent = room.room_number === updateCustomHourCurrentRoom;
+            const item = document.createElement('div');
+            item.className = 'px-4 py-3 hover:bg-primary/10 cursor-pointer transition-colors text-sm flex items-center justify-between';
+
+            item.innerHTML = `
+                <div class="flex items-center space-x-2 flex-1">
+                    <span class="w-2 h-2 rounded-full ${isFree ? 'bg-green-500' : 'bg-red-500'}"></span>
+                    <div>
+                        <div class="font-medium text-gray-900">${room.room_number}${isCurrent ? ' (aktuell)' : ''}</div>
+                        ${room.room_name ? `<div class="text-xs text-gray-600">${room.room_name}</div>` : ''}
+                    </div>
+                </div>
+                <span class="text-xs ${isFree ? 'text-green-600' : 'text-red-600'} font-medium">
+                    ${isFree ? 'Frei' : 'Belegt'}
+                </span>
+            `;
+
+            item.onclick = () => selectUpdateCustomHourRoom(room);
+            dropdown.appendChild(item);
+        });
+    }
+
+    dropdown.classList.remove('hidden');
+}
+
+/**
+ * Select a room for update
+ */
+function selectUpdateCustomHourRoom(room) {
+    const searchInput = document.getElementById('updateCustomHourRoomSearch');
+    const hiddenInput = document.getElementById('updateCustomHourRoom');
+    const dropdown = document.getElementById('updateCustomHourRoomDropdown');
+
+    if (searchInput && hiddenInput) {
+        const displayText = room.room_name
+            ? `${room.room_number} - ${room.room_name}`
+            : room.room_number;
+
+        searchInput.value = displayText;
+        hiddenInput.value = room.room_number;
+
+        if (dropdown) dropdown.classList.add('hidden');
     }
 }
 
@@ -1063,10 +1282,17 @@ function createAddExamModal() {
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             Raum (optional)
                         </label>
-                        <select id="examRoom"
-                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary">
-                            <option value="">Raum auswählen...</option>
-                        </select>
+                        <div class="relative">
+                            <input type="text" id="examRoomSearch" autocomplete="off"
+                                   oninput="filterExamRooms()"
+                                   onfocus="showExamRoomDropdown()"
+                                   placeholder="Raum suchen..."
+                                   class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary">
+                            <input type="hidden" id="examRoom" value="">
+                            <div id="examRoomDropdown" class="hidden absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                                <!-- Room items will be populated dynamically -->
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Actions -->
@@ -1090,29 +1316,125 @@ function createAddExamModal() {
     // Load rooms and courses for selection
     loadRoomsForExam();
     loadCoursesForExam();
+
+    // Initialize Flatpickr for date and time inputs
+    if (typeof flatpickr !== 'undefined') {
+        // Date picker
+        flatpickr('#examDate', {
+            dateFormat: 'Y-m-d',
+            minDate: 'today',
+            locale: 'de'
+        });
+
+        // Time picker
+        flatpickr('#examTime', {
+            enableTime: true,
+            noCalendar: true,
+            dateFormat: 'H:i',
+            time_24hr: true,
+            minuteIncrement: 15
+        });
+    }
 }
+
+// Global storage for exam rooms
+let examAllRooms = [];
 
 /**
  * Load rooms for exam dropdown
  */
 async function loadRoomsForExam() {
     try {
-        const rooms = await RoomAPI.getAllRooms();
-        const select = document.getElementById('examRoom');
+        examAllRooms = await RoomAPI.getAllRooms();
 
-        rooms.forEach(room => {
-            const option = document.createElement('option');
-            option.value = room.room_number;
-            option.textContent = `${room.room_number}${room.room_name ? ' - ' + room.room_name : ''}`;
-            select.appendChild(option);
-
-            // Automatically select Audimax if available
-            if (room.room_name && room.room_name.toLowerCase() === 'audimax') {
-                option.selected = true;
+        // Automatically select Audimax if available
+        const audimax = examAllRooms.find(r => r.room_name && r.room_name.toLowerCase() === 'audimax');
+        if (audimax) {
+            const searchInput = document.getElementById('examRoomSearch');
+            const hiddenInput = document.getElementById('examRoom');
+            if (searchInput && hiddenInput) {
+                const displayText = `${audimax.room_number} - ${audimax.room_name}`;
+                searchInput.value = displayText;
+                hiddenInput.value = audimax.room_number;
             }
-        });
+        }
+
+        console.log('✅ Rooms loaded for exam:', examAllRooms.length);
     } catch (error) {
         console.error('Error loading rooms:', error);
+        examAllRooms = [];
+    }
+}
+
+/**
+ * Show exam room dropdown
+ */
+function showExamRoomDropdown() {
+    const dropdown = document.getElementById('examRoomDropdown');
+    if (dropdown && examAllRooms.length > 0) {
+        filterExamRooms();
+        dropdown.classList.remove('hidden');
+    }
+}
+
+/**
+ * Filter rooms for exam based on search input
+ */
+function filterExamRooms() {
+    const searchInput = document.getElementById('examRoomSearch');
+    const dropdown = document.getElementById('examRoomDropdown');
+
+    if (!searchInput || !dropdown) return;
+
+    const searchTerm = searchInput.value.toLowerCase();
+
+    // Filter rooms
+    const filtered = examAllRooms.filter(room => {
+        const roomNumber = room.room_number.toLowerCase();
+        const roomName = room.room_name ? room.room_name.toLowerCase() : '';
+        return roomNumber.includes(searchTerm) || roomName.includes(searchTerm);
+    });
+
+    // Populate dropdown
+    dropdown.innerHTML = '';
+
+    if (filtered.length === 0) {
+        dropdown.innerHTML = '<div class="px-4 py-3 text-sm text-gray-500">Keine Räume gefunden</div>';
+    } else {
+        filtered.forEach(room => {
+            const item = document.createElement('div');
+            item.className = 'px-4 py-3 hover:bg-primary/10 cursor-pointer transition-colors text-sm';
+
+            item.innerHTML = `
+                <div class="font-medium text-gray-900">${room.room_number}</div>
+                ${room.room_name ? `<div class="text-xs text-gray-600">${room.room_name}</div>` : ''}
+            `;
+
+            item.onclick = () => selectExamRoom(room);
+            dropdown.appendChild(item);
+        });
+    }
+
+    dropdown.classList.remove('hidden');
+}
+
+/**
+ * Select a room for exam
+ */
+function selectExamRoom(room) {
+    const searchInput = document.getElementById('examRoomSearch');
+    const hiddenInput = document.getElementById('examRoom');
+    const dropdown = document.getElementById('examRoomDropdown');
+
+    if (searchInput && hiddenInput) {
+        const displayText = room.room_name
+            ? `${room.room_number} - ${room.room_name}`
+            : room.room_number;
+
+        searchInput.value = displayText;
+        hiddenInput.value = room.room_number;
+
+        if (dropdown) dropdown.classList.add('hidden');
     }
 }
 
@@ -1693,3 +2015,35 @@ function closeZenturieSelectionModal() {
         document.body.style.overflow = 'auto';
     }
 }
+
+/**
+ * Global click-outside handler for room dropdowns
+ */
+document.addEventListener('click', function(event) {
+    // Custom Hour Room Dropdown
+    const customHourDropdown = document.getElementById('customHourRoomDropdown');
+    const customHourSearch = document.getElementById('customHourRoomSearch');
+    if (customHourDropdown && customHourSearch) {
+        if (!customHourDropdown.contains(event.target) && !customHourSearch.contains(event.target)) {
+            customHourDropdown.classList.add('hidden');
+        }
+    }
+
+    // Update Custom Hour Room Dropdown
+    const updateCustomHourDropdown = document.getElementById('updateCustomHourRoomDropdown');
+    const updateCustomHourSearch = document.getElementById('updateCustomHourRoomSearch');
+    if (updateCustomHourDropdown && updateCustomHourSearch) {
+        if (!updateCustomHourDropdown.contains(event.target) && !updateCustomHourSearch.contains(event.target)) {
+            updateCustomHourDropdown.classList.add('hidden');
+        }
+    }
+
+    // Exam Room Dropdown
+    const examRoomDropdown = document.getElementById('examRoomDropdown');
+    const examRoomSearch = document.getElementById('examRoomSearch');
+    if (examRoomDropdown && examRoomSearch) {
+        if (!examRoomDropdown.contains(event.target) && !examRoomSearch.contains(event.target)) {
+            examRoomDropdown.classList.add('hidden');
+        }
+    }
+});
