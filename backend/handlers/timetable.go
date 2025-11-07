@@ -416,7 +416,7 @@ func AddFriend(c *fiber.Ctx) error {
 	// Check if trying to add self
 	if friend.ID == user.ID {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"detail": "Sie können sich nicht selbst als Freund hinzufügen",
+			"detail": "Du kannst dich nicht selbst als Freund hinzufügen",
 		})
 	}
 
@@ -626,7 +626,7 @@ func UpdateCustomHour(c *fiber.Ctx) error {
 	var customHour models.CustomHour
 	if err := config.DB.Where("id = ? AND user_id = ?", req.CustomHourID, user.ID).First(&customHour).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
-			"detail": "Custom Hour nicht gefunden oder Sie haben keine Berechtigung",
+			"detail": "Custom Hour nicht gefunden oder du hast keine Berechtigung",
 		})
 	}
 
@@ -696,7 +696,7 @@ func AddExam(c *fiber.Ctx) error {
 
 	if result.Error == nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"detail": "Sie haben diese Klausur bereits eingetragen",
+			"detail": "Du hast diese Klausur bereits eingetragen",
 		})
 	}
 
