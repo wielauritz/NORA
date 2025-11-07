@@ -753,7 +753,8 @@ func findOrCreateRoom(location string) (*uint, string) {
 }
 
 // parseRoomNumber extracts room number from location string
-// Examples: "A104" -> "A104", "EDV-A102" -> "A102", "A 23 a" -> "A23A"
+// Examples: "A104" -> "A104", "EDV-A102" -> "A102", "A 001" -> "A001"
+// Format: Letter + exactly 3 digits (4 characters total)
 // Stops at: backslash, newline, or other invalid characters
 func parseRoomNumber(location string) string {
 	// Trim initial whitespace
@@ -773,11 +774,11 @@ func parseRoomNumber(location string) string {
 		}
 	}
 
-	// Remove spaces (handles "A 23 a" -> "A23a")
+	// Remove spaces (handles "A 001" -> "A001")
 	location = strings.ReplaceAll(location, " ", "")
 	location = strings.TrimSpace(location)
 
-	// Extract only valid room number: Letter + 2-3 digits + optional trailing letter
+	// Extract only valid room number: Letter + exactly 3 digits (4 characters total)
 	var roomNumber strings.Builder
 	digitCount := 0
 
@@ -790,23 +791,23 @@ func parseRoomNumber(location string) string {
 				return "" // Invalid start
 			}
 		} else if c >= '0' && c <= '9' {
-			// Accept digits (2-3 digits expected)
+			// Accept digits (exactly 3 expected)
 			roomNumber.WriteRune(c)
 			digitCount++
-		} else if digitCount >= 2 && ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) {
-			// Optional trailing letter (only after at least 2 digits, e.g., A23a)
-			roomNumber.WriteRune(c)
-			break // Only one trailing letter
+			// Stop after 3 digits - no trailing letters allowed
+			if digitCount == 3 {
+				break
+			}
 		} else {
-			// Stop at any other character (punctuation, symbols, etc.)
+			// Stop at any other character (including letters after the initial letter)
 			break
 		}
 	}
 
 	result := strings.ToUpper(roomNumber.String())
 
-	// Validate: Must have at least 3 characters (letter + 2 digits minimum)
-	if len(result) >= 3 && digitCount >= 2 {
+	// Validate: Must have exactly 4 characters (letter + 3 digits)
+	if len(result) == 4 && digitCount == 3 {
 		return result
 	}
 

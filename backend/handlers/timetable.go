@@ -491,7 +491,7 @@ func RemoveFriend(c *fiber.Ctx) error {
 }
 
 // ViewZenturieTimetable returns timetable for a specific zenturie (public, no auth)
-// GET /v1/view?zenturie=I24c&date=2025-01-20
+// GET /v1/view?zenturie=I24c&date=2025-01-20&end=2025-01-22
 func ViewZenturieTimetable(c *fiber.Ctx) error {
 	zenturieName := c.Query("zenturie")
 	dateStr := c.Query("date")
@@ -510,6 +510,30 @@ func ViewZenturieTimetable(c *fiber.Ctx) error {
 		})
 	}
 
+	// Check if end parameter is provided (for date range queries)
+	endStr := c.Query("end")
+	var endDate time.Time
+
+	if endStr != "" {
+		// Parse end date in UTC
+		endDate, err = time.Parse("2006-01-02", endStr)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"detail": "Ungültiges End-Datumsformat. Nutze YYYY-MM-DD",
+			})
+		}
+
+		// Validate that end date is not before start date
+		if endDate.Before(eventDate) {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"detail": "End-Datum darf nicht vor Start-Datum liegen",
+			})
+		}
+	} else {
+		// No end parameter: use start date as end date
+		endDate = eventDate
+	}
+
 	// Find zenturie
 	var zenturie models.Zenturie
 	if err := config.DB.Where("name = ?", zenturieName).First(&zenturie).Error; err != nil {
@@ -520,7 +544,7 @@ func ViewZenturieTimetable(c *fiber.Ctx) error {
 
 	// Time range in UTC
 	startOfDay := time.Date(eventDate.Year(), eventDate.Month(), eventDate.Day(), 0, 0, 0, 0, time.UTC)
-	endOfDay := time.Date(eventDate.Year(), eventDate.Month(), eventDate.Day(), 23, 59, 59, 999999999, time.UTC)
+	endOfDay := time.Date(endDate.Year(), endDate.Month(), endDate.Day(), 23, 59, 59, 999999999, time.UTC)
 
 	// Get timetables
 	var timetables []models.Timetable
