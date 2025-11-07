@@ -150,7 +150,7 @@ function showCodeVerificationForm(email) {
                     id="resendCodeBtn"
                     class="text-sm text-primary hover:text-secondary transition-colors font-medium"
                 >
-                    Code erneut senden
+                    E-Mail erneut senden
                 </button>
                 <p id="resendTimer" class="text-xs text-gray-500 mt-1 hidden"></p>
             </div>

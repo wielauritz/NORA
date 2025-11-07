@@ -42,6 +42,23 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
+
+        code {
+            background-color: rgba(60, 210, 255, 0.1);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .move-up {
+            margin-top: -2rem;
+        }
+
+        @media screen and (max-width: 768px) {
+            .move-up {
+                margin-top: 0;
+            }
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-800 min-h-screen">
@@ -63,26 +80,31 @@
     </nav>
 
     <!-- Main Content -->
-    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style="padding-top: 6rem; padding-bottom: 3rem;">
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style="padding-top: 6rem; padding-bottom: 3rem;">
 
         <!-- Header -->
-        <div class="mb-8">
-            <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+        <div style="margin-bottom: 0 !important; padding: 0 !important;">
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2 mt-2" style="margin-top: 1.5rem !important;">
                 <span class="gradient-text">Impressum</span>
             </h1>
-            <p class="text-gray-600 dark:text-gray-400">Angaben gemäß § 5 TMG / § 18 MStV</p>
+            <p class="text-gray-600 dark:text-gray-400">Angaben gemäß § 5 DDG / § 18 MStV</p>
         </div>
 
         <!-- Content Card -->
-        <div class="glass-effect dark:bg-slate-800/95 rounded-2xl p-8 space-y-6">
+        <div class="glass-effect dark:bg-slate-800/95 rounded-2xl p-8 space-y-6 move-up">
 
             <section>
-                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">WWWIEBUSCH – NORA Team</h2>
+                <h2 class="text-2xl font-semibold text-gray-900 dark:text-white">NORA Team</h2>
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-4">Studierende der NORDAKADEMIE, Hochschule der Wirtschaft, Elmshorn</h3>
+                <h5 class="text-md font-bold text-gray-900 dark:text-white mb-4">vertreten und betrieben durch:</h5>
+
                 <p class="text-gray-700 dark:text-gray-300">
+                    <a href="//wwwiebusch.com" class="text-primary hover:text-secondary transition-colors">WWWIEBUSCH</a><br>
                     Lauritz Wiebusch<br>
                     Luhner Weg 19<br>
                     27383 Scheeßel<br>
-                    Niedersachsen, Deutschland
+                    Niedersachsen<br>
+                    Deutschland
                 </p>
             </section>
 
@@ -100,7 +122,9 @@
                 <p class="text-gray-700 dark:text-gray-300">
                     Lauritz Wiebusch<br>
                     Luhner Weg 19<br>
-                    27383 Scheeßel (DE)
+                    27383 Scheeßel<br>
+                    Niedersachsen<br>
+                    Deutschland
                 </p>
             </section>
 
@@ -129,8 +153,26 @@
 
             <hr class="border-gray-200 dark:border-slate-700">
 
-            <footer class="text-sm text-gray-500 dark:text-gray-400">
-                <p>Stand: Oktober 2025 • Kontakt: <a href="mailto:team@nora-nak.de" class="text-primary hover:text-secondary transition-colors">team@nora-nak.de</a></p>
+            <section id="aenderungen">
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">Änderungen dieser Seite</h2>
+                <p class="text-gray-700 dark:text-gray-300">
+                    Wir behalten uns vor, dieses Impressum zu aktualisieren, um sie an geänderte Rechtslage oder Änderungen unserer Dienste anzupassen. Die jeweils aktuelle Fassung finden Sie stets auf dieser Seite.
+                </p>
+                <p class="text-sm text-gray-500 dark:text-gray-400 mt-4">
+                    <strong>Stand:</strong> November 2025
+                </p>
+            </section>
+
+            <hr class="border-gray-200 dark:border-slate-700">
+
+            <footer class="text-sm text-gray-500 dark:text-gray-400 text-center">
+                <p class="mb-2">
+                    Bei Fragen zum Impressum erreichen Sie uns unter:<br>
+                    <a href="mailto:team@nora-nak.de" class="text-primary hover:text-secondary transition-colors">team@nora-nak.de</a>
+                </p>
+                <p class="text-xs">
+                    API: <code>https://api.nora-nak.de</code> • Website: <code>https://nora-nak.de</code>
+                </p>
             </footer>
 
         </div>

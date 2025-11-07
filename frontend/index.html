@@ -3,115 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Login - Stundenplan Dashboard</title>
+    <title>NORA - Nordakademie Organizer & Room Assistant</title>
     <script src="js/dark-mode.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-    theme: {
-                extend: {
-                    colors: {
-                        primary: '#3cd2ff',
-                        secondary: '#003a79',
-                        accent: '#ffa064',
-                    }
-                }
-            }
-        }
-    </script>
-    <link rel="stylesheet" href="css/common.css">
-</head>
-<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
-
-    <!-- Login Container -->
-    <div class="w-full max-w-md">
-
-        <!-- Logo/Header -->
-        <div class="text-center mb-8">
-            <img src="https://cdn.nora-nak.de/img/logo.png" alt="NORA Logo" class="h-20 mx-auto mb-4">
-            <p class="text-gray-600 text-sm">Melde dich an oder erstelle einen Account</p>
-        </div>
-
-        <!-- Login Form -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-            <form id="loginForm" class="space-y-5">
-
-                <!-- E-Mail Input -->
-                <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
-                        E-Mail-Adresse
-                    </label>
-                    <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        required
-                        autocomplete="email"
-                        class="input-focus block w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none transition-all bg-white"
-                        placeholder="vorname.nachname@nordakademie.de"
-                    >
-                </div>
-
-                <!-- Passwort Input -->
-                <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
-                        Passwort
-                    </label>
-                    <input
-                        type="password"
-                        id="password"
-                        name="password"
-                        required
-                        autocomplete="current-password"
-                        minlength="6"
-                        class="input-focus block w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none transition-all bg-white"
-                        placeholder="Mindestens 6 Zeichen"
-                    >
-                </div>
-
-                <!-- Forgot Password -->
-                <div class="text-right">
-                    <a href="password-reset.html" class="text-sm font-medium text-primary hover:text-secondary transition-colors">
-                        Passwort vergessen?
-                    </a>
-                </div>
-
-                <!-- Login Button -->
-                <button
-                    type="submit"
-                    class="btn-hover w-full bg-gradient-to-r from-primary to-secondary text-white py-3 px-4 rounded-lg font-medium"
-                >
-                    Anmelden
-                </button>
-
-                <!-- Info Text -->
-                <p class="text-xs text-center text-gray-500 mt-4">
-                    Neuer Account? Wird automatisch bei erster Anmeldung erstellt
-                </p>
-
-            </form>
-        </div>
-
-        <!-- Footer -->
-        <div class="text-center mt-6 text-gray-400 text-xs space-y-2">
-            <p>&copy; 2025 NORA – Nordakademie Organizer & Room Assistant</p>
-            <p class="space-x-3">
-                <a href="/impressum.html" class="hover:text-primary transition-colors">Impressum</a>
-                <span>•</span>
-                <a href="/privacy.html" class="hover:text-primary transition-colors">Datenschutz</a>
-            </p>
-        </div>
-
-    </div>
-
     <script src="js/storage-ios.js"></script>
     <script src="js/storage-manager.js"></script>
     <script src="js/persistent-storage.js"></script>
-    <script src="js/api-helper.js"></script>
-    <script src="js/auth.js"></script>
     <script src="js/app-updater.js"></script>
-    <script src="js/login.js"></script>
+    <style>
+        /* Prevent white flash in dark mode during app initialization */
+        @media (prefers-color-scheme: dark) {
+            html, body {
+                background-color: #0f172a;
+            }
+        }
 
+        /* Also support manual dark mode class (set by dark-mode.js) */
+        html.dark, html.dark body {
+            background-color: #0f172a;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        // API Base URL
+        const API_BASE_URL = 'https://api.new.nora-nak.de/v1';
+
+        (async function() {
+            try {
+                // 1. Check for content updates FIRST
+                // This may reload the page if new content is available
+                // Token is preserved in persistent storage
+                if (typeof appUpdater !== 'undefined') {
+                    await appUpdater.checkContentUpdates();
+                }
+
+                // 2. Initialize persistent storage
+                await initPersistentStorage();
+
+                // 3. Check if user has a token
+                const token = await loadTokenPersistent();
+
+                if (!token) {
+                    // No token found, redirect to login
+                    window.location.replace('login.html');
+                    return;
+                }
+
+                // 4. Validate token with server before redirecting to dashboard
+                try {
+                    const response = await fetch(`${API_BASE_URL}/user`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (response.ok) {
+                        // Token is valid, redirect to dashboard
+                        console.log('✅ Token validated, redirecting to dashboard');
+                        window.location.replace('dashboard.html');
+                    } else {
+                        // Token is invalid (401, 403, etc.), clear and redirect to login
+                        console.log('❌ Token invalid, clearing and redirecting to login');
+                        await clearTokenPersistent();
+                        window.location.replace('login.html');
+                    }
+                } catch (error) {
+                    // Network error or token validation failed
+                    console.error('❌ Token validation failed:', error);
+                    await clearTokenPersistent();
+                    window.location.replace('login.html');
+                }
+            } catch (error) {
+                console.error('Error during auth check:', error);
+                // If anything fails, redirect to login
+                window.location.replace('login.html');
+            }
+        })();
+    </script>
 </body>
 </html>

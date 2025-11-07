@@ -78,7 +78,7 @@ class AppUpdater {
      * Zeigt Update-Benachrichtigung
      */
     async showUpdateNotification(newVersion) {
-        const message = `Eine neue Version (${newVersion}) ist verfügbar! Bitte aktualisieren Sie die App im App Store.`;
+        const message = `Eine neue Version (${newVersion}) ist verfügbar! Bitte aktualisiere die App im App Store.`;
 
         // Zeige native Alert (falls verfügbar)
         if (this.isCapacitor && window.Capacitor.Plugins.Dialog) {
@@ -89,6 +89,58 @@ class AppUpdater {
         } else {
             // Fallback zu Browser-Alert
             alert(message);
+        }
+    }
+
+    /**
+     * Prüft, ob neue Content-Versionen (HTML/CSS/JS) verfügbar sind
+     * Dies ermöglicht Hot-Updates ohne App Store Update
+     */
+    async checkContentUpdates() {
+        try {
+            console.log('[AppUpdater] Checking for content updates...');
+
+            // Lade aktuelle Content-Version vom Server
+            // Verwende Timestamp um Caching zu verhindern
+            const response = await fetch(`/version.json?t=${Date.now()}`);
+
+            if (!response.ok) {
+                console.log('[AppUpdater] version.json not found, skipping content update check');
+                return;
+            }
+
+            const serverData = await response.json();
+            const serverVersion = serverData.version;
+
+            // Hole gespeicherte lokale Version
+            const localVersion = localStorage.getItem('content_version');
+
+            console.log(`[AppUpdater] Content versions - Local: ${localVersion}, Server: ${serverVersion}`);
+
+            // Wenn keine lokale Version gespeichert ist, speichere die aktuelle
+            if (!localVersion) {
+                localStorage.setItem('content_version', serverVersion);
+                console.log('[AppUpdater] First run, saved content version:', serverVersion);
+                return;
+            }
+
+            // Wenn Versionen unterschiedlich sind, lade neue Contents
+            if (localVersion !== serverVersion) {
+                console.log(`[AppUpdater] New content version available: ${serverVersion}`);
+                console.log('[AppUpdater] Reloading app to fetch new content...');
+
+                // Speichere neue Version BEVOR reload
+                localStorage.setItem('content_version', serverVersion);
+
+                // Hard reload (ohne Cache) um neue Contents zu laden
+                // Token bleibt erhalten (in persistent storage)
+                window.location.reload(true);
+            } else {
+                console.log('[AppUpdater] Content is up to date');
+            }
+        } catch (error) {
+            console.error('[AppUpdater] Content update check failed:', error);
+            // Bei Fehler nicht reloaden, sondern normal weitermachen
         }
     }
 

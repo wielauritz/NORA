@@ -380,10 +380,13 @@ function renderTodaySchedule() {
                                 ${event.professor}
                             </span>
                         ` : ''}
-                        ${event.description ? `
-                            <span class="text-xs text-gray-500">${nl2br(event.description)}</span>
-                        ` : ''}
                     </div>
+                    ${(() => {
+                        const filteredDesc = filterDescription(event.description);
+                        return filteredDesc ? `
+                            <div class="mt-2 text-xs text-gray-500 dark:text-gray-400" style="white-space: pre-line;">${filteredDesc}</div>
+                        ` : '';
+                    })()}
                 </div>
                 ${isActive ? `
                     <span class="text-xs px-3 py-1 bg-green-100 text-green-700 rounded-full font-medium">Aktiv</span>
@@ -924,7 +927,7 @@ function showEventDetails(event) {
                     const filteredDesc = filterDescription(event.description);
                     return filteredDesc ? `
                         <div class="mt-4 p-3 bg-gray-50 dark:bg-slate-700 rounded-lg">
-                            <p class="text-sm text-gray-700 dark:text-gray-300">${nl2br(filteredDesc)}</p>
+                            <p class="text-sm text-gray-700 dark:text-gray-300" style="white-space: pre-line;">${filteredDesc}</p>
                         </div>
                     ` : '';
                 })() : ''}

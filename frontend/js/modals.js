@@ -1474,14 +1474,20 @@ async function createZenturieSelectionModal() {
                 <form id="zenturieForm" onsubmit="submitZenturieSelection(event)" class="space-y-4">
 
                     <!-- Zenturie Selection -->
-                    <div>
+                    <div class="relative">
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             Zenturie *
                         </label>
-                        <select id="zenturieSelect" required
-                                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary">
-                            <option value="">Zenturie auswählen...</option>
-                        </select>
+                        <input type="text" id="zenturieSelectInput" required
+                               autocomplete="off"
+                               placeholder="z.B. I25a"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary"
+                               oninput="filterModalZenturien()"
+                               onfocus="showModalZenturieDropdown()">
+                        <div id="modalZenturieDropdown" class="hidden absolute z-[200] w-full mt-1 bg-white border border-gray-300 rounded-xl shadow-lg max-h-40 overflow-y-auto">
+                            <!-- Dropdown items will be populated dynamically -->
+                        </div>
+                        <input type="hidden" id="selectedModalZenturieValue" value="">
                     </div>
 
                     <!-- Info Box -->
@@ -1512,22 +1518,16 @@ async function createZenturieSelectionModal() {
     await loadZenturienForSelection();
 }
 
+// Global variable for modal zenturien
+let modalZenturien = [];
+
 /**
  * Load Zenturien for selection dropdown
  */
 async function loadZenturienForSelection() {
     try {
-        const zenturien = await UserAPI.getAllZenturien();
-        const select = document.getElementById('zenturieSelect');
-
-        if (!select) return;
-
-        zenturien.forEach(z => {
-            const option = document.createElement('option');
-            option.value = z.zenturie;
-            option.textContent = `${z.zenturie}${z.year ? ' (Jahrgang ' + z.year + ')' : ''}`;
-            select.appendChild(option);
-        });
+        modalZenturien = await UserAPI.getAllZenturien();
+        console.log('✅ Zenturien loaded for modal:', modalZenturien.length);
     } catch (error) {
         console.error('Error loading Zenturien:', error);
         const errorDiv = document.getElementById('zenturieError');
@@ -1536,8 +1536,99 @@ async function loadZenturienForSelection() {
             errorText.textContent = 'Fehler beim Laden der Zenturien';
             errorDiv.classList.remove('hidden');
         }
+        modalZenturien = [];
     }
 }
+
+/**
+ * Show modal zenturie dropdown
+ */
+function showModalZenturieDropdown() {
+    const dropdown = document.getElementById('modalZenturieDropdown');
+    if (dropdown) {
+        // Populate with all zenturien initially
+        filterModalZenturien();
+        dropdown.classList.remove('hidden');
+    }
+}
+
+/**
+ * Filter zenturien in modal based on input
+ */
+function filterModalZenturien() {
+    const input = document.getElementById('zenturieSelectInput');
+    const dropdown = document.getElementById('modalZenturieDropdown');
+
+    if (!input || !dropdown) return;
+
+    // Extract only the zenturie name (before " (Jahrgang")
+    let searchTerm = input.value;
+    const jahrgangIndex = searchTerm.indexOf(' (Jahrgang');
+    if (jahrgangIndex !== -1) {
+        searchTerm = searchTerm.substring(0, jahrgangIndex);
+    }
+    searchTerm = searchTerm.toLowerCase().trim();
+
+    // Filter zenturien - only match against zenturie name, not display text
+    const filtered = modalZenturien.filter(zenturie => {
+        return zenturie.zenturie.toLowerCase().includes(searchTerm);
+    });
+
+    // Populate dropdown
+    dropdown.innerHTML = '';
+
+    if (filtered.length === 0) {
+        dropdown.innerHTML = '<div class="px-4 py-3 text-sm text-gray-500">Keine Zenturien gefunden</div>';
+    } else {
+        filtered.forEach(zenturie => {
+            const item = document.createElement('div');
+            item.className = 'px-4 py-3 hover:bg-primary/10 cursor-pointer transition-colors text-sm';
+
+            const displayText = zenturie.year
+                ? `${zenturie.zenturie} (Jahrgang ${zenturie.year})`
+                : zenturie.zenturie;
+
+            item.innerHTML = `
+                <div class="font-medium text-gray-900">${displayText}</div>
+            `;
+
+            item.onclick = () => selectModalZenturie(zenturie);
+            dropdown.appendChild(item);
+        });
+    }
+
+    dropdown.classList.remove('hidden');
+}
+
+/**
+ * Select a zenturie in modal and auto-fill the field
+ */
+function selectModalZenturie(zenturie) {
+    const input = document.getElementById('zenturieSelectInput');
+    const hiddenInput = document.getElementById('selectedModalZenturieValue');
+    const dropdown = document.getElementById('modalZenturieDropdown');
+
+    if (input && hiddenInput) {
+        const displayText = zenturie.year
+            ? `${zenturie.zenturie} (Jahrgang ${zenturie.year})`
+            : zenturie.zenturie;
+        input.value = displayText;
+        hiddenInput.value = zenturie.zenturie;
+
+        // Hide dropdown
+        if (dropdown) dropdown.classList.add('hidden');
+    }
+}
+
+// Hide modal zenturie dropdown when clicking outside
+document.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('modalZenturieDropdown');
+    const input = document.getElementById('zenturieSelectInput');
+
+    if (dropdown && input && !input.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.classList.add('hidden');
+    }
+});
 
 /**
  * Submit Zenturie selection form
@@ -1548,12 +1639,12 @@ async function submitZenturieSelection(event) {
     const errorDiv = document.getElementById('zenturieError');
     const errorText = document.getElementById('zenturieErrorText');
     const submitBtn = document.getElementById('submitZenturieBtn');
-    const select = document.getElementById('zenturieSelect');
+    const hiddenInput = document.getElementById('selectedModalZenturieValue');
 
     // Hide previous errors
     if (errorDiv) errorDiv.classList.add('hidden');
 
-    const zenturie = select.value;
+    const zenturie = hiddenInput.value;
 
     if (!zenturie) {
         if (errorText && errorDiv) {
