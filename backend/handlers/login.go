@@ -808,7 +808,7 @@ func getVerificationSuccessPage(sessionID string) string {
 
         <!-- Footer -->
         <div class="text-center mt-6 text-gray-400 dark:text-gray-500 text-xs space-y-2">
-            <p>&copy; 2025 NORA – Nordakademie Organizer & Room Assistant</p>
+            <p>&copy; 2025 NORA – Nordakademie Organizer & Room Assistant</p><p>Diese Seite wird nicht von der <a href="//nordakdemie.de">NORDAKADEMIE</a> betrieben.</p><br>
             <p class="space-x-3">
                 <a href="https://new.nora-nak.de/impressum.html" class="hover:text-primary transition-colors">Impressum</a>
                 <span>•</span>
@@ -892,7 +892,7 @@ func getInvalidVerificationCode() string {
 
         <!-- Footer -->
         <div class="text-center mt-6 text-gray-400 dark:text-gray-500 text-xs space-y-2">
-            <p>&copy; 2025 NORA – Nordakademie Organizer & Room Assistant</p>
+            <p>&copy; 2025 NORA – Nordakademie Organizer & Room Assistant</p><p>Diese Seite wird nicht von der <a href="//nordakdemie.de">NORDAKADEMIE</a> betrieben.</p><br>
             <p class="space-x-3">
                 <a href="https://new.nora-nak.de/impressum.html" class="hover:text-primary transition-colors">Impressum</a>
                 <span>•</span>
@@ -960,7 +960,7 @@ func getInvalidResetCode() string {
 
         <!-- Footer -->
         <div class="text-center mt-6 text-gray-400 dark:text-gray-500 text-xs space-y-2">
-            <p>&copy; 2025 NORA – Nordakademie Organizer & Room Assistant</p>
+            <p>&copy; 2025 NORA – Nordakademie Organizer & Room Assistant</p><p>Diese Seite wird nicht von der <a href="//nordakdemie.de">NORDAKADEMIE</a> betrieben.</p><br>
             <p class="space-x-3">
                 <a href="https://new.nora-nak.de/impressum.html" class="hover:text-primary transition-colors">Impressum</a>
                 <span>•</span>
@@ -1034,7 +1034,7 @@ func getExpiredVerificationPage() string {
 
         <!-- Footer -->
         <div class="text-center mt-6 text-gray-400 dark:text-gray-500 text-xs space-y-2">
-            <p>&copy; 2025 NORA – Nordakademie Organizer & Room Assistant</p>
+            <p>&copy; 2025 NORA – Nordakademie Organizer & Room Assistant</p><p>Diese Seite wird nicht von der <a href="//nordakdemie.de">NORDAKADEMIE</a> betrieben.</p><br>
             <p class="space-x-3">
                 <a href="https://new.nora-nak.de/impressum.html" class="hover:text-primary transition-colors">Impressum</a>
                 <span>•</span>
@@ -1108,7 +1108,7 @@ func getExpiredResetPage() string {
 
         <!-- Footer -->
         <div class="text-center mt-6 text-gray-400 dark:text-gray-500 text-xs space-y-2">
-            <p>&copy; 2025 NORA – Nordakademie Organizer & Room Assistant</p>
+            <p>&copy; 2025 NORA – Nordakademie Organizer & Room Assistant</p><p>Diese Seite wird nicht von der <a href="//nordakdemie.de">NORDAKADEMIE</a> betrieben.</p><br>
             <p class="space-x-3">
                 <a href="https://new.nora-nak.de/impressum.html" class="hover:text-primary transition-colors">Impressum</a>
                 <span>•</span>
@@ -1205,7 +1205,7 @@ func getHTMLResetForm(resetUUID string) string {
 
         <!-- Footer -->
         <div class="text-center mt-6 text-gray-400 dark:text-gray-500 text-xs space-y-2">
-            <p>&copy; 2025 NORA – Nordakademie Organizer & Room Assistant</p>
+            <p>&copy; 2025 NORA – Nordakademie Organizer & Room Assistant</p><p>Diese Seite wird nicht von der <a href="//nordakdemie.de">NORDAKADEMIE</a> betrieben.</p><br>
             <p class="space-x-3">
                 <a href="https://new.nora-nak.de/impressum.html" class="hover:text-primary transition-colors">Impressum</a>
                 <span>•</span>
