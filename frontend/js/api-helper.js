@@ -5,8 +5,10 @@
 
 // API Base URL - Backend Login Service
 const API_BASE_URL = 'https://api.new.nora-nak.de/v1';
+const API_BASE_URL_V2 = 'https://api.new.nora-nak.de/v2';
 // For local development, uncomment:
 // const API_BASE_URL = 'http://localhost:8000/v1';
+// const API_BASE_URL_V2 = 'http://localhost:8000/v2';
 
 /**
  * Helper: Detect if running in Capacitor
@@ -21,8 +23,11 @@ function isCapacitor() {
 
 /**
  * Helper: API Request mit Authentication (Capacitor & Browser compatible)
+ * @param {string} endpoint - API endpoint path
+ * @param {object} options - Request options
+ * @param {string} baseUrl - Override base URL (defaults to API_BASE_URL)
  */
-async function apiRequest(endpoint, options = {}) {
+async function apiRequest(endpoint, options = {}, baseUrl = API_BASE_URL) {
     const token = storage.getItem('token');
 
     const headers = {
@@ -31,7 +36,7 @@ async function apiRequest(endpoint, options = {}) {
         ...options.headers,
     };
 
-    const url = `${API_BASE_URL}${endpoint}`;
+    const url = `${baseUrl}${endpoint}`;
     const method = options.method || 'GET';
     const body = options.body;
 
@@ -372,33 +377,70 @@ const RoomAPI = {
 };
 
 /**
- * Friends APIs - NORA Timetable Service
+ * Friends APIs V2 - NORA Timetable Service
+ * Modern friend request system with request/accept/reject flow
  */
 const FriendsAPI = {
-    // Get friends list
+    // Send friend request
+    async sendRequest(friendMail) {
+        const sessionId = storage.getItem('token');
+        if (!sessionId) throw new Error('Nicht eingeloggt');
+        return await apiRequest('/friends/request', {
+            method: 'POST',
+            body: JSON.stringify({ friend_mail: friendMail }),
+        }, API_BASE_URL_V2);
+    },
+
+    // Get all friend requests (incoming and outgoing)
+    async getRequests() {
+        const sessionId = storage.getItem('token');
+        if (!sessionId) throw new Error('Nicht eingeloggt');
+        return await apiRequest('/friends/requests', {}, API_BASE_URL_V2);
+    },
+
+    // Accept friend request
+    async acceptRequest(requestId) {
+        const sessionId = storage.getItem('token');
+        if (!sessionId) throw new Error('Nicht eingeloggt');
+        return await apiRequest('/friends/accept', {
+            method: 'POST',
+            body: JSON.stringify({ request_id: requestId }),
+        }, API_BASE_URL_V2);
+    },
+
+    // Reject friend request
+    async rejectRequest(requestId) {
+        const sessionId = storage.getItem('token');
+        if (!sessionId) throw new Error('Nicht eingeloggt');
+        return await apiRequest('/friends/reject', {
+            method: 'POST',
+            body: JSON.stringify({ request_id: requestId }),
+        }, API_BASE_URL_V2);
+    },
+
+    // Cancel outgoing friend request
+    async cancelRequest(requestId) {
+        const sessionId = storage.getItem('token');
+        if (!sessionId) throw new Error('Nicht eingeloggt');
+        return await apiRequest(`/friends/request?request_id=${requestId}`, {
+            method: 'DELETE',
+        }, API_BASE_URL_V2);
+    },
+
+    // Get accepted friends list
     async getFriends() {
         const sessionId = storage.getItem('token');
         if (!sessionId) throw new Error('Nicht eingeloggt');
-        return await apiRequest(`/friends`);
+        return await apiRequest('/friends', {}, API_BASE_URL_V2);
     },
 
-    // Add friend by email
-    async addFriend(friendMail) {
-        const sessionId = storage.getItem('token');
-        if (!sessionId) throw new Error('Nicht eingeloggt');
-        return await apiRequest(`/friends`, {
-            method: 'POST',
-            body: JSON.stringify({ friend_mail: friendMail }),
-        });
-    },
-
-    // Remove friend by user ID
+    // Remove friend (delete accepted friendship)
     async removeFriend(friendUserId) {
         const sessionId = storage.getItem('token');
         if (!sessionId) throw new Error('Nicht eingeloggt');
         return await apiRequest(`/friends?friend_user_id=${friendUserId}`, {
             method: 'DELETE',
-        });
+        }, API_BASE_URL_V2);
     },
 };
 

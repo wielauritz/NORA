@@ -41,6 +41,50 @@ function renderNavbar(activePage = '') {
                             </svg>
                         </button>
 
+                        <!-- Friend Requests Notification -->
+                        <div class="relative">
+                            <button onclick="toggleFriendRequestsDropdown()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors relative" id="friendRequestsBtn" title="Freundschaftsanfragen">
+                                <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                </svg>
+                                <!-- Badge Counter -->
+                                <span id="friendRequestsBadge" class="hidden absolute -top-1 -right-1 bg-accent text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"></span>
+                            </button>
+
+                            <!-- Friend Requests Dropdown -->
+                            <div id="friendRequestsDropdown" class="hidden absolute right-0 mt-2 w-96 rounded-xl shadow-lg glass-effect dark:bg-slate-800 border border-gray-200 dark:border-slate-700 overflow-hidden z-50 max-h-96 overflow-y-auto">
+                                <!-- Loading State -->
+                                <div id="friendRequestsLoading" class="p-6 text-center">
+                                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                                    <p class="text-sm text-gray-500 mt-2">Lade Anfragen...</p>
+                                </div>
+
+                                <!-- Content -->
+                                <div id="friendRequestsContent" class="hidden">
+                                    <!-- Header -->
+                                    <div class="p-4 border-b border-gray-200 dark:border-slate-700">
+                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Freundschaftsanfragen</h3>
+                                    </div>
+
+                                    <!-- Incoming Requests -->
+                                    <div id="incomingRequestsSection">
+                                        <div class="px-4 py-2 bg-gray-50 dark:bg-slate-700/50">
+                                            <h4 class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Eingehende Anfragen</h4>
+                                        </div>
+                                        <div id="incomingRequestsList"></div>
+                                    </div>
+
+                                    <!-- Outgoing Requests -->
+                                    <div id="outgoingRequestsSection" class="border-t border-gray-200 dark:border-slate-700">
+                                        <div class="px-4 py-2 bg-gray-50 dark:bg-slate-700/50">
+                                            <h4 class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Gesendete Anfragen</h4>
+                                        </div>
+                                        <div id="outgoingRequestsList"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- User Profile with Dropdown -->
                         <div class="relative">
                             <button onclick="toggleUserDropdown()" class="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center text-white font-semibold hover:ring-2 hover:ring-primary/50 transition-all" id="userInitials" title="Profil-Menü">
@@ -244,16 +288,345 @@ function toggleUserDropdown() {
 }
 
 /**
- * Close dropdown when clicking outside
+ * Close dropdowns when clicking outside
  */
 document.addEventListener('click', function(event) {
-    const dropdown = document.getElementById('userDropdown');
+    const userDropdown = document.getElementById('userDropdown');
     const userInitials = document.getElementById('userInitials');
+    const friendRequestsDropdown = document.getElementById('friendRequestsDropdown');
+    const friendRequestsBtn = document.getElementById('friendRequestsBtn');
 
-    if (dropdown && userInitials) {
-        // Check if click is outside both the dropdown and the user initials button
-        if (!dropdown.contains(event.target) && !userInitials.contains(event.target)) {
-            dropdown.classList.add('hidden');
+    // Close user dropdown if clicking outside
+    if (userDropdown && userInitials) {
+        if (!userDropdown.contains(event.target) && !userInitials.contains(event.target)) {
+            userDropdown.classList.add('hidden');
+        }
+    }
+
+    // Close friend requests dropdown if clicking outside
+    if (friendRequestsDropdown && friendRequestsBtn) {
+        if (!friendRequestsDropdown.contains(event.target) && !friendRequestsBtn.contains(event.target)) {
+            friendRequestsDropdown.classList.add('hidden');
         }
     }
 });
+
+/**
+ * Friend Requests Management
+ */
+
+// Global state for friend requests
+let friendRequestsData = { incoming: [], outgoing: [] };
+let friendRequestsPollingInterval = null;
+
+/**
+ * Toggle friend requests dropdown
+ */
+async function toggleFriendRequestsDropdown() {
+    const dropdown = document.getElementById('friendRequestsDropdown');
+    if (!dropdown) return;
+
+    const isHidden = dropdown.classList.contains('hidden');
+
+    if (isHidden) {
+        // Show dropdown and load requests
+        dropdown.classList.remove('hidden');
+        await loadFriendRequests();
+    } else {
+        // Hide dropdown
+        dropdown.classList.add('hidden');
+    }
+}
+
+/**
+ * Load friend requests from API
+ */
+async function loadFriendRequests() {
+    const loadingEl = document.getElementById('friendRequestsLoading');
+    const contentEl = document.getElementById('friendRequestsContent');
+
+    if (!loadingEl || !contentEl) return;
+
+    try {
+        // Show loading state
+        loadingEl.classList.remove('hidden');
+        contentEl.classList.add('hidden');
+
+        // Fetch requests
+        const data = await FriendsAPI.getRequests();
+        friendRequestsData = data;
+
+        // Render requests
+        renderFriendRequests();
+
+        // Update badge
+        updateFriendRequestsBadge();
+
+        // Hide loading, show content
+        loadingEl.classList.add('hidden');
+        contentEl.classList.remove('hidden');
+
+    } catch (error) {
+        console.error('Error loading friend requests:', error);
+
+        // Show error message
+        loadingEl.innerHTML = `
+            <div class="p-6 text-center">
+                <svg class="w-12 h-12 text-red-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <p class="text-sm text-gray-600 dark:text-gray-400">Fehler beim Laden der Anfragen</p>
+                <button onclick="loadFriendRequests()" class="mt-3 text-sm text-primary hover:text-secondary font-medium">
+                    Erneut versuchen
+                </button>
+            </div>
+        `;
+    }
+}
+
+/**
+ * Render friend requests in dropdown
+ */
+function renderFriendRequests() {
+    const incomingList = document.getElementById('incomingRequestsList');
+    const outgoingList = document.getElementById('outgoingRequestsList');
+
+    if (!incomingList || !outgoingList) return;
+
+    // Render incoming requests
+    if (friendRequestsData.incoming && friendRequestsData.incoming.length > 0) {
+        incomingList.innerHTML = friendRequestsData.incoming.map(request => {
+            const initials = request.initials || '??';
+            const fullName = `${request.first_name || ''} ${request.last_name || ''}`.trim() || 'Unbekannt';
+            const zenturie = request.zenturie || 'Keine Zenturie';
+
+            return `
+                <div class="p-4 border-b border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700/30 transition-colors">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3 flex-1 min-w-0">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+                                ${initials}
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-sm font-medium text-gray-900 dark:text-white truncate">${fullName}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 truncate">${zenturie}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2 flex-shrink-0 ml-3">
+                            <button onclick="acceptFriendRequest(${request.id})" class="p-2 bg-green-100 hover:bg-green-200 text-green-700 rounded-lg transition-colors" title="Annehmen">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                            </button>
+                            <button onclick="rejectFriendRequest(${request.id})" class="p-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg transition-colors" title="Ablehnen">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } else {
+        incomingList.innerHTML = `
+            <div class="p-6 text-center text-gray-500 dark:text-gray-400">
+                <p class="text-sm">Keine eingehenden Anfragen</p>
+            </div>
+        `;
+    }
+
+    // Render outgoing requests
+    if (friendRequestsData.outgoing && friendRequestsData.outgoing.length > 0) {
+        outgoingList.innerHTML = friendRequestsData.outgoing.map(request => {
+            const initials = request.initials || '??';
+            const fullName = `${request.first_name || ''} ${request.last_name || ''}`.trim() || 'Unbekannt';
+            const zenturie = request.zenturie || 'Keine Zenturie';
+
+            return `
+                <div class="p-4 border-b border-gray-100 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700/30 transition-colors">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3 flex-1 min-w-0">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+                                ${initials}
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-sm font-medium text-gray-900 dark:text-white truncate">${fullName}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 truncate">${zenturie}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2 flex-shrink-0 ml-3">
+                            <span class="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full font-medium">Ausstehend</span>
+                            <button onclick="cancelFriendRequest(${request.id})" class="p-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors" title="Abbrechen">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    } else {
+        outgoingList.innerHTML = `
+            <div class="p-6 text-center text-gray-500 dark:text-gray-400">
+                <p class="text-sm">Keine gesendeten Anfragen</p>
+            </div>
+        `;
+    }
+}
+
+/**
+ * Update friend requests badge count
+ */
+function updateFriendRequestsBadge() {
+    const badge = document.getElementById('friendRequestsBadge');
+    if (!badge) return;
+
+    const incomingCount = friendRequestsData.incoming ? friendRequestsData.incoming.length : 0;
+
+    if (incomingCount > 0) {
+        badge.textContent = incomingCount > 9 ? '9+' : incomingCount;
+        badge.classList.remove('hidden');
+    } else {
+        badge.classList.add('hidden');
+    }
+}
+
+/**
+ * Accept friend request
+ */
+async function acceptFriendRequest(requestId) {
+    try {
+        const result = await FriendsAPI.acceptRequest(requestId);
+
+        // Show success toast
+        if (typeof showToast === 'function') {
+            showToast(result.message || 'Freundschaftsanfrage angenommen!', 'success');
+        }
+
+        // Reload requests
+        await loadFriendRequests();
+
+        // Reload friends list if on dashboard
+        if (typeof loadFriends === 'function') {
+            await loadFriends();
+        }
+
+    } catch (error) {
+        console.error('Error accepting friend request:', error);
+        if (typeof showToast === 'function') {
+            showToast(error.message || 'Fehler beim Annehmen der Anfrage', 'error');
+        }
+    }
+}
+
+/**
+ * Reject friend request
+ */
+async function rejectFriendRequest(requestId) {
+    try {
+        const result = await FriendsAPI.rejectRequest(requestId);
+
+        // Show success toast
+        if (typeof showToast === 'function') {
+            showToast(result.message || 'Freundschaftsanfrage abgelehnt', 'success');
+        }
+
+        // Reload requests
+        await loadFriendRequests();
+
+    } catch (error) {
+        console.error('Error rejecting friend request:', error);
+        if (typeof showToast === 'function') {
+            showToast(error.message || 'Fehler beim Ablehnen der Anfrage', 'error');
+        }
+    }
+}
+
+/**
+ * Cancel outgoing friend request
+ */
+async function cancelFriendRequest(requestId) {
+    try {
+        const result = await FriendsAPI.cancelRequest(requestId);
+
+        // Show success toast
+        if (typeof showToast === 'function') {
+            showToast(result.message || 'Anfrage abgebrochen', 'success');
+        }
+
+        // Reload requests
+        await loadFriendRequests();
+
+    } catch (error) {
+        console.error('Error cancelling friend request:', error);
+        if (typeof showToast === 'function') {
+            showToast(error.message || 'Fehler beim Abbrechen der Anfrage', 'error');
+        }
+    }
+}
+
+/**
+ * Start polling for friend requests
+ */
+function startFriendRequestsPolling() {
+    // Only poll if user is authenticated
+    if (!storage.getItem('token')) return;
+
+    // Initial load
+    updateFriendRequestsBadge();
+
+    // Load requests in background (don't show dropdown)
+    (async () => {
+        try {
+            const data = await FriendsAPI.getRequests();
+            friendRequestsData = data;
+            updateFriendRequestsBadge();
+        } catch (error) {
+            console.error('Error polling friend requests:', error);
+        }
+    })();
+
+    // Clear existing interval if any
+    if (friendRequestsPollingInterval) {
+        clearInterval(friendRequestsPollingInterval);
+    }
+
+    // Poll every 30 seconds
+    friendRequestsPollingInterval = setInterval(async () => {
+        try {
+            const data = await FriendsAPI.getRequests();
+            const previousIncomingCount = friendRequestsData.incoming ? friendRequestsData.incoming.length : 0;
+            const newIncomingCount = data.incoming ? data.incoming.length : 0;
+
+            friendRequestsData = data;
+            updateFriendRequestsBadge();
+
+            // Show toast if new incoming request
+            if (newIncomingCount > previousIncomingCount && typeof showToast === 'function') {
+                showToast('Du hast eine neue Freundschaftsanfrage erhalten!', 'info');
+            }
+        } catch (error) {
+            console.error('Error polling friend requests:', error);
+        }
+    }, 30000); // 30 seconds
+}
+
+/**
+ * Stop polling for friend requests
+ */
+function stopFriendRequestsPolling() {
+    if (friendRequestsPollingInterval) {
+        clearInterval(friendRequestsPollingInterval);
+        friendRequestsPollingInterval = null;
+    }
+}
+
+// Initialize polling when navbar is loaded
+if (typeof storage !== 'undefined' && storage.getItem('token')) {
+    // Start polling after a short delay to allow page to load
+    setTimeout(() => {
+        startFriendRequestsPolling();
+    }, 1000);
+}

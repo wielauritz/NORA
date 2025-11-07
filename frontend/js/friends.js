@@ -38,8 +38,8 @@ function createAddFriendModal() {
 
                 <!-- Modal Header -->
                 <div class="mb-6">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Freund hinzufügen</h2>
-                    <p class="text-gray-600">Füge einen Kommilitonen zu deiner Freundesliste hinzu</p>
+                    <h2 class="text-2xl font-bold text-gray-900 mb-2">Freundschaftsanfrage senden</h2>
+                    <p class="text-gray-600">Sende eine Freundschaftsanfrage an einen Kommilitonen</p>
                 </div>
 
                 <!-- Error Message -->
@@ -74,7 +74,7 @@ function createAddFriendModal() {
                             </svg>
                             <div class="text-sm text-blue-800">
                                 <p class="font-medium mb-1">Freunde-Funktion</p>
-                                <p>Sobald du einen Freund hinzugefügt hast, kannst du dessen Stundenplan (nur offizielle Kurse) einsehen.</p>
+                                <p>Dein Kommilitone muss die Anfrage annehmen, bevor ihr Freunde seid. Sobald ihr befreundet seid, kannst du dessen Stundenplan (nur offizielle Kurse) einsehen.</p>
                             </div>
                         </div>
                     </div>
@@ -83,7 +83,7 @@ function createAddFriendModal() {
                     <div class="flex space-x-3 pt-4">
                         <button type="submit" id="submitFriendBtn"
                                 class="flex-1 px-6 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-xl font-medium hover:shadow-lg transition-shadow">
-                            Hinzufügen
+                            Anfrage senden
                         </button>
                         <button type="button" onclick="closeAddFriendModal()"
                                 class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-xl font-medium transition-colors">
@@ -130,33 +130,38 @@ async function submitAddFriend(event) {
 
     // Disable button
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Wird hinzugefügt...';
+    submitBtn.textContent = 'Wird gesendet...';
 
     try {
-        const result = await FriendsAPI.addFriend(email);
+        const result = await FriendsAPI.sendRequest(email);
 
         // Success!
-        showToast(result.message || 'Freund erfolgreich hinzugefügt!', 'success');
+        showToast(result.message || 'Freundschaftsanfrage erfolgreich gesendet!', 'success');
 
         // Reset button before closing modal
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Hinzufügen';
+        submitBtn.textContent = 'Anfrage senden';
 
         closeAddFriendModal();
 
-        // Reload friends if on dashboard page
+        // Reload friend requests in navbar if function exists
+        if (typeof loadFriendRequests === 'function') {
+            loadFriendRequests();
+        }
+
+        // Also reload friends list if on dashboard page (in case of immediate acceptance)
         if (typeof loadFriends === 'function') {
             loadFriends();
         }
 
     } catch (error) {
-        console.error('Error adding friend:', error);
-        errorText.textContent = error.message || 'Fehler beim Hinzufügen des Freundes';
+        console.error('Error sending friend request:', error);
+        errorText.textContent = error.message || 'Fehler beim Senden der Freundschaftsanfrage';
         errorDiv.classList.remove('hidden');
 
         // Re-enable button
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Hinzufügen';
+        submitBtn.textContent = 'Anfrage senden';
     }
 }
 
