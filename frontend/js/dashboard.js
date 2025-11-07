@@ -500,8 +500,8 @@ async function loadFriends() {
  * Render friends list
  */
 function renderFriends() {
-    // Update friends count in stats (now 4th card after reordering)
-    const friendsCountEl = document.querySelectorAll('.glass-effect h3')[3];
+    // Update friends count in stats
+    const friendsCountEl = document.getElementById('friendsCount');
     if (friendsCountEl) {
         friendsCountEl.textContent = friendsList.length;
     }
