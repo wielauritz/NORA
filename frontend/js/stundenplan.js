@@ -1572,23 +1572,21 @@ async function deleteCustomHour() {
         return;
     }
 
-    if (!confirm('Möchtest du diesen Termin wirklich löschen?')) {
-        return;
-    }
+    showConfirmDialog('Möchtest du diesen Termin wirklich löschen?', async () => {
+        try {
+            const result = await CustomHoursAPI.deleteCustomHour(currentlyViewedEvent.id);
+            showToast(result.message || 'Termin erfolgreich gelöscht!', 'success');
 
-    try {
-        const result = await CustomHoursAPI.deleteCustomHour(currentlyViewedEvent.id);
-        showToast(result.message || 'Termin erfolgreich gelöscht!', 'success');
+            // Close the event modal
+            closeEventModal();
 
-        // Close the event modal
-        closeEventModal();
-
-        // Reload the current week schedule
-        await loadWeekSchedule();
-    } catch (error) {
-        console.error('Error deleting custom hour:', error);
-        showToast(error.message || 'Fehler beim Löschen des Termins', 'error');
-    }
+            // Reload the current week schedule
+            await loadWeekSchedule();
+        } catch (error) {
+            console.error('Error deleting custom hour:', error);
+            showToast(error.message || 'Fehler beim Löschen des Termins', 'error');
+        }
+    });
 }
 
 /**

@@ -71,7 +71,7 @@ func SendFriendRequest(c *fiber.Ctx) error {
 	// Check if trying to add self
 	if friend.ID == user.ID {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"detail": "Sie können sich nicht selbst als Freund hinzufügen",
+			"detail": "Du kannst dich nicht selbst als Freund hinzufügen",
 		})
 	}
 
@@ -85,7 +85,7 @@ func SendFriendRequest(c *fiber.Ctx) error {
 	if result.Error == nil {
 		if existingRequest.Status == "accepted" {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-				"detail": "Sie sind bereits mit diesem Benutzer befreundet",
+				"detail": "Du bist bereits mit diesem Benutzer befreundet",
 			})
 		}
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -202,7 +202,7 @@ func AcceptFriendRequest(c *fiber.Ctx) error {
 	// Verify that the current user is the receiver
 	if friendRequest.ReceiverID != user.ID {
 		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
-			"detail": "Sie können nur Anfragen annehmen, die an Sie gerichtet sind",
+			"detail": "Du kannst nur Anfragen annehmen, die an dich gerichtet sind",
 		})
 	}
 
@@ -234,7 +234,7 @@ func AcceptFriendRequest(c *fiber.Ctx) error {
 	}
 
 	return c.JSON(MessageResponse{
-		Message: "Sie sind nun mit " + requesterName + " befreundet",
+		Message: "Du bist nun mit " + requesterName + " befreundet",
 	})
 }
 
@@ -261,7 +261,7 @@ func RejectFriendRequest(c *fiber.Ctx) error {
 	// Verify that the current user is the receiver
 	if friendRequest.ReceiverID != user.ID {
 		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
-			"detail": "Sie können nur Anfragen ablehnen, die an Sie gerichtet sind",
+			"detail": "Du kannst nur Anfragen ablehnen, die an dich gerichtet sind",
 		})
 	}
 
@@ -308,7 +308,7 @@ func CancelFriendRequest(c *fiber.Ctx) error {
 	// Verify that the current user is the requester
 	if friendRequest.RequesterID != user.ID {
 		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
-			"detail": "Sie können nur Anfragen zurückziehen, die Sie selbst gesendet haben",
+			"detail": "Du kannst nur Anfragen zurückziehen, die du selbst gesendet hast",
 		})
 	}
 

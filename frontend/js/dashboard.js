@@ -513,9 +513,9 @@ function renderFriends() {
     if (friendsList.length === 0) {
         container.innerHTML = `
             <div class="text-center py-4 text-gray-500">
-                <p class="text-sm">Noch keine Freunde hinzugefügt</p>
+                <p class="text-sm">Noch keine Freunde</p>
                 <button onclick="showAddFriendModal()" class="mt-3 text-sm text-primary hover:text-secondary font-medium">
-                    + Freund hinzufügen
+                    + Anfrage senden
                 </button>
             </div>
         `;
@@ -612,23 +612,21 @@ function viewFriendSchedule(zenturie) {
  */
 async function removeFriend(friendUserId, friendName) {
     // Confirmation dialog
-    if (!confirm(`Möchtest du ${friendName} wirklich aus deiner Freundesliste entfernen?`)) {
-        return;
-    }
+    showConfirmDialog(`Möchtest du ${friendName} wirklich aus deiner Freundesliste entfernen?`, async () => {
+        try {
+            const result = await FriendsAPI.removeFriend(friendUserId);
 
-    try {
-        const result = await FriendsAPI.removeFriend(friendUserId);
+            // Show success message
+            showToast(result.message || 'Freund erfolgreich entfernt!', 'success');
 
-        // Show success message
-        showToast(result.message || 'Freund erfolgreich entfernt!', 'success');
+            // Reload friends list
+            await loadFriends();
 
-        // Reload friends list
-        await loadFriends();
-
-    } catch (error) {
-        console.error('Error removing friend:', error);
-        showToast(error.message || 'Fehler beim Entfernen des Freundes', 'error');
-    }
+        } catch (error) {
+            console.error('Error removing friend:', error);
+            showToast(error.message || 'Fehler beim Entfernen des Freundes', 'error');
+        }
+    });
 }
 
 /**

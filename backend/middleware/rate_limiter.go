@@ -61,7 +61,7 @@ func LoginRateLimiter() fiber.Handler {
 		Max:        5,
 		Expiration: 15 * time.Minute,
 		KeyFunc:    IPBasedKeyFunc,
-		Message:    "Zu viele Login-Versuche. Bitte versuchen Sie es in 15 Minuten erneut.",
+		Message:    "Zu viele Login-Versuche. Bitte versuche es in 15 Minuten erneut.",
 	})
 }
 
@@ -72,7 +72,7 @@ func PasswordResetRateLimiter() fiber.Handler {
 		Max:        5,
 		Expiration: 1 * time.Hour,
 		KeyFunc:    IPBasedKeyFunc,
-		Message:    "Zu viele Passwort-Reset-Anfragen. Bitte versuchen Sie es in einer Stunde erneut.",
+		Message:    "Zu viele Passwort-Reset-Anfragen. Bitte versuche es in einer Stunde erneut.",
 	})
 }
 
@@ -83,7 +83,7 @@ func ResendEmailRateLimiter() fiber.Handler {
 		Max:        5,
 		Expiration: 1 * time.Hour,
 		KeyFunc:    IPBasedKeyFunc,
-		Message:    "Zu viele E-Mail-Anfragen. Bitte versuchen Sie es in einer Stunde erneut.",
+		Message:    "Zu viele E-Mail-Anfragen. Bitte versuche es in einer Stunde erneut.",
 	})
 }
 
@@ -94,7 +94,7 @@ func FriendRequestRateLimiter() fiber.Handler {
 		Max:        50,
 		Expiration: 24 * time.Hour,
 		KeyFunc:    UserBasedKeyFunc,
-		Message:    "Zu viele Freundschaftsanfragen. Sie können maximal 50 Anfragen pro Tag senden.",
+		Message:    "Zu viele Freundschaftsanfragen. Du kannst maximal 50 Anfragen pro Tag senden.",
 	})
 }
 
@@ -105,6 +105,6 @@ func SearchRateLimiter() fiber.Handler {
 		Max:        300,
 		Expiration: 1 * time.Minute,
 		KeyFunc:    UserBasedKeyFunc,
-		Message:    "Zu viele Suchanfragen. Bitte verlangsamen Sie Ihre Suche.",
+		Message:    "Zu viele Suchanfragen. Bitte verlangsame deine Suche.",
 	})
 }
