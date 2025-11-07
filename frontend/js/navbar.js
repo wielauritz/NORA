@@ -62,8 +62,15 @@ function renderNavbar(activePage = '') {
                                 <!-- Content -->
                                 <div id="friendRequestsContent" class="hidden">
                                     <!-- Header -->
-                                    <div class="p-4 border-b border-gray-200 dark:border-slate-700">
+                                    <div class="p-4 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between">
                                         <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Freundschaftsanfragen</h3>
+                                        <button onclick="showAddFriendModal(); document.getElementById('friendRequestsDropdown').classList.add('hidden');"
+                                                class="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                                                title="Freundschaftsanfrage senden">
+                                            <svg class="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                            </svg>
+                                        </button>
                                     </div>
 
                                     <!-- Incoming Requests -->
@@ -431,7 +438,7 @@ function renderFriendRequests() {
     } else {
         incomingList.innerHTML = `
             <div class="p-6 text-center text-gray-500 dark:text-gray-400">
-                <p class="text-sm">Keine eingehenden Anfragen</p>
+                <p class="text-sm">Du hast keine eingehenden Anfragen</p>
             </div>
         `;
     }
@@ -470,7 +477,7 @@ function renderFriendRequests() {
     } else {
         outgoingList.innerHTML = `
             <div class="p-6 text-center text-gray-500 dark:text-gray-400">
-                <p class="text-sm">Keine gesendeten Anfragen</p>
+                <p class="text-sm">Du hast keine gesendeten Anfragen</p>
             </div>
         `;
     }

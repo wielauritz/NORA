@@ -10,6 +10,11 @@ function showAddFriendModal() {
     const modal = document.getElementById('addFriendModal');
     if (!modal) {
         createAddFriendModal();
+        // Immediately reset after creation
+        setTimeout(() => {
+            document.getElementById('friendForm').reset();
+            document.getElementById('friendError').classList.add('hidden');
+        }, 0);
         return showAddFriendModal();
     }
 
@@ -74,7 +79,7 @@ function createAddFriendModal() {
                             </svg>
                             <div class="text-sm text-blue-800">
                                 <p class="font-medium mb-1">Freunde-Funktion</p>
-                                <p>Dein Kommilitone muss die Anfrage annehmen, bevor ihr Freunde seid. Sobald ihr befreundet seid, kannst du dessen Stundenplan (nur offizielle Kurse) einsehen.</p>
+                                <p>Dein Kommilitone muss die Anfrage annehmen, bevor du seinen Stundenplan sehen kannst. Du kannst dann seinen offiziellen Stundenplan (nur offizielle Kurse) einsehen.</p>
                             </div>
                         </div>
                     </div>
