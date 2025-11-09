@@ -1213,6 +1213,14 @@ body > main {
 
 .modal-content {
     animation: modalSlideIn 0.3s ease-out;
+    max-height: 90vh;
+    overflow: visible;
+}
+
+.modal-inner-scroll {
+    max-height: calc(90vh - 4rem);
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 @keyframes modalSlideIn {

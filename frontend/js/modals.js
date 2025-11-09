@@ -131,15 +131,16 @@ function createAddCustomHourModal() {
     const modalHTML = `
         <div id="addCustomHourModal" class="modal-overlay">
             <div class="modal-content glass-effect rounded-3xl w-full max-w-2xl p-8 relative" onclick="event.stopPropagation()">
+                <div class="modal-inner-scroll">
 
-                <!-- Close Button -->
-                <button onclick="closeAddCustomHourModal()" class="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
+                    <!-- Close Button -->
+                    <button onclick="closeAddCustomHourModal()" class="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-lg transition-colors z-10">
+                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
 
-                <!-- Modal Header -->
+                    <!-- Modal Header -->
                 <div class="mb-6">
                     <h2 class="text-2xl font-bold text-gray-900 mb-2">Eigene Stunde hinzufügen</h2>
                     <p class="text-gray-600">Erstelle einen benutzerdefinierten Termin</p>
@@ -266,6 +267,8 @@ function createAddCustomHourModal() {
                         </button>
                     </div>
                 </form>
+
+                </div><!-- End modal-inner-scroll -->
             </div>
         </div>
     `;
@@ -315,6 +318,7 @@ function createAddCustomHourModal() {
             dateFormat: 'Y-m-d',
             minDate: 'today',
             locale: 'de',
+            disableMobile: true,
             onChange: function() {
                 loadRoomsForCustomHour();
             }
@@ -328,6 +332,8 @@ function createAddCustomHourModal() {
             time_24hr: true,
             minuteIncrement: 15,
             defaultDate: endTimeStr,
+            disableMobile: true,
+            static: true,
             onChange: function() {
                 loadRoomsForCustomHour();
             }
@@ -341,6 +347,8 @@ function createAddCustomHourModal() {
             time_24hr: true,
             minuteIncrement: 15,
             defaultDate: timeStr,
+            disableMobile: true,
+            static: true,
             onChange: function(selectedDates, dateStr) {
                 // Automatically set end time to 1 hour after start time
                 if (selectedDates.length > 0 && dateStr) {
@@ -667,15 +675,16 @@ async function createUpdateCustomHourModal(event) {
     const modalHTML = `
         <div id="updateCustomHourModal" class="modal-overlay">
             <div class="modal-content glass-effect rounded-3xl w-full max-w-2xl p-8 relative" onclick="event.stopPropagation()">
+                <div class="modal-inner-scroll">
 
-                <!-- Close Button -->
-                <button onclick="closeUpdateCustomHourModal()" class="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
+                    <!-- Close Button -->
+                    <button onclick="closeUpdateCustomHourModal()" class="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-lg transition-colors z-10">
+                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
 
-                <!-- Modal Header -->
+                    <!-- Modal Header -->
                 <div class="mb-6">
                     <h2 class="text-2xl font-bold text-gray-900 mb-2">Eigene Stunde bearbeiten</h2>
                     <p class="text-gray-600">Aktualisiere deinen benutzerdefinierten Termin</p>
@@ -802,6 +811,8 @@ async function createUpdateCustomHourModal(event) {
                         </button>
                     </div>
                 </form>
+
+                </div><!-- End modal-inner-scroll -->
             </div>
         </div>
     `;
@@ -833,6 +844,7 @@ async function createUpdateCustomHourModal(event) {
             dateFormat: 'Y-m-d',
             minDate: 'today',
             locale: 'de',
+            disableMobile: true,
             onChange: function() {
                 loadRoomsForUpdateCustomHour(currentRoom);
             }
@@ -845,6 +857,8 @@ async function createUpdateCustomHourModal(event) {
             dateFormat: 'H:i',
             time_24hr: true,
             minuteIncrement: 15,
+            disableMobile: true,
+            static: true,
             onChange: function() {
                 loadRoomsForUpdateCustomHour(currentRoom);
             }
@@ -857,6 +871,8 @@ async function createUpdateCustomHourModal(event) {
             dateFormat: 'H:i',
             time_24hr: true,
             minuteIncrement: 15,
+            disableMobile: true,
+            static: true,
             onChange: function(selectedDates, dateStr) {
                 // Automatically set end time to 1 hour after start time
                 if (selectedDates.length > 0 && dateStr) {
@@ -1219,15 +1235,16 @@ function createAddExamModal() {
     const modalHTML = `
         <div id="addExamModal" class="modal-overlay">
             <div class="modal-content glass-effect rounded-3xl w-full max-w-2xl p-8 relative" onclick="event.stopPropagation()">
+                <div class="modal-inner-scroll">
 
-                <!-- Close Button -->
-                <button onclick="closeAddExamModal()" class="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
+                    <!-- Close Button -->
+                    <button onclick="closeAddExamModal()" class="absolute top-4 right-4 p-2 hover:bg-gray-100 rounded-lg transition-colors z-10">
+                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
 
-                <!-- Modal Header -->
+                    <!-- Modal Header -->
                 <div class="mb-6">
                     <h2 class="text-2xl font-bold text-gray-900 mb-2">Klausur hinzufügen</h2>
                     <p class="text-gray-600">Trage eine anstehende Klausur ein</p>
@@ -1350,6 +1367,8 @@ function createAddExamModal() {
                         </button>
                     </div>
                 </form>
+
+                </div><!-- End modal-inner-scroll -->
             </div>
         </div>
     `;
@@ -1366,7 +1385,8 @@ function createAddExamModal() {
         flatpickr('#examDate', {
             dateFormat: 'Y-m-d',
             minDate: 'today',
-            locale: 'de'
+            locale: 'de',
+            disableMobile: true
         });
 
         // Time picker
@@ -1375,7 +1395,9 @@ function createAddExamModal() {
             noCalendar: true,
             dateFormat: 'H:i',
             time_24hr: true,
-            minuteIncrement: 15
+            minuteIncrement: 15,
+            disableMobile: true,
+            static: true
         });
     }
 }
