@@ -2,16 +2,29 @@
  * Login Page JavaScript
  */
 
+// Flag to prevent double auth check
+let authChecked = false;
+
 /**
  * Check if user is already authenticated (for login page)
  * Returns true if user should stay on login page, false if redirect to dashboard
  */
 async function checkAuthOnLoginPage() {
+    if (authChecked) {
+        console.log('ℹ️ Auth already checked, skipping');
+        return true;
+    }
+    authChecked = true;
+
     try {
         // Initialize persistent storage
         await initPersistentStorage();
     } catch (e) {
-        console.warn('⚠️ Failed to initialize persistent storage:', e);
+        console.warn('⚠️ Failed to initialize persistent storage:', {
+            message: e.message,
+            code: e.code,
+            error: JSON.stringify(e)
+        });
     }
 
     // Try to load token from persistent storage

@@ -37,6 +37,17 @@ class ContentLoader {
         this.container = document.getElementById('app-container');
         this.currentPage = null;
         this.loadedScripts = new Set();
+
+        // Add global error handler to catch script execution errors
+        window.addEventListener('error', (event) => {
+            console.error('[ContentLoader] Global error caught:', {
+                message: event.message,
+                filename: event.filename,
+                lineno: event.lineno,
+                colno: event.colno,
+                error: event.error
+            });
+        });
     }
 
     /**
@@ -206,6 +217,12 @@ class ContentLoader {
             console.log('[ContentLoader] Extracted <main> content');
         }
 
+        // Clear any form initialization flags from previous page loads
+        if (document.body.dataset.formInitialized) {
+            delete document.body.dataset.formInitialized;
+            console.log('[ContentLoader] Cleared form initialization flag');
+        }
+
         // Extract and load stylesheets
         const stylesheets = doc.querySelectorAll('link[rel="stylesheet"]');
         for (const link of stylesheets) {
@@ -318,21 +335,46 @@ class ContentLoader {
                     url = `${CONFIG.SERVER_URL}/${src.replace(/^\//, '')}`;
                 }
 
-                // Add cache-busting timestamp to force fresh load
-                const cacheBuster = `?_=${Date.now()}`;
-                url = url + cacheBuster;
-                console.log(`[ContentLoader] Loading script with cache-buster: ${url}`);
+                // Fetch script content as text and inject inline to avoid CORS issues
+                this.fetchWithTimeout(url).then(async (response) => {
+                    if (!response.ok) {
+                        console.error(`[ContentLoader] Failed to fetch script: ${src} (${response.status})`);
+                        reject(new Error(`Script fetch failed: ${src}`));
+                        return;
+                    }
 
-                script.src = url;
-                script.onload = () => {
-                    console.log(`[ContentLoader] Script loaded: ${src}`);
+                    const scriptContent = await response.text();
+
+                    // Create a new script element for inline execution
+                    const inlineScript = document.createElement('script');
+                    inlineScript.type = 'text/javascript';
+
+                    // Wrap in try-catch to catch execution errors
+                    const wrappedContent = `
+                        try {
+                            ${scriptContent}
+                        } catch (error) {
+                            console.error('[ContentLoader] Script execution error in ${src}:', error);
+                            throw error;
+                        }
+                    `;
+
+                    inlineScript.textContent = wrappedContent;
+                    console.log(`[ContentLoader] Script loaded and injected: ${src}`);
                     this.loadedScripts.add(src);
-                    resolve();
-                };
-                script.onerror = () => {
-                    console.error(`[ContentLoader] Failed to load script: ${src}`);
-                    reject(new Error(`Script load failed: ${src}`));
-                };
+
+                    // Append to execute
+                    document.body.appendChild(inlineScript);
+
+                    // Small delay to ensure execution completes
+                    setTimeout(() => resolve(), 50);
+                }).catch(error => {
+                    console.error(`[ContentLoader] Error fetching script ${src}:`, error);
+                    reject(error);
+                });
+
+                // Don't append script here - it's done in the then() after content is set
+                return;
             } else if (content) {
                 // Inline script
                 script.textContent = content;

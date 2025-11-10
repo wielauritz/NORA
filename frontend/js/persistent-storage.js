@@ -20,14 +20,14 @@ async function initPersistentStorage() {
         try {
             await Capacitor.Plugins.Filesystem.stat({
                 path: STORAGE_DIR,
-                directory: 'Documents'
+                directory: Capacitor.Plugins.Filesystem.Directory.Documents
             });
             console.log('✅ [PersistentStorage] Storage directory exists');
         } catch (e) {
             console.log('📁 [PersistentStorage] Creating storage directory...');
             await Capacitor.Plugins.Filesystem.mkdir({
                 path: STORAGE_DIR,
-                directory: 'Documents',
+                directory: Capacitor.Plugins.Filesystem.Directory.Documents,
                 recursive: true
             });
             console.log('✅ [PersistentStorage] Storage directory created');
@@ -71,7 +71,7 @@ async function storeTokenPersistent(token) {
             await Capacitor.Plugins.Filesystem.writeFile({
                 path: `${STORAGE_DIR}/${TOKEN_FILE}`,
                 data: JSON.stringify(data),
-                directory: 'Documents',
+                directory: Capacitor.Plugins.Filesystem.Directory.Documents,
                 encoding: 'utf8',
                 recursive: true
             });
@@ -101,7 +101,7 @@ async function loadTokenPersistent() {
 
                 const fileContent = await Capacitor.Plugins.Filesystem.readFile({
                     path: `${STORAGE_DIR}/${TOKEN_FILE}`,
-                    directory: 'Documents',
+                    directory: Capacitor.Plugins.Filesystem.Directory.Documents,
                     encoding: 'utf8'
                 });
 
@@ -163,7 +163,7 @@ async function clearTokenPersistent() {
         try {
             await Capacitor.Plugins.Filesystem.deleteFile({
                 path: `${STORAGE_DIR}/${TOKEN_FILE}`,
-                directory: 'Documents'
+                directory: Capacitor.Plugins.Filesystem.Directory.Documents
             });
             console.log('✅ Token cleared from filesystem');
         } catch (e) {
