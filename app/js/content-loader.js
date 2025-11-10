@@ -317,6 +317,12 @@ class ContentLoader {
                 } else if (!src.startsWith('http')) {
                     url = `${CONFIG.SERVER_URL}/${src.replace(/^\//, '')}`;
                 }
+
+                // Add cache-busting timestamp to force fresh load
+                const cacheBuster = `?_=${Date.now()}`;
+                url = url + cacheBuster;
+                console.log(`[ContentLoader] Loading script with cache-buster: ${url}`);
+
                 script.src = url;
                 script.onload = () => {
                     console.log(`[ContentLoader] Script loaded: ${src}`);
