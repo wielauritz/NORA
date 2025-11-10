@@ -800,7 +800,6 @@ window.formatName = formatName;
 window.disableSubmitButton = disableSubmitButton;
 window.enableSubmitButton = enableSubmitButton;
 window.showError = showError;
-window.clearError = clearError;
 window.showLoginSuccess = showLoginSuccess;
 window.showVerificationRequired = showVerificationRequired;
 window.showConfirmDialog = showConfirmDialog;

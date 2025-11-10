@@ -75,6 +75,11 @@ function initLoginForm() {
             console.log('[Login] Checking AuthAPI availability:', typeof AuthAPI, typeof window.AuthAPI);
             console.log('[Login] AuthAPI object:', window.AuthAPI);
 
+            // Verify AuthAPI is loaded and functional
+            if (typeof AuthAPI === 'undefined' || !AuthAPI.login) {
+                throw new Error('AuthAPI nicht verfügbar. Bitte lade die Seite neu.');
+            }
+
             // Call Backend Login API
             const data = await AuthAPI.login(email, password);
 
