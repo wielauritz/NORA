@@ -173,3 +173,10 @@ async function clearTokenPersistent() {
         }
     }
 }
+
+// Export functions to window for global access
+window.initPersistentStorage = initPersistentStorage;
+window.storeTokenPersistent = storeTokenPersistent;
+window.loadTokenPersistent = loadTokenPersistent;
+window.clearTokenPersistent = clearTokenPersistent;
+console.log('[PersistentStorage] Functions exported to window');

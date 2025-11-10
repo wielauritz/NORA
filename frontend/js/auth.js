@@ -790,3 +790,19 @@ async function clearAuthStorage() {
         }
     }
 }
+
+// Export auth functions to window for global access
+window.storeToken = storeToken;
+window.checkAuth = checkAuth;
+window.clearAuthStorage = clearAuthStorage;
+window.getUrlParameter = getUrlParameter;
+window.formatName = formatName;
+window.disableSubmitButton = disableSubmitButton;
+window.enableSubmitButton = enableSubmitButton;
+window.showError = showError;
+window.clearError = clearError;
+window.showLoginSuccess = showLoginSuccess;
+window.showVerificationRequired = showVerificationRequired;
+window.showConfirmDialog = showConfirmDialog;
+window.closeConfirmDialog = closeConfirmDialog;
+console.log('[Auth] Functions exported to window');
