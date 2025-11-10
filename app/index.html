@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>NORA</title>
+
+    <!-- Inter Font - Local -->
+    <link rel="stylesheet" href="assets/css/fonts.css">
+
+    <!-- Shell Styles -->
+    <link rel="stylesheet" href="css/shell.css">
+    <link rel="stylesheet" href="css/preloader.css">
+
+    <!-- Tailwind CSS - Local -->
+    <script src="assets/js/tailwind.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3cd2ff',
+                        secondary: '#003a79',
+                        accent: '#ffa064',
+                        purple: '#a78bfa',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="font-sans">
+
+    <!-- Preloader Screen (Full Screen) -->
+    <div id="preloader" class="screen active">
+        <div class="preloader-content">
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+    <!-- Offline Screen (Full Screen) -->
+    <div id="offline-screen" class="screen">
+        <div class="offline-content">
+            <div class="offline-icon">
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M10.41 9L12 10.59L13.59 9L15 10.41L13.41 12L15 13.59L13.59 15L12 13.41L10.41 15L9 13.59L10.59 12L9 10.41L10.41 9Z" fill="currentColor"/>
+                    <path d="M17 3H7C5.9 3 5 3.9 5 5V19C5 20.1 5.9 21 7 21H17C18.1 21 19 20.1 19 19V5C19 3.9 18.1 3 17 3ZM17 19H7V5H17V19Z" fill="currentColor"/>
+                </svg>
+            </div>
+            <h2 class="offline-title">Du scheinst offline zu sein</h2>
+            <p class="offline-message">Bitte stelle eine Internetverbindung her und versuche es erneut.</p>
+            <button id="retry-button" class="retry-button">
+                <svg class="retry-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4C7.58 4 4.01 7.58 4.01 12C4.01 16.42 7.58 20 12 20C15.73 20 18.84 17.45 19.73 14H17.65C16.83 16.33 14.61 18 12 18C8.69 18 6 15.31 6 12C6 8.69 8.69 6 12 6C13.66 6 15.14 6.69 16.22 7.78L13 11H20V4L17.65 6.35Z" fill="currentColor"/>
+                </svg>
+                Neu laden
+            </button>
+        </div>
+    </div>
+
+    <!-- Top Navigation Bar - PERMANENT -->
+    <nav id="top-navbar" class="glass-effect shadow-lg fixed pb-2 top-0 left-0 right-0 z-50 w-full hidden" style="padding-top: calc(0.5rem + env(safe-area-inset-top));">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+            <div class="flex justify-between items-center h-12">
+
+                <!-- Logo -->
+                <div class="flex items-center space-x-3">
+                    <a href="#" data-page="dashboard" class="hover:cursor-pointer">
+                        <img src="https://cdn.nora-nak.de/img/logo.png" alt="NORA Logo" class="h-8">
+                    </a>
+                </div>
+
+                <!-- Desktop Navigation Links -->
+                <div class="hidden md:flex items-center space-x-1">
+                    <a href="#" data-page="dashboard" class="nav-link px-4 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+                        Dashboard
+                    </a>
+                    <a href="#" data-page="stundenplan" class="nav-link px-4 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+                        Stundenplan
+                    </a>
+                    <a href="#" data-page="raumplan" class="nav-link px-4 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+                        Raumplan
+                    </a>
+                </div>
+
+                <!-- Desktop User Menu -->
+                <div class="hidden md:flex items-center space-x-4">
+                    <!-- Search -->
+                    <button data-page="search" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors" title="Suche">
+                        <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </button>
+
+                    <!-- Friend Requests Notification -->
+                    <div class="relative">
+                        <button onclick="toggleFriendRequestsDropdown()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors relative" id="friendRequestsBtn" title="Freundschaftsanfragen">
+                            <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                            <!-- Badge Counter -->
+                            <span id="friendRequestsBadge" class="hidden absolute -top-1 -right-1 bg-accent text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"></span>
+                        </button>
+
+                        <!-- Friend Requests Dropdown -->
+                        <div id="friendRequestsDropdown" class="hidden absolute right-0 mt-2 w-96 rounded-xl shadow-lg glass-effect dark:bg-slate-800 border border-gray-200 dark:border-slate-700 overflow-hidden z-50 max-h-96 overflow-y-auto">
+                            <!-- Loading State -->
+                            <div id="friendRequestsLoading" class="p-6 text-center">
+                                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">Lade Anfragen...</p>
+                            </div>
+
+                            <!-- Content -->
+                            <div id="friendRequestsContent" class="hidden">
+                                <!-- Header -->
+                                <div class="p-4 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between">
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Freundschaftsanfragen</h3>
+                                    <button onclick="showAddFriendModal(); document.getElementById('friendRequestsDropdown').classList.add('hidden');"
+                                            class="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                                            title="Freundschaftsanfrage senden">
+                                        <svg class="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <!-- Incoming Requests -->
+                                <div id="incomingRequestsSection">
+                                    <div class="px-4 py-2 bg-gray-50 dark:bg-slate-700/50">
+                                        <h4 class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Eingehende Anfragen</h4>
+                                    </div>
+                                    <div id="incomingRequestsList"></div>
+                                </div>
+
+                                <!-- Outgoing Requests -->
+                                <div id="outgoingRequestsSection" class="border-t border-gray-200 dark:border-slate-700">
+                                    <div class="px-4 py-2 bg-gray-50 dark:bg-slate-700/50">
+                                        <h4 class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Gesendete Anfragen</h4>
+                                    </div>
+                                    <div id="outgoingRequestsList"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- User Profile with Dropdown -->
+                    <div class="relative">
+                        <button onclick="toggleUserDropdown()" class="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center text-white font-semibold hover:ring-2 hover:ring-primary/50 transition-all" id="userInitials" title="Profil-Menü">
+                        </button>
+
+                        <!-- Dropdown Menu -->
+                        <div id="userDropdown" class="hidden absolute right-0 mt-2 w-48 rounded-xl shadow-lg glass-effect dark:bg-slate-800 border border-gray-200 dark:border-slate-700 overflow-hidden z-50">
+                            <a href="#" data-page="settings" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                                Einstellungen
+                            </a>
+                            <button onclick="window.Shell.logout()" class="flex items-center w-full px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                                </svg>
+                                Abmelden
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mobile User Menu (Friend Requests + Profile) -->
+                <div class="flex md:hidden items-center space-x-2">
+                    <!-- Friend Requests (Mobile) -->
+                    <div class="relative">
+                        <button onclick="toggleFriendRequestsDropdown()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors relative" id="friendRequestsBtnMobile" title="Freundschaftsanfragen">
+                            <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                            <!-- Badge Counter (Mobile) -->
+                            <span id="friendRequestsBadgeMobile" class="hidden absolute -top-1 -right-1 bg-accent text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"></span>
+                        </button>
+                    </div>
+
+                    <!-- User Profile (Mobile) -->
+                    <div class="relative">
+                        <button onclick="toggleUserDropdown()" class="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center text-white font-semibold hover:ring-2 hover:ring-primary/50 transition-all" id="userInitialsMobile" title="Profil-Menü">
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </nav>
+
+    <!-- Content Preloader (between navbars) -->
+    <div id="content-loader" class="fixed top-0 md:top-0 left-0 right-0 md:bottom-0 bottom-0 bg-white/85 dark:bg-slate-900/85 hidden items-center justify-center backdrop-blur-xl z-30">
+        <div class="text-center">
+            <div class="inline-block">
+                <div class="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin-slow"></div>
+            </div>
+            <p class="mt-4 text-gray-700 dark:text-gray-300 font-medium text-sm">Lädt...</p>
+        </div>
+    </div>
+
+    <!-- App Container - Content will be injected here -->
+    <div id="app-container" class="app-content"></div>
+
+    <!-- Bottom Navigation Bar (Mobile only) - PERMANENT -->
+    <nav id="bottom-navbar" class="fixed md:hidden bottom-0 left-0 right-0 glass-effect border-t border-gray-200 dark:border-slate-700 z-50"
+         style="padding-bottom: calc(env(safe-area-inset-bottom) * 0.25);">
+        <div class="flex items-stretch w-full">
+            <a href="#" data-page="dashboard" class="nav-item flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-colors text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">
+                <svg class="w-6 h-6" viewBox="0 0 24 24">
+                    <path d="M5,10 L5,19 C5,19.5523 5.44772,20 6,20 L18,20 C18.5523,20 19,19.5523 19,19 L19,10" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"></path>
+                    <path d="M21,11 L12.307,4.23875 C12.1264,4.09832 11.8736,4.09832 11.693,4.23875 L3,11" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"></path>
+                </svg>
+                <span class="text-xs font-medium whitespace-nowrap">Start</span>
+            </a>
+            <a href="#" data-page="stundenplan" class="nav-item flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-colors text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+                <span class="text-xs font-medium whitespace-nowrap">Stundenplan</span>
+            </a>
+            <a href="#" data-page="raumplan" class="nav-item flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-colors text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4 0h1m-1 4h1"/>
+                </svg>
+                <span class="text-xs font-medium whitespace-nowrap">Raumplan</span>
+            </a>
+            <button data-page="search" class="nav-item flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-colors text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                </svg>
+                <span class="text-xs font-medium whitespace-nowrap">Suche</span>
+            </button>
+            <a href="#" data-page="settings" class="nav-item flex-1 flex flex-col items-center justify-center py-3 gap-1 transition-colors text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span class="text-xs font-medium whitespace-nowrap">Einstellungen</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Capacitor Core -->
+    <script type="module">
+        // Capacitor will be imported by native app
+        // For web testing, we'll need to handle this gracefully
+        window.isCapacitor = typeof window.Capacitor !== 'undefined';
+    </script>
+
+    <!-- Configuration -->
+    <script src="config.js"></script>
+
+    <!-- Core Scripts - MINIMAL SHELL ONLY -->
+    <script src="js/storage.js"></script>
+    <script src="js/content-loader.js"></script>
+    <script src="js/navbar-utils.js"></script>
+    <script src="js/shell.js"></script>
+
+</body>
+</html>

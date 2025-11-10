@@ -579,6 +579,7 @@ function handleAPIError(error, fallbackMessage = 'Ein Fehler ist aufgetreten') {
 
 // Export APIs for use in other files
 if (typeof module !== 'undefined' && module.exports) {
+    // Node.js environment
     module.exports = {
         AuthAPI,
         UserAPI,
@@ -598,4 +599,26 @@ if (typeof module !== 'undefined' && module.exports) {
         showToast,
         handleAPIError,
     };
+} else {
+    // Browser environment - assign to window for global access
+    window.AuthAPI = AuthAPI;
+    window.UserAPI = UserAPI;
+    window.ScheduleAPI = ScheduleAPI;
+    window.ExamsAPI = ExamsAPI;
+    window.RoomAPI = RoomAPI;
+    window.FriendsAPI = FriendsAPI;
+    window.CustomHoursAPI = CustomHoursAPI;
+    window.SearchAPI = SearchAPI;
+    window.CalendarAPI = CalendarAPI;
+
+    // Utilities
+    window.formatDateForAPI = formatDateForAPI;
+    window.formatTime = formatTime;
+    window.calculateDuration = calculateDuration;
+    window.getCurrentWeekNumber = getCurrentWeekNumber;
+    window.getDayName = getDayName;
+    window.showToast = showToast;
+    window.handleAPIError = handleAPIError;
+
+    console.log('[API Helper] APIs exported to window globally');
 }

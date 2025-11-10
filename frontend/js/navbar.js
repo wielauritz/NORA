@@ -116,6 +116,26 @@ function renderNavbar(activePage = '') {
                         </div>
                     </div>
 
+                    <!-- Mobile User Menu (Friend Requests + Profile) -->
+                    <div class="flex md:hidden items-center space-x-2">
+                        <!-- Friend Requests (Mobile) -->
+                        <div class="relative">
+                            <button onclick="toggleFriendRequestsDropdown()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors relative" id="friendRequestsBtnMobile" title="Freundschaftsanfragen">
+                                <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                </svg>
+                                <!-- Badge Counter (Mobile) -->
+                                <span id="friendRequestsBadgeMobile" class="hidden absolute -top-1 -right-1 bg-accent text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"></span>
+                            </button>
+                        </div>
+
+                        <!-- User Profile (Mobile) -->
+                        <div class="relative">
+                            <button onclick="toggleUserDropdown()" class="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center text-white font-semibold hover:ring-2 hover:ring-primary/50 transition-all" id="userInitialsMobile" title="Profil-Menü">
+                            </button>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </nav>
@@ -484,19 +504,33 @@ function renderFriendRequests() {
 }
 
 /**
- * Update friend requests badge count
+ * Update friend requests badge count (Desktop + Mobile)
  */
 function updateFriendRequestsBadge() {
-    const badge = document.getElementById('friendRequestsBadge');
-    if (!badge) return;
+    const badgeDesktop = document.getElementById('friendRequestsBadge');
+    const badgeMobile = document.getElementById('friendRequestsBadgeMobile');
 
     const incomingCount = friendRequestsData.incoming ? friendRequestsData.incoming.length : 0;
+    const badgeText = incomingCount > 9 ? '9+' : incomingCount;
 
-    if (incomingCount > 0) {
-        badge.textContent = incomingCount > 9 ? '9+' : incomingCount;
-        badge.classList.remove('hidden');
-    } else {
-        badge.classList.add('hidden');
+    // Update Desktop Badge
+    if (badgeDesktop) {
+        if (incomingCount > 0) {
+            badgeDesktop.textContent = badgeText;
+            badgeDesktop.classList.remove('hidden');
+        } else {
+            badgeDesktop.classList.add('hidden');
+        }
+    }
+
+    // Update Mobile Badge
+    if (badgeMobile) {
+        if (incomingCount > 0) {
+            badgeMobile.textContent = badgeText;
+            badgeMobile.classList.remove('hidden');
+        } else {
+            badgeMobile.classList.add('hidden');
+        }
     }
 }
 
@@ -627,6 +661,23 @@ function stopFriendRequestsPolling() {
     if (friendRequestsPollingInterval) {
         clearInterval(friendRequestsPollingInterval);
         friendRequestsPollingInterval = null;
+    }
+}
+
+/**
+ * Set user initials in navbar (Desktop + Mobile)
+ * @param {string} initials - User initials (e.g., "AB")
+ */
+function setUserInitials(initials) {
+    const avatarDesktop = document.getElementById('userInitials');
+    const avatarMobile = document.getElementById('userInitialsMobile');
+
+    if (avatarDesktop) {
+        avatarDesktop.textContent = initials;
+    }
+
+    if (avatarMobile) {
+        avatarMobile.textContent = initials;
     }
 }
 

@@ -1,7 +1,7 @@
 {
   "appId": "de.nora.nak",
   "appName": "NORA",
-  "webDir": "www",
+  "webDir": "../app",
   "bundledWebRuntime": false,
   "plugins": {
     "SplashScreen": {

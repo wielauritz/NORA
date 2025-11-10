@@ -1,0 +1,476 @@
+/* ===========================
+   NORA Mobile App Shell
+   Matched to WebApp Design
+   =========================== */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Body Layout - Match WebApp */
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+                 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    background: #f8f9fa;
+}
+
+/* Dark Mode - Body */
+html.dark body {
+    background: #0f172a;
+}
+
+@media (prefers-color-scheme: dark) {
+    html:not(.light) body {
+        background: #0f172a;
+    }
+}
+
+/* ===========================
+   Glass Effect (Match WebApp)
+   =========================== */
+
+.glass-effect {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Dark Mode - Glass Effect */
+html.dark .glass-effect {
+    background: rgba(30, 41, 59, 0.8) !important;
+    border-color: rgba(148, 163, 184, 0.1) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+    html:not(.light) .glass-effect {
+        background: rgba(30, 41, 59, 0.8) !important;
+        border-color: rgba(148, 163, 184, 0.1) !important;
+    }
+}
+
+/* ===========================
+   Screen Management
+   =========================== */
+
+.screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    background: linear-gradient(135deg, #3cd2ff 0%, #003a79 100%);
+}
+
+.screen.active {
+    display: flex;
+}
+
+/* ===========================
+   Preloader Screen
+   =========================== */
+
+#preloader {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+}
+
+/* Dark mode preloader */
+html.dark #preloader {
+    background: rgba(15, 23, 42, 0.7);
+}
+
+@media (prefers-color-scheme: dark) {
+    html:not(.light) #preloader {
+        background: rgba(15, 23, 42, 0.7);
+    }
+}
+
+.preloader-content {
+    text-align: center;
+    padding: 2rem;
+}
+
+.logo-container {
+    width: 150px;
+    height: 150px;
+    margin: 0 auto 2rem;
+}
+
+.logo-animated {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.3));
+}
+
+.loading-text {
+    color: white;
+    font-size: 1.25rem;
+    font-weight: 500;
+    margin-top: 1rem;
+    opacity: 0.9;
+}
+
+/* ===========================
+   Offline Screen
+   =========================== */
+
+#offline-screen {
+    background: #f8f9fa;
+}
+
+html.dark #offline-screen {
+    background: #0f172a;
+}
+
+@media (prefers-color-scheme: dark) {
+    html:not(.light) #offline-screen {
+        background: #0f172a;
+    }
+}
+
+.offline-content {
+    text-align: center;
+    padding: 2rem;
+    max-width: 400px;
+}
+
+.offline-icon {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 2rem;
+    color: #6c757d;
+}
+
+html.dark .offline-icon {
+    color: #94a3b8;
+}
+
+@media (prefers-color-scheme: dark) {
+    html:not(.light) .offline-icon {
+        color: #94a3b8;
+    }
+}
+
+.offline-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.offline-title {
+    font-size: 1.75rem;
+    font-weight: bold;
+    color: #212529;
+    margin-bottom: 1rem;
+}
+
+html.dark .offline-title {
+    color: #f1f5f9;
+}
+
+@media (prefers-color-scheme: dark) {
+    html:not(.light) .offline-title {
+        color: #f1f5f9;
+    }
+}
+
+.offline-message {
+    font-size: 1.125rem;
+    color: #6c757d;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+html.dark .offline-message {
+    color: #cbd5e1;
+}
+
+@media (prefers-color-scheme: dark) {
+    html:not(.light) .offline-message {
+        color: #cbd5e1;
+    }
+}
+
+.retry-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.875rem 2rem;
+    background: linear-gradient(135deg, #3cd2ff 0%, #003a79 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.125rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 12px rgba(60, 210, 255, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.retry-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(60, 210, 255, 0.4);
+}
+
+.retry-button:active {
+    transform: translateY(0);
+}
+
+.retry-icon {
+    width: 20px;
+    height: 20px;
+}
+
+/* ===========================
+   Navigation Bar Display Rules
+   =========================== */
+
+#top-navbar {
+    /* Initially hidden, shown when authenticated */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+#top-navbar.hidden {
+    display: none !important;
+}
+
+#bottom-navbar {
+    /* Initially hidden, shown when authenticated */
+    display: flex;
+}
+
+#bottom-navbar.hidden {
+    display: none !important;
+}
+
+/* ===========================
+   App Container (Match WebApp)
+   =========================== */
+
+.app-content {
+    display: none;
+    width: 100%;
+    height: 100%;
+    margin: 0 auto;
+    /* CRITICAL: Top padding must account for:
+       - Navbar height (~3.5rem)
+       - env(safe-area-inset-top) for iOS notch
+       - Extra spacing (0.5rem)
+       Bottom padding for bottom navbar on mobile */
+    padding-top: calc(3.5rem + env(safe-area-inset-top) + 0.5rem);
+    padding-bottom: 8.5rem; /* Space for bottom navbar */
+    box-sizing: border-box;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+.app-content.loaded {
+    display: block;
+}
+
+/* Desktop - No bottom navbar padding, but keep top padding */
+@media (min-width: 768px) {
+    .app-content {
+        padding-top: calc(3.5rem + env(safe-area-inset-top) + 1rem);
+        padding-bottom: 0;
+    }
+}
+
+/* ===========================
+   Top Navbar
+   =========================== */
+
+#top-navbar {
+    /* Initially hidden, shown when authenticated */
+}
+
+#top-navbar.visible {
+    display: flex !important;
+}
+
+/* Desktop Navigation Links - Active State */
+#top-navbar .nav-link.active {
+    background: rgba(60, 210, 255, 0.1) !important;
+    color: #3cd2ff !important;
+    font-weight: 500 !important;
+}
+
+html.dark #top-navbar .nav-link.active {
+    background: rgba(60, 210, 255, 0.15) !important;
+    color: #3cd2ff !important;
+}
+
+/* Navbar Dropdowns z-index */
+#top-navbar .relative {
+    z-index: 60;
+}
+
+/* Friend Requests Dropdown on Mobile - Adjust width */
+@media (max-width: 640px) {
+    #friendRequestsDropdown {
+        width: calc(100vw - 2rem) !important;
+        max-width: 400px !important;
+    }
+}
+
+/* ===========================
+   Bottom Navbar
+   =========================== */
+
+#bottom-navbar {
+    /* Inherits Tailwind classes from HTML */
+}
+
+/* Active State */
+#bottom-navbar .nav-item.active {
+    color: #3cd2ff !important;
+}
+
+html.dark #bottom-navbar .nav-item.active {
+    color: #3cd2ff !important;
+}
+
+/* Hover Effect */
+#bottom-navbar .nav-item {
+    -webkit-tap-highlight-color: transparent;
+}
+
+#bottom-navbar .nav-item:active {
+    background: rgba(60, 210, 255, 0.1);
+}
+
+/* ===========================
+   Content Loader (Match WebApp)
+   =========================== */
+
+#content-loader.visible {
+    display: flex !important;
+}
+
+/* Slow Spin Animation */
+@keyframes spin-slow {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin-slow {
+    animation: spin-slow 2s linear infinite;
+}
+
+/* ===========================
+   Safe Area Insets (iOS)
+   =========================== */
+
+/* Safe area insets are now integrated into .app-content padding rules above */
+/* Top navbar handles safe-area-inset-top via inline style */
+/* Bottom navbar handles safe-area-inset-bottom via inline style */
+
+/* Additional horizontal safe areas */
+@supports (padding-left: env(safe-area-inset-left)) {
+    .app-content {
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+    }
+}
+
+/* ===========================
+   Dark Mode Support
+   =========================== */
+
+/* Text Colors */
+html.dark .text-gray-900 { color: #f1f5f9 !important; }
+html.dark .text-gray-800 { color: #f1f5f9 !important; }
+html.dark .text-gray-700 { color: #cbd5e1 !important; }
+html.dark .text-gray-600 { color: #94a3b8 !important; }
+
+@media (prefers-color-scheme: dark) {
+    html:not(.light) .text-gray-900 { color: #f1f5f9 !important; }
+    html:not(.light) .text-gray-800 { color: #f1f5f9 !important; }
+    html:not(.light) .text-gray-700 { color: #cbd5e1 !important; }
+    html:not(.light) .text-gray-600 { color: #94a3b8 !important; }
+}
+
+/* ===========================
+   Responsive Adjustments
+   =========================== */
+
+@media (max-width: 480px) {
+    .logo-container {
+        width: 120px;
+        height: 120px;
+    }
+
+    .loading-text {
+        font-size: 1.125rem;
+    }
+
+    .offline-icon {
+        width: 100px;
+        height: 100px;
+    }
+
+    .offline-title {
+        font-size: 1.5rem;
+    }
+
+    .offline-message {
+        font-size: 1rem;
+    }
+
+    .retry-button {
+        font-size: 1rem;
+        padding: 0.75rem 1.75rem;
+    }
+}
+
+/* ===========================
+   Utility Classes
+   =========================== */
+
+.fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Hide scrollbar but keep functionality */
+.app-content::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+}
+
+.app-content {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
