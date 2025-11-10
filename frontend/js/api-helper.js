@@ -578,6 +578,9 @@ function handleAPIError(error, fallbackMessage = 'Ein Fehler ist aufgetreten') {
 }
 
 // Export APIs for use in other files
+console.log('[API Helper] Script loaded, beginning exports...');
+console.log('[API Helper] module check:', typeof module, typeof module !== 'undefined' && module.exports);
+
 if (typeof module !== 'undefined' && module.exports) {
     // Node.js environment
     module.exports = {

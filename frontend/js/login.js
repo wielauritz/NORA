@@ -58,6 +58,10 @@ function initLoginForm() {
         const originalText = disableSubmitButton(submitBtn, 'Wird verarbeitet...');
 
         try {
+            // Debug: Check if AuthAPI is available
+            console.log('[Login] Checking AuthAPI availability:', typeof AuthAPI, typeof window.AuthAPI);
+            console.log('[Login] AuthAPI object:', window.AuthAPI);
+
             // Call Backend Login API
             const data = await AuthAPI.login(email, password);
 
