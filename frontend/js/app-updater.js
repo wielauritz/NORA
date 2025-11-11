@@ -3,6 +3,9 @@
  * Prüft beim App-Start, ob neue Versionen verfügbar sind
  */
 
+// Get storage instance from window (exported by storage-manager.js)
+const storage = window.storage;
+
 const APP_VERSION = '1.0.0';
 const UPDATE_CHECK_INTERVAL = 60000; // 1 Minute (für Development - in Production auf 3600000 setzen)
 const VERSION_STORAGE_KEY = 'app_version';

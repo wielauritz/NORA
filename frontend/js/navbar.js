@@ -3,6 +3,9 @@
  * Renders navbar dynamically with preloader
  */
 
+// Get storage instance from window (exported by storage-manager.js)
+const storage = window.storage;
+
 /**
  * Render navbar
  * @param {string} activePage - Current active page ('dashboard', 'stundenplan', or 'raumplan')

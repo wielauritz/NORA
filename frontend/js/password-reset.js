@@ -2,6 +2,9 @@
  * Password Reset Page JavaScript
  */
 
+// Get storage instance from window (exported by storage-manager.js)
+const storage = window.storage;
+
 let resetEmail = ''; // Store email for code verification
 
 // Reset Form Handler - Request reset code

@@ -3,6 +3,8 @@
  * Gemeinsame Funktionen für Auth-Flows
  */
 
+// Get storage instance from window (exported by storage-manager.js)
+const storage = window.storage;
 
 /**
  * Get URL parameter by name

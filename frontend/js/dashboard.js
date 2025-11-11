@@ -3,6 +3,9 @@
  * Lädt und zeigt Dashboard-Daten vom NORA Backend
  */
 
+// Get storage instance from window (exported by storage-manager.js)
+const storage = window.storage;
+
 // Initialize dashboard with auto-login support
 // This ensures auto-login completes BEFORE authentication check
 (async function initializeAuth() {
