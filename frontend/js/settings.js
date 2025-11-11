@@ -379,5 +379,10 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', initSettings);
+// Initialize on page load (works for both static and dynamic loading)
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSettings);
+} else {
+    // DOM already loaded (script loaded dynamically) - initialize immediately
+    initSettings();
+}

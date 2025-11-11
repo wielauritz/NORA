@@ -981,11 +981,18 @@ if (!document.getElementById('spinner-style')) {
     document.head.appendChild(style);
 }
 
-// Initialize when page loads
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize when page loads (works for both static and dynamic loading)
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initRaumplanPage);
+} else {
+    // DOM already loaded (script loaded dynamically) - initialize immediately
+    initRaumplanPage();
+}
+
+function initRaumplanPage() {
     console.log('🚀 Initializing Raumplan...');
     initRaumplan();
-});
+}
 
 // Close modal when clicking outside
 document.addEventListener('click', (e) => {

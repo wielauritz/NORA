@@ -1739,11 +1739,18 @@ function filterDescription(description) {
     return result;
 }
 
-// Initialize when page loads
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize when page loads (works for both static and dynamic loading)
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initStundenplanPage);
+} else {
+    // DOM already loaded (script loaded dynamically) - initialize immediately
+    initStundenplanPage();
+}
+
+function initStundenplanPage() {
     console.log('🚀 Initializing Stundenplan...');
     initStundenplan();
-});
+}
 
 // Handle window resize for responsive calendar
 let resizeTimeout;

@@ -978,8 +978,15 @@ function closeEventModal() {
     }
 }
 
-// Initialize dashboard when page loads
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize dashboard when page loads (works for both static and dynamic loading)
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDashboardAndStartRefresh);
+} else {
+    // DOM already loaded (script loaded dynamically) - initialize immediately
+    initDashboardAndStartRefresh();
+}
+
+function initDashboardAndStartRefresh() {
     console.log('🚀 Initializing dashboard...');
     initDashboard();
 
@@ -988,4 +995,4 @@ document.addEventListener('DOMContentLoaded', () => {
         renderTodaySchedule();
         updateStatistics();
     }, 60000); // 60 seconds
-});
+}
