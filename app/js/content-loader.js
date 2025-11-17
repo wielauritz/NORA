@@ -287,6 +287,15 @@ class ContentLoader {
 
         console.log(`[ContentLoader] Content injected for ${page}`);
 
+        // Fire custom event for page re-initialization
+        // This allows dynamically loaded scripts to re-initialize even if already loaded
+        const pageName = page.replace('.html', '');
+        const event = new CustomEvent('nora:pageLoaded', {
+            detail: { page: pageName }
+        });
+        window.dispatchEvent(event);
+        console.log(`[ContentLoader] Fired pageLoaded event for: ${pageName}`);
+
         // Call pageContentReady callback
         if (typeof window.Shell !== 'undefined' && typeof window.Shell.pageContentReady === 'function') {
             window.Shell.pageContentReady();

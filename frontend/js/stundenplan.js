@@ -1752,6 +1752,15 @@ function initStundenplanPage() {
     initStundenplan();
 }
 
+// Listen for page reload events (for app navigation)
+// This ensures re-initialization even when script is already loaded
+window.addEventListener('nora:pageLoaded', (event) => {
+    if (event.detail.page === 'stundenplan') {
+        console.log('🔄 [Stundenplan] Page reload detected - re-initializing');
+        initStundenplan();
+    }
+});
+
 // Handle window resize for responsive calendar
 let resizeTimeout;
 window.addEventListener('resize', () => {

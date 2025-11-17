@@ -994,6 +994,15 @@ function initRaumplanPage() {
     initRaumplan();
 }
 
+// Listen for page reload events (for app navigation)
+// This ensures re-initialization even when script is already loaded
+window.addEventListener('nora:pageLoaded', (event) => {
+    if (event.detail.page === 'raumplan') {
+        console.log('🔄 [Raumplan] Page reload detected - re-initializing');
+        initRaumplan();
+    }
+});
+
 // Close modal when clicking outside
 document.addEventListener('click', (e) => {
     const modal = document.getElementById('roomModal');

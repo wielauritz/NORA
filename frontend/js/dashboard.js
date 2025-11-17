@@ -998,6 +998,15 @@ function initDashboardAndStartRefresh() {
     }, 60000); // 60 seconds
 }
 
+// Listen for page reload events (for app navigation)
+// This ensures re-initialization even when script is already loaded
+window.addEventListener('nora:pageLoaded', (event) => {
+    if (event.detail.page === 'dashboard') {
+        console.log('🔄 [Dashboard] Page reload detected - re-initializing');
+        initDashboard();
+    }
+});
+
 // Export dashboard functions to window for global access
 window.initDashboard = initDashboard;
 window.loadUserData = loadUserData;

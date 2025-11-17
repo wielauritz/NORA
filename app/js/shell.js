@@ -44,6 +44,14 @@ class ShellApp {
                 } catch (e) {
                     console.error('[Shell] Failed to store token in AppStorage:', e);
                 }
+
+                // CRITICAL: Also store token in localStorage for dynamically loaded scripts
+                try {
+                    localStorage.setItem('token', token);
+                    console.log('[Shell] Token synced to localStorage after login');
+                } catch (e) {
+                    console.warn('[Shell] Failed to sync token to localStorage:', e);
+                }
             }
         });
         console.log('[Shell] Login bridge setup complete');
@@ -316,6 +324,17 @@ class ShellApp {
             if (response.ok) {
                 const userData = await response.json();
                 await window.AppStorage.storeUserData(userData);
+
+                // CRITICAL: Also store token and user data in localStorage
+                // This makes them available to dynamically loaded frontend scripts
+                try {
+                    localStorage.setItem('token', token);
+                    localStorage.setItem('user', JSON.stringify(userData));
+                    console.log('[Shell] Token and user data synced to localStorage');
+                } catch (e) {
+                    console.warn('[Shell] Failed to sync to localStorage:', e);
+                }
+
                 console.log('[Shell] Token validated successfully');
                 return true;
             }
