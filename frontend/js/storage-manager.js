@@ -102,9 +102,9 @@ class StorageManager {
     }
 }
 
-// Erstelle globale Instanz
-const storage = new StorageManager();
+// Erstelle globale Instanz (use different variable name to avoid global scope collision)
+const storageInstance = new StorageManager();
 
 // Export to window for global access (required for dynamically loaded scripts)
-window.storage = storage;
+window.storage = storageInstance;
 console.log('[StorageManager] Exported to window.storage');
