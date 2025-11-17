@@ -102,9 +102,11 @@ class StorageManager {
     }
 }
 
-// Erstelle globale Instanz als 'storage' variable (globally accessible)
-var storage = new StorageManager();
+// Erstelle globale Instanz - assign to window first, then create global reference
+window.storage = new StorageManager();
 
-// Export to window for global access (required for dynamically loaded scripts)
-window.storage = storage;
+// Create global 'storage' variable without var/let/const (implicitly global)
+// This works in dynamically loaded scripts without declaration conflicts
+storage = window.storage;
+
 console.log('[StorageManager] Exported to window.storage');
