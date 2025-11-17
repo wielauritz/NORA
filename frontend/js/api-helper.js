@@ -12,7 +12,9 @@ const API_BASE_URL_V2 = 'https://api.new.nora-nak.de/v2';
 
 // Get storage instance from window (exported by storage-manager.js)
 // Use var to avoid redeclaration errors in browser when multiple scripts load
-var storage = storage || window.storage;
+if (typeof storage === 'undefined') {
+    var storage = window.storage;
+}
 
 /**
  * Helper: Detect if running in Capacitor

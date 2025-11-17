@@ -5,7 +5,9 @@
 
 // Get storage instance from window (exported by storage-manager.js)
 // Use var to avoid redeclaration errors in browser when multiple scripts load
-var storage = storage || window.storage;
+if (typeof storage === 'undefined') {
+    var storage = window.storage;
+}
 
 const APP_VERSION = '1.0.0';
 const UPDATE_CHECK_INTERVAL = 60000; // 1 Minute (für Development - in Production auf 3600000 setzen)
