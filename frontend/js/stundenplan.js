@@ -21,6 +21,10 @@ let showWeekends = false; // Show weekends toggle
 let viewMode = 'week'; // 'week', 'month', or 'year'
 let currentDayOffset = 0; // For mobile single-day view navigation (offset from week start)
 
+// Initialization guards to prevent double initialization
+let isInitializing = false;
+let isInitialized = false;
+
 /**
  * Get number of days to show based on screen size
  */
@@ -42,10 +46,26 @@ function getDaysToShow() {
  * Initialize stundenplan page
  */
 async function initStundenplan() {
-    // Always show preloader on stundenplan load
-    if (typeof showContentLoader === 'function') {
-        showContentLoader();
+    // Prevent double initialization
+    if (isInitializing) {
+        console.log('⏭️ [Stundenplan] Already initializing, skipping...');
+        return;
     }
+
+    if (isInitialized) {
+        console.log('🔄 [Stundenplan] Already initialized, re-loading view only...');
+        await loadCurrentView();
+        return;
+    }
+
+    isInitializing = true;
+    console.log('🚀 [Stundenplan] Starting initialization...');
+
+    try {
+        // Always show preloader on stundenplan load
+        if (typeof showContentLoader === 'function') {
+            showContentLoader();
+        }
 
     // Load user profile data
     await loadUserProfile();
@@ -76,12 +96,18 @@ async function initStundenplan() {
     const dayOfWeek = today.getDay();
     currentDayOffset = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Monday = 0, Sunday = 6
 
-    // Load initial view
-    await loadCurrentView();
+        // Load initial view
+        await loadCurrentView();
 
-    // Setup add event buttons (only if not viewing friend)
-    if (!viewingFriend) {
-        setupAddEventButtons();
+        // Setup add event buttons (only if not viewing friend)
+        if (!viewingFriend) {
+            setupAddEventButtons();
+        }
+
+        isInitialized = true;
+        console.log('✅ [Stundenplan] Initialization complete');
+    } finally {
+        isInitializing = false;
     }
 }
 
@@ -628,8 +654,13 @@ function renderWeekSchedule() {
     const gridContainer = document.getElementById('calendarGrid');
     if (!gridContainer) return;
 
-    gridContainer.innerHTML = '';
+    // Force clear with explicit removal of all children
+    // This is more reliable than innerHTML = '' for preventing duplicates
+    while (gridContainer.firstChild) {
+        gridContainer.removeChild(gridContainer.firstChild);
+    }
     gridContainer.className = 'calendar-grid';
+    console.log('📅 [Stundenplan] Rendering week schedule (grid cleared)...');
 
     // Time range: 0:00 - 24:00 (full day)
     const startHour = 0;
@@ -1739,13 +1770,14 @@ function filterDescription(description) {
     return result;
 }
 
-// Initialize when page loads (works for both static and dynamic loading)
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initStundenplanPage);
-} else {
-    // DOM already loaded (script loaded dynamically) - initialize immediately
-    initStundenplanPage();
-}
+// REMOVED: DOMContentLoaded initialization to prevent double-init
+// Shell.js triggerPageInit() and nora:pageLoaded event handle initialization
+// Keeping this commented for reference:
+// if (document.readyState === 'loading') {
+//     document.addEventListener('DOMContentLoaded', initStundenplanPage);
+// } else {
+//     initStundenplanPage();
+// }
 
 function initStundenplanPage() {
     console.log('🚀 Initializing Stundenplan...');

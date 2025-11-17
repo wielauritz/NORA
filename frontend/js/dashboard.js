@@ -258,36 +258,62 @@ function updateUserDisplay() {
     const lastName = userData.last_name || '';
     const initials = userData.initials || 'U';
 
-    // Update welcome message
-    const welcomeEl = document.querySelector('h1 .gradient-text');
-    if (welcomeEl) {
+    // Retry mechanism to wait for DOM elements to be ready
+    const maxRetries = 10;
+    let retryCount = 0;
+
+    const tryUpdate = () => {
+        const welcomeEl = document.querySelector('h1 .gradient-text');
+        const dateEl = document.getElementById('dashboardDateText');
+
+        // Check if critical elements exist
+        if (!welcomeEl || !dateEl) {
+            retryCount++;
+            if (retryCount < maxRetries) {
+                console.log(`⏳ [Dashboard] Waiting for DOM elements... retry ${retryCount}/${maxRetries}`);
+                setTimeout(tryUpdate, 50); // Retry after 50ms
+                return;
+            } else {
+                console.warn('⚠️ [Dashboard] DOM elements not found after retries');
+                return;
+            }
+        }
+
+        // Now we know elements exist - update them
         welcomeEl.textContent = firstName;
-    }
 
-    // Update user initials in avatar
-    const avatarEl = document.getElementById('userInitials');
-    if (avatarEl) {
-        avatarEl.textContent = initials;
-    }
+        // Update user initials in avatar (local dashboard element if exists)
+        const avatarEl = document.getElementById('userInitials');
+        if (avatarEl) {
+            avatarEl.textContent = initials;
+        }
 
-    // Update current date display
-    const today = new Date();
-    const dateOptions = {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    };
-    const dateStr = today.toLocaleDateString('de-DE', dateOptions);
+        // CRITICAL: Also update initials in shell navbar (app/index.html)
+        if (typeof window.setUserInitials === 'function') {
+            window.setUserInitials(initials);
+            console.log('[Dashboard] User initials set in shell navbar:', initials);
+        }
 
-    const dateEl = document.getElementById('dashboardDateText');
-    if (dateEl) {
+        // Update current date display
+        const today = new Date();
+        const dateOptions = {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        };
+        const dateStr = today.toLocaleDateString('de-DE', dateOptions);
+
         if (userData.zenturie) {
             dateEl.textContent = `Hier ist deine Übersicht für heute, ${dateStr} • Zenturie: ${userData.zenturie}`;
         } else {
             dateEl.textContent = `Hier ist deine Übersicht für heute, ${dateStr}`;
         }
-    }
+
+        console.log('✅ [Dashboard] User display updated');
+    };
+
+    tryUpdate();
 }
 
 /**

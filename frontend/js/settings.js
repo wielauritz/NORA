@@ -8,10 +8,36 @@ let currentSettings = null;
 let allZenturien = [];
 let userData = null;
 
+// Initialization guards to prevent double initialization
+let isInitializing = false;
+let isInitialized = false;
+
 /**
  * Initialize settings page
  */
 async function initSettings() {
+    // Prevent double initialization
+    if (isInitializing) {
+        console.log('⏭️ [Settings] Already initializing, skipping...');
+        return;
+    }
+
+    if (isInitialized) {
+        console.log('🔄 [Settings] Already initialized, reloading data only...');
+        // Just reload settings data
+        try {
+            const settingsData = await UserAPI.getSettings();
+            currentSettings = settingsData;
+            updateSettingsUI(settingsData);
+        } catch (error) {
+            console.error('[Settings] Error reloading data:', error);
+        }
+        return;
+    }
+
+    isInitializing = true;
+    console.log('🚀 [Settings] Starting initialization...');
+
     try {
         // Check authentication first
         const isAuthenticated = await checkAuth();
@@ -45,11 +71,15 @@ async function initSettings() {
         // Populate form with current settings
         populateForm();
 
+        isInitialized = true;
+        console.log('✅ [Settings] Initialization complete');
         pageContentReady();
     } catch (error) {
         console.error('Failed to load settings:', error);
         showToast('Fehler beim Laden der Einstellungen', 'error');
         pageContentReady();
+    } finally {
+        isInitializing = false;
     }
 }
 
@@ -379,10 +409,11 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-// Initialize on page load (works for both static and dynamic loading)
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initSettings);
-} else {
-    // DOM already loaded (script loaded dynamically) - initialize immediately
-    initSettings();
-}
+// REMOVED: DOMContentLoaded initialization to prevent double-init
+// Shell.js triggerPageInit() handles initialization
+// Keeping this commented for reference:
+// if (document.readyState === 'loading') {
+//     document.addEventListener('DOMContentLoaded', initSettings);
+// } else {
+//     initSettings();
+// }

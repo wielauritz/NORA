@@ -172,12 +172,57 @@ class ShellApp {
      */
     handleSearch() {
         console.log('[Shell] Search button clicked');
-        // Search functionality will be implemented in loaded content
-        // Try to call global search function if available
-        if (typeof window.showGlobalSearch === 'function') {
-            window.showGlobalSearch();
+
+        // On mobile: Navigate to search page via ContentLoader
+        // On desktop: Show search modal
+        if (window.innerWidth < 768) {
+            // Mobile: Load search.html via ContentLoader (from server)
+            console.log('[Shell] Mobile detected - navigating to search page');
+            this.navigateTo('search');
         } else {
-            console.warn('[Shell] Search function not available yet');
+            // Desktop: Show modal if function available
+            if (typeof window.showGlobalSearch === 'function') {
+                window.showGlobalSearch();
+            } else {
+                console.warn('[Shell] Search function not available yet');
+            }
+        }
+    }
+
+    /**
+     * Trigger page-specific initialization
+     * Fallback for when pageLoaded event doesn't fire
+     * @param {string} page - Page name (without .html)
+     */
+    triggerPageInit(page) {
+        console.log(`[Shell] Triggering re-init for: ${page}`);
+
+        // Call page-specific init functions if they exist
+        switch(page) {
+            case 'dashboard':
+                if (typeof window.initDashboard === 'function') {
+                    console.log('[Shell] Calling initDashboard()');
+                    window.initDashboard();
+                }
+                break;
+            case 'stundenplan':
+                if (typeof window.initStundenplan === 'function') {
+                    console.log('[Shell] Calling initStundenplan()');
+                    window.initStundenplan();
+                }
+                break;
+            case 'raumplan':
+                if (typeof window.initRaumplan === 'function') {
+                    console.log('[Shell] Calling initRaumplan()');
+                    window.initRaumplan();
+                }
+                break;
+            case 'settings':
+                if (typeof window.initSettings === 'function') {
+                    console.log('[Shell] Calling initSettings()');
+                    window.initSettings();
+                }
+                break;
         }
     }
 
@@ -464,6 +509,10 @@ class ShellApp {
 
             // Load page
             await window.ContentLoader.loadPage(`${page}.html`);
+
+            // CRITICAL: Manually trigger page re-initialization
+            // This is a fallback in case pageLoaded event doesn't fire
+            this.triggerPageInit(page);
 
             // Update navbar
             this.updateActiveNavItem(page);

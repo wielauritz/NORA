@@ -186,6 +186,9 @@ class ContentLoader {
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
 
+        // Extract page name once for use throughout the function
+        const pageName = page.replace('.html', '');
+
         // Set base URL for relative paths BEFORE extracting resources
         // This ensures all relative URLs (css, js, images) resolve to the server
         const baseElement = doc.createElement('base');
@@ -200,9 +203,17 @@ class ContentLoader {
         // This captures styles that are outside <main> which would otherwise be lost
         const allStyles = doc.querySelectorAll('style');
         const stylesToInject = [];
-        allStyles.forEach(styleEl => {
+        allStyles.forEach((styleEl, index) => {
             // Clone the style element to preserve attributes (id, class, etc.)
             const clonedStyle = styleEl.cloneNode(true);
+
+            // CRITICAL: Assign generated ID if style doesn't have one
+            // This prevents style accumulation on navigation
+            if (!clonedStyle.id) {
+                clonedStyle.id = `${pageName}-style-${index}`;
+                console.log(`[ContentLoader] Assigned generated ID: ${clonedStyle.id}`);
+            }
+
             stylesToInject.push(clonedStyle);
         });
         console.log(`[ContentLoader] Extracted ${stylesToInject.length} style blocks`);
@@ -289,7 +300,6 @@ class ContentLoader {
 
         // Fire custom event for page re-initialization
         // This allows dynamically loaded scripts to re-initialize even if already loaded
-        const pageName = page.replace('.html', '');
         const event = new CustomEvent('nora:pageLoaded', {
             detail: { page: pageName }
         });
