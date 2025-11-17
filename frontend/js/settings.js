@@ -424,3 +424,6 @@ function showToast(message, type = 'info') {
 // } else {
 //     initSettings();
 // }
+
+// CRITICAL: Export initSettings to window so Shell.triggerPageInit() can call it
+window.initSettings = initSettings;

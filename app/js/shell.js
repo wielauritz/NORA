@@ -519,10 +519,13 @@ class ShellApp {
             // Update navbar
             this.updateActiveNavItem(page);
 
-            // Hide loader
-            this.hideContentLoader();
+            // REMOVED: Don't hide loader here - let pages call pageContentReady() when actually ready
+            // This prevents hiding loader before async initialization completes
+            // Pages should call pageContentReady() when their data is loaded and rendered
+            // Old code:
+            // this.hideContentLoader();
 
-            console.log(`[Shell] Navigation to ${page} complete`);
+            console.log(`[Shell] Navigation to ${page} complete (waiting for page to signal ready)`);
 
         } catch (error) {
             console.error(`[Shell] Navigation to ${page} failed:`, error);

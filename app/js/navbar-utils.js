@@ -453,15 +453,28 @@ function toggleUserDropdown() {
  * @param {string} initials - User initials (e.g., "AB")
  */
 function setUserInitials(initials) {
+    console.log('[NavbarUtils] setUserInitials called with:', initials);
+
     const avatarDesktop = document.getElementById('userInitials');
     const avatarMobile = document.getElementById('userInitialsMobile');
 
+    console.log('[NavbarUtils] Elements found:', {
+        desktop: !!avatarDesktop,
+        mobile: !!avatarMobile
+    });
+
     if (avatarDesktop) {
         avatarDesktop.textContent = initials;
+        console.log('[NavbarUtils] Desktop initials set to:', initials);
+    } else {
+        console.warn('[NavbarUtils] Desktop avatar element not found!');
     }
 
     if (avatarMobile) {
         avatarMobile.textContent = initials;
+        console.log('[NavbarUtils] Mobile initials set to:', initials);
+    } else {
+        console.warn('[NavbarUtils] Mobile avatar element not found!');
     }
 }
 
