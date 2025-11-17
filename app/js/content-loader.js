@@ -196,6 +196,30 @@ class ContentLoader {
             console.log(`[ContentLoader] Set base URL: ${baseElement.href}`);
         }
 
+        // Extract all <style> blocks from the loaded HTML (both <head> and <body>)
+        // This captures styles that are outside <main> which would otherwise be lost
+        const allStyles = doc.querySelectorAll('style');
+        const stylesToInject = [];
+        allStyles.forEach(styleEl => {
+            // Clone the style element to preserve attributes (id, class, etc.)
+            const clonedStyle = styleEl.cloneNode(true);
+            stylesToInject.push(clonedStyle);
+        });
+        console.log(`[ContentLoader] Extracted ${stylesToInject.length} style blocks`);
+
+        // Extract body-level elements (toasts, modals, etc.) that are outside <main>
+        // but need to be present in the app (e.g., toast notifications)
+        const bodyLevelElements = doc.querySelectorAll('body > div[id], body > aside[id]');
+        const elementsToInject = [];
+        bodyLevelElements.forEach(el => {
+            // Skip main element, navbar placeholders, and elements that already exist
+            const skipIds = ['navbar-placeholder', 'content-loader'];
+            if (el.tagName !== 'MAIN' && !skipIds.includes(el.id) && !document.getElementById(el.id)) {
+                elementsToInject.push(el.cloneNode(true));
+            }
+        });
+        console.log(`[ContentLoader] Extracted ${elementsToInject.length} body-level elements`);
+
         // Extract MAIN content only (not bottom navbar!)
         const mainContent = doc.querySelector('main');
         if (!mainContent) {
@@ -216,6 +240,29 @@ class ContentLoader {
             this.container.innerHTML = mainContent.outerHTML;
             console.log('[ContentLoader] Extracted <main> content');
         }
+
+        // Inject all extracted <style> blocks into document head
+        // This ensures styles defined outside <main> are not lost
+        stylesToInject.forEach(style => {
+            // Check if style with same id already exists (to avoid duplicates on navigation)
+            if (style.id && document.getElementById(style.id)) {
+                // Replace existing style with new one
+                const existingStyle = document.getElementById(style.id);
+                existingStyle.replaceWith(style);
+                console.log(`[ContentLoader] Replaced existing style: ${style.id}`);
+            } else {
+                // Append new style to head
+                document.head.appendChild(style);
+                console.log(`[ContentLoader] Injected style block${style.id ? ` (id: ${style.id})` : ''}`);
+            }
+        });
+
+        // Inject body-level elements (toasts, modals, etc.)
+        // These are elements that need to exist at body level for proper positioning/functionality
+        elementsToInject.forEach(el => {
+            document.body.appendChild(el);
+            console.log(`[ContentLoader] Injected body-level element: ${el.tagName}#${el.id}`);
+        });
 
         // Clear any form initialization flags from previous page loads
         if (document.body.dataset.formInitialized) {
