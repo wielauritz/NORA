@@ -4,7 +4,11 @@
  */
 
 // Get storage instance from window (exported by storage-manager.js)
-var storage = window.storage;
+// Conditional declaration to work in both browser and dynamically loaded contexts
+if (typeof storage === 'undefined') {
+    var storage;
+}
+storage = window.storage;
 
 const APP_VERSION = '1.0.0';
 const UPDATE_CHECK_INTERVAL = 60000; // 1 Minute (für Development - in Production auf 3600000 setzen)

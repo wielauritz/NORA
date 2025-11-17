@@ -11,7 +11,11 @@ const API_BASE_URL_V2 = 'https://api.new.nora-nak.de/v2';
 // const API_BASE_URL_V2 = 'http://localhost:8000/v2';
 
 // Get storage instance from window (exported by storage-manager.js)
-var storage = window.storage;
+// Conditional declaration to work in both browser and dynamically loaded contexts
+if (typeof storage === 'undefined') {
+    var storage;
+}
+storage = window.storage;
 
 /**
  * Helper: Detect if running in Capacitor

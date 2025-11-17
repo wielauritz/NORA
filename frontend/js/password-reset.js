@@ -3,7 +3,11 @@
  */
 
 // Get storage instance from window (exported by storage-manager.js)
-var storage = window.storage;
+// Conditional declaration to work in both browser and dynamically loaded contexts
+if (typeof storage === 'undefined') {
+    var storage;
+}
+storage = window.storage;
 
 let resetEmail = ''; // Store email for code verification
 
