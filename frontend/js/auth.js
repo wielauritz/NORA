@@ -3,8 +3,8 @@
  * Gemeinsame Funktionen für Auth-Flows
  */
 
-// storage is globally available from storage-manager.js via window.storage
-// No local declaration needed - rely on global scope
+// Local reference to storage (exported by storage-manager.js to window.storage)
+const storage = window.storage;
 
 /**
  * Get URL parameter by name

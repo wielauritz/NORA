@@ -102,11 +102,8 @@ class StorageManager {
     }
 }
 
-// Erstelle globale Instanz - assign to window first, then create global reference
+// Erstelle globale Instanz - only export to window.storage
+// NO global 'storage' variable to avoid conflicts and readonly property errors
 window.storage = new StorageManager();
-
-// Create global 'storage' variable without var/let/const (implicitly global)
-// This works in dynamically loaded scripts without declaration conflicts
-storage = window.storage;
 
 console.log('[StorageManager] Exported to window.storage');

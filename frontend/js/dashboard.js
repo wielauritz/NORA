@@ -3,8 +3,8 @@
  * Lädt und zeigt Dashboard-Daten vom NORA Backend
  */
 
-// storage is globally available from storage-manager.js via window.storage
-// No local declaration needed - rely on global scope
+// Local reference to storage (exported by storage-manager.js to window.storage)
+const storage = window.storage;
 
 // Initialize dashboard with auto-login support
 // This ensures auto-login completes BEFORE authentication check

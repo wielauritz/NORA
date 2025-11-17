@@ -2,8 +2,8 @@
  * Password Reset Page JavaScript
  */
 
-// storage is globally available from storage-manager.js via window.storage
-// No local declaration needed - rely on global scope
+// Local reference to storage (exported by storage-manager.js to window.storage)
+const storage = window.storage;
 
 let resetEmail = ''; // Store email for code verification
 
