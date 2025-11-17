@@ -2,6 +2,7 @@
  * Password Reset Page JavaScript
  */
 
+(function() {
 // Local reference to storage (exported by storage-manager.js to window.storage)
 const storage = window.storage;
 
@@ -399,3 +400,12 @@ function startResendCountdown(sendEmail = false) {
             });
     }
 }
+
+// Export password reset functions to window for global access (if needed from other files)
+window.showCodeVerificationForm = showCodeVerificationForm;
+window.setupCodeFormListeners = setupCodeFormListeners;
+window.showEmailForm = showEmailForm;
+window.handleCodeVerification = handleCodeVerification;
+window.startResendCountdown = startResendCountdown;
+console.log('[PasswordReset] Functions exported to window');
+})();

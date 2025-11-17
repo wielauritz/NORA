@@ -3,6 +3,7 @@
  * Renders navbar dynamically with preloader
  */
 
+(function() {
 // Local reference to storage (exported by storage-manager.js to window.storage)
 const storage = window.storage;
 
@@ -691,3 +692,25 @@ if (typeof storage !== 'undefined' && storage.getItem('token')) {
         startFriendRequestsPolling();
     }, 1000);
 }
+
+// Export navbar functions to window for global access
+window.renderNavbar = renderNavbar;
+window.showContentLoader = showContentLoader;
+window.hideContentLoader = hideContentLoader;
+window.initNavbar = initNavbar;
+window.attachNavbarPreloaderHandlers = attachNavbarPreloaderHandlers;
+window.restorePreloaderIfNeeded = restorePreloaderIfNeeded;
+window.pageContentReady = pageContentReady;
+window.toggleUserDropdown = toggleUserDropdown;
+window.toggleFriendRequestsDropdown = toggleFriendRequestsDropdown;
+window.loadFriendRequests = loadFriendRequests;
+window.renderFriendRequests = renderFriendRequests;
+window.updateFriendRequestsBadge = updateFriendRequestsBadge;
+window.acceptFriendRequest = acceptFriendRequest;
+window.rejectFriendRequest = rejectFriendRequest;
+window.cancelFriendRequest = cancelFriendRequest;
+window.startFriendRequestsPolling = startFriendRequestsPolling;
+window.stopFriendRequestsPolling = stopFriendRequestsPolling;
+window.setUserInitials = setUserInitials;
+console.log('[Navbar] Functions exported to window');
+})();

@@ -3,6 +3,7 @@
  * Diese Datei enthält wiederverwendbare Funktionen für API-Calls
  */
 
+(function() {
 // API Base URL - Backend Login Service
 const API_BASE_URL = 'https://api.new.nora-nak.de/v1';
 const API_BASE_URL_V2 = 'https://api.new.nora-nak.de/v2';
@@ -628,3 +629,4 @@ if (typeof module !== 'undefined' && module.exports) {
 
     console.log('[API Helper] APIs exported to window globally');
 }
+})();

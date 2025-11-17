@@ -3,6 +3,7 @@
  * Gemeinsame Funktionen für Auth-Flows
  */
 
+(function() {
 // Local reference to storage (exported by storage-manager.js to window.storage)
 const storage = window.storage;
 
@@ -807,3 +808,4 @@ window.showVerificationRequired = showVerificationRequired;
 window.showConfirmDialog = showConfirmDialog;
 window.closeConfirmDialog = closeConfirmDialog;
 console.log('[Auth] Functions exported to window');
+})();

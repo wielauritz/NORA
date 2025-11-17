@@ -3,6 +3,7 @@
  * Lädt und zeigt Dashboard-Daten vom NORA Backend
  */
 
+(function() {
 // Local reference to storage (exported by storage-manager.js to window.storage)
 const storage = window.storage;
 
@@ -996,3 +997,26 @@ function initDashboardAndStartRefresh() {
         updateStatistics();
     }, 60000); // 60 seconds
 }
+
+// Export dashboard functions to window for global access
+window.initDashboard = initDashboard;
+window.loadUserData = loadUserData;
+window.updateUserDisplay = updateUserDisplay;
+window.loadTodaySchedule = loadTodaySchedule;
+window.renderTodaySchedule = renderTodaySchedule;
+window.loadUpcomingExams = loadUpcomingExams;
+window.renderUpcomingExams = renderUpcomingExams;
+window.loadFriends = loadFriends;
+window.renderFriends = renderFriends;
+window.updateStatistics = updateStatistics;
+window.viewFriendSchedule = viewFriendSchedule;
+window.removeFriend = removeFriend;
+window.logout = logout;
+window.showCalendarSubscription = showCalendarSubscription;
+window.copySubscriptionURL = copySubscriptionURL;
+window.closeCalendarSubModal = closeCalendarSubModal;
+window.showEventDetails = showEventDetails;
+window.closeEventModal = closeEventModal;
+window.initDashboardAndStartRefresh = initDashboardAndStartRefresh;
+console.log('[Dashboard] Functions exported to window');
+})();

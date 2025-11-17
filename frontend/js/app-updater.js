@@ -3,6 +3,7 @@
  * Prüft beim App-Start, ob neue Versionen verfügbar sind
  */
 
+(function() {
 // Local reference to storage (exported by storage-manager.js to window.storage)
 const storage = window.storage;
 
@@ -179,3 +180,4 @@ function startAppUpdater() {
 setInterval(() => {
     appUpdater.checkForUpdates(false);
 }, 600000);
+})();
