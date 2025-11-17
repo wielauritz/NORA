@@ -3,12 +3,8 @@
  * Renders navbar dynamically with preloader
  */
 
-// Get storage instance from window (exported by storage-manager.js)
-// Conditional declaration to work in both browser and dynamically loaded contexts
-if (typeof storage === 'undefined') {
-    var storage;
-}
-storage = window.storage;
+// storage is globally available from storage-manager.js via window.storage
+// No local declaration needed - rely on global scope
 
 /**
  * Render navbar

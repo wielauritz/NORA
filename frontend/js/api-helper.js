@@ -10,12 +10,8 @@ const API_BASE_URL_V2 = 'https://api.new.nora-nak.de/v2';
 // const API_BASE_URL = 'http://localhost:8000/v1';
 // const API_BASE_URL_V2 = 'http://localhost:8000/v2';
 
-// Get storage instance from window (exported by storage-manager.js)
-// Conditional declaration to work in both browser and dynamically loaded contexts
-if (typeof storage === 'undefined') {
-    var storage;
-}
-storage = window.storage;
+// storage is globally available from storage-manager.js via window.storage
+// No local declaration needed - rely on global scope
 
 /**
  * Helper: Detect if running in Capacitor

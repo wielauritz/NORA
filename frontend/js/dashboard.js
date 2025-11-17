@@ -3,12 +3,8 @@
  * Lädt und zeigt Dashboard-Daten vom NORA Backend
  */
 
-// Get storage instance from window (exported by storage-manager.js)
-// Conditional declaration to work in both browser and dynamically loaded contexts
-if (typeof storage === 'undefined') {
-    var storage;
-}
-storage = window.storage;
+// storage is globally available from storage-manager.js via window.storage
+// No local declaration needed - rely on global scope
 
 // Initialize dashboard with auto-login support
 // This ensures auto-login completes BEFORE authentication check
