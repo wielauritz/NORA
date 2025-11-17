@@ -4,7 +4,8 @@
  */
 
 // Get storage instance from window (exported by storage-manager.js)
-const storage = window.storage;
+// Use var to avoid redeclaration errors in browser when multiple scripts load
+var storage = storage || window.storage;
 
 // Initialize dashboard with auto-login support
 // This ensures auto-login completes BEFORE authentication check

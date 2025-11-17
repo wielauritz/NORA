@@ -4,7 +4,8 @@
  */
 
 // Get storage instance from window (exported by storage-manager.js)
-const storage = window.storage;
+// Use var to avoid redeclaration errors in browser when multiple scripts load
+var storage = storage || window.storage;
 
 /**
  * Get URL parameter by name
