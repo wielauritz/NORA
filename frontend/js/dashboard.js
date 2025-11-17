@@ -259,7 +259,7 @@ function updateUserDisplay() {
     const initials = userData.initials || 'U';
 
     // Retry mechanism to wait for DOM elements to be ready
-    const maxRetries = 10;
+    const maxRetries = 20; // Increased from 10 to 20 for better reliability
     let retryCount = 0;
 
     const tryUpdate = () => {
@@ -271,7 +271,7 @@ function updateUserDisplay() {
             retryCount++;
             if (retryCount < maxRetries) {
                 console.log(`⏳ [Dashboard] Waiting for DOM elements... retry ${retryCount}/${maxRetries}`);
-                setTimeout(tryUpdate, 50); // Retry after 50ms
+                setTimeout(tryUpdate, 100); // Increased from 50ms to 100ms (total: 2000ms timeout)
                 return;
             } else {
                 console.warn('⚠️ [Dashboard] DOM elements not found after retries');

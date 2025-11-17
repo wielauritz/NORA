@@ -220,11 +220,11 @@ class ContentLoader {
 
         // Extract body-level elements (toasts, modals, etc.) that are outside <main>
         // but need to be present in the app (e.g., toast notifications)
-        const bodyLevelElements = doc.querySelectorAll('body > div[id], body > aside[id]');
+        const bodyLevelElements = doc.querySelectorAll('body > div[id], body > aside[id], body > nav[id]');
         const elementsToInject = [];
         bodyLevelElements.forEach(el => {
-            // Skip main element, navbar placeholders, and elements that already exist
-            const skipIds = ['navbar-placeholder', 'content-loader'];
+            // Skip main element, navbar placeholders, shell navbars, and elements that already exist
+            const skipIds = ['navbar-placeholder', 'content-loader', 'top-navbar', 'bottom-navbar'];
             if (el.tagName !== 'MAIN' && !skipIds.includes(el.id) && !document.getElementById(el.id)) {
                 elementsToInject.push(el.cloneNode(true));
             }
@@ -306,10 +306,13 @@ class ContentLoader {
         window.dispatchEvent(event);
         console.log(`[ContentLoader] Fired pageLoaded event for: ${pageName}`);
 
-        // Call pageContentReady callback
-        if (typeof window.Shell !== 'undefined' && typeof window.Shell.pageContentReady === 'function') {
-            window.Shell.pageContentReady();
-        }
+        // REMOVED: Automatic pageContentReady call
+        // Pages should call pageContentReady() themselves when their async initialization completes
+        // This prevents the loader from hiding before data is loaded
+        // Old code:
+        // if (typeof window.Shell !== 'undefined' && typeof window.Shell.pageContentReady === 'function') {
+        //     window.Shell.pageContentReady();
+        // }
     }
 
     /**

@@ -499,7 +499,9 @@ class ShellApp {
      */
     async navigateTo(page) {
         if (this.currentPage === page) {
-            console.log(`[Shell] Already on ${page} page`);
+            console.log(`[Shell] Already on ${page} page - triggering re-init`);
+            // Even if already on page, trigger re-init to refresh the content
+            this.triggerPageInit(page);
             return;
         }
 

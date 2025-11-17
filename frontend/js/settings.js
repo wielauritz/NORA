@@ -24,11 +24,18 @@ async function initSettings() {
 
     if (isInitialized) {
         console.log('🔄 [Settings] Already initialized, reloading data only...');
-        // Just reload settings data
+        // Just reload settings data and refresh UI
         try {
             const settingsData = await UserAPI.getSettings();
             currentSettings = settingsData;
-            updateSettingsUI(settingsData);
+
+            // Refresh the form with current settings
+            populateForm();
+
+            // Refresh user display (initials)
+            updateUserDisplay();
+
+            console.log('✅ [Settings] Data reloaded successfully');
         } catch (error) {
             console.error('[Settings] Error reloading data:', error);
         }
