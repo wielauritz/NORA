@@ -36,8 +36,13 @@ async function initSettings() {
             updateUserDisplay();
 
             console.log('✅ [Settings] Data reloaded successfully');
+
+            // CRITICAL: Hide loader after reload complete
+            pageContentReady();
         } catch (error) {
             console.error('[Settings] Error reloading data:', error);
+            // Even on error, hide the loader
+            pageContentReady();
         }
         return;
     }

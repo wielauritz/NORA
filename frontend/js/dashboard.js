@@ -344,8 +344,13 @@ async function loadTodaySchedule() {
  * Render today's schedule
  */
 function renderTodaySchedule() {
+    console.log('[Dashboard] renderTodaySchedule() called, todayEvents:', todayEvents.length);
+
     const container = document.getElementById('todaySchedule');
-    if (!container) return;
+    if (!container) {
+        console.warn('[Dashboard] todaySchedule container NOT FOUND - cannot render!');
+        return;
+    }
 
     const now = new Date();
 
@@ -355,7 +360,10 @@ function renderTodaySchedule() {
         return endTime > now; // Only show events that haven't ended yet
     });
 
+    console.log('[Dashboard] Filtered to', upcomingEvents.length, 'upcoming events (from', todayEvents.length, 'total)');
+
     if (upcomingEvents.length === 0) {
+        console.log('[Dashboard] No upcoming events, showing empty state');
         container.innerHTML = `
             <div class="text-center py-8 text-gray-500">
                 <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -424,6 +432,8 @@ function renderTodaySchedule() {
             </div>
         `;
     }).join('');
+
+    console.log('[Dashboard] ✅ Today schedule rendered successfully with', upcomingEvents.length, 'events');
 }
 
 /**
@@ -595,6 +605,8 @@ function renderFriends() {
  * Update dashboard statistics
  */
 function updateStatistics() {
+    console.log('[Dashboard] updateStatistics() called');
+
     const now = new Date();
 
     // Filter out past events
@@ -603,10 +615,15 @@ function updateStatistics() {
         return endTime > now;
     });
 
+    console.log('[Dashboard] Statistics: todayEvents=', todayEvents.length, 'upcomingEvents=', upcomingEvents.length);
+
     // Total upcoming events today (timetable + custom hours) - 1st card
     const todayEventsCountEl = document.getElementById('todayEventsCount');
     if (todayEventsCountEl) {
         todayEventsCountEl.textContent = upcomingEvents.length;
+        console.log('[Dashboard] Set todayEventsCount to:', upcomingEvents.length);
+    } else {
+        console.warn('[Dashboard] todayEventsCountEl NOT FOUND!');
     }
 
     // Upcoming courses today (only timetable events, not custom hours) - 2nd card
