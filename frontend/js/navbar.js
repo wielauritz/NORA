@@ -672,18 +672,10 @@ function stopFriendRequestsPolling() {
  * Set user initials in navbar (Desktop + Mobile)
  * @param {string} initials - User initials (e.g., "AB")
  */
-function setUserInitials(initials) {
-    const avatarDesktop = document.getElementById('userInitials');
-    const avatarMobile = document.getElementById('userInitialsMobile');
-
-    if (avatarDesktop) {
-        avatarDesktop.textContent = initials;
-    }
-
-    if (avatarMobile) {
-        avatarMobile.textContent = initials;
-    }
-}
+// REMOVED: setUserInitials function
+// This function is now ONLY in /app/js/navbar-utils.js to avoid conflicts
+// The version in navbar-utils.js has detailed logging for debugging
+// Old code removed to prevent window.setUserInitials being overwritten
 
 // Initialize polling when navbar is loaded
 if (typeof storage !== 'undefined' && storage.getItem('token')) {
@@ -711,6 +703,6 @@ window.rejectFriendRequest = rejectFriendRequest;
 window.cancelFriendRequest = cancelFriendRequest;
 window.startFriendRequestsPolling = startFriendRequestsPolling;
 window.stopFriendRequestsPolling = stopFriendRequestsPolling;
-window.setUserInitials = setUserInitials;
+// REMOVED: window.setUserInitials - now only exported from /app/js/navbar-utils.js
 console.log('[Navbar] Functions exported to window');
 })();

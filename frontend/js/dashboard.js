@@ -626,11 +626,14 @@ function updateStatistics() {
         console.warn('[Dashboard] todayEventsCountEl NOT FOUND!');
     }
 
-    // Upcoming courses today (only timetable events, not custom hours) - 2nd card
-    const coursesCount = upcomingEvents.filter(e => e.event_type === 'timetable').length;
+    // Courses today (only timetable events, not custom hours) - 2nd card
+    // NOTE: Uses todayEvents (all events today) not upcomingEvents (only future events)
+    // because we want to show total courses for the day, not just upcoming ones
+    const coursesCount = todayEvents.filter(e => e.event_type === 'timetable').length;
     const coursesEl = document.getElementById('coursesTodayCount');
     if (coursesEl) {
         coursesEl.textContent = coursesCount;
+        console.log('[Dashboard] Set coursesTodayCount to:', coursesCount);
     }
 
     // Upcoming exams (next 30 days) - 3rd card
