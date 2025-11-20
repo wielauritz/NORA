@@ -250,6 +250,11 @@ function showEmailForm() {
         </form>
     `;
 
+    // Setup email autocomplete
+    if (typeof setupEmailAutocomplete === 'function') {
+        setupEmailAutocomplete('email');
+    }
+
     // Re-attach event listener
     document.getElementById('resetForm').addEventListener('submit', async (e) => {
         e.preventDefault();
