@@ -321,7 +321,18 @@ function updateUserDisplay() {
  */
 async function loadTodaySchedule() {
     try {
-        const today = formatDateForAPI(new Date());
+        const now = new Date();
+        const today = formatDateForAPI(now);
+
+        // DEBUG: Show exactly what date is being used
+        console.log('[Dashboard] 📅 Date debug:', {
+            localDate: `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`,
+            utcDate: now.toISOString().split('T')[0],
+            apiDate: today,
+            localTime: now.toLocaleString('de-DE'),
+            utcTime: now.toISOString()
+        });
+
         todayEvents = await ScheduleAPI.getEvents(today);
 
         console.log('✅ Today events loaded:', todayEvents.length);

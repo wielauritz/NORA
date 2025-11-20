@@ -107,12 +107,12 @@ function showAddCustomHourModal() {
     document.getElementById('customHourForm').reset();
     document.getElementById('customHourError').classList.add('hidden');
 
-    // Set default date to today
-    const today = new Date().toISOString().split('T')[0];
+    // Set default date to today (use local date, not UTC)
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
     document.getElementById('customHourDate').value = today;
 
     // Set default start time to current time rounded to nearest 15 minutes
-    const now = new Date();
     const minutes = now.getMinutes();
     const roundedMinutes = Math.ceil(minutes / 15) * 15;
     now.setMinutes(roundedMinutes);
@@ -278,12 +278,12 @@ function createAddCustomHourModal() {
     // Load rooms for selection
     loadRoomsForCustomHour();
 
-    // Set default date to today
-    const today = new Date().toISOString().split('T')[0];
+    // Set default date to today (use local date, not UTC)
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
     document.getElementById('customHourDate').value = today;
 
     // Set default start time to current time rounded to nearest 15 minutes
-    const now = new Date();
     const minutes = now.getMinutes();
     const roundedMinutes = Math.ceil(minutes / 15) * 15;
     now.setMinutes(roundedMinutes);

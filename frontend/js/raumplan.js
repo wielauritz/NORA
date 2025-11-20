@@ -415,7 +415,8 @@ async function loadRoomOccupanciesForToday() {
 
             // Filter only today's occupancy
             const todayOccupancy = occupancy.filter(event => {
-                const eventDate = new Date(event.start_time).toISOString().split('T')[0];
+                // Use local date to match todayStr (which is also local)
+                const eventDate = formatDateForAPI(new Date(event.start_time));
                 return eventDate === todayStr;
             });
 
@@ -789,10 +790,10 @@ function renderRoomModal(roomData) {
     const { room, occupancy } = roomData;
     const modalContent = document.getElementById('roomModalContent');
 
-    // Group occupancy by date
+    // Group occupancy by date (use local date for consistency)
     const occupancyByDate = {};
     occupancy.forEach(event => {
-        const date = new Date(event.start_time).toISOString().split('T')[0];
+        const date = formatDateForAPI(new Date(event.start_time));
         if (!occupancyByDate[date]) {
             occupancyByDate[date] = [];
         }
