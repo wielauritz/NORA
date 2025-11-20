@@ -421,14 +421,15 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-// REMOVED: DOMContentLoaded initialization to prevent double-init
-// Shell.js triggerPageInit() handles initialization
-// Keeping this commented for reference:
-// if (document.readyState === 'loading') {
-//     document.addEventListener('DOMContentLoaded', initSettings);
-// } else {
-//     initSettings();
-// }
+// Initialize on DOMContentLoaded for BROWSER compatibility
+// In the app, Shell.triggerPageInit() will call initSettings() directly
+// The isInitialized guard in initSettings() prevents double initialization
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSettings);
+} else {
+    // DOM already loaded (script loaded dynamically)
+    initSettings();
+}
 
 // CRITICAL: Export initSettings to window so Shell.triggerPageInit() can call it
 window.initSettings = initSettings;

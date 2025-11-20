@@ -1770,18 +1770,19 @@ function filterDescription(description) {
     return result;
 }
 
-// REMOVED: DOMContentLoaded initialization to prevent double-init
-// Shell.js triggerPageInit() and nora:pageLoaded event handle initialization
-// Keeping this commented for reference:
-// if (document.readyState === 'loading') {
-//     document.addEventListener('DOMContentLoaded', initStundenplanPage);
-// } else {
-//     initStundenplanPage();
-// }
-
 function initStundenplanPage() {
     console.log('🚀 Initializing Stundenplan...');
     initStundenplan();
+}
+
+// Initialize on DOMContentLoaded for BROWSER compatibility
+// In the app, Shell.triggerPageInit() will call initStundenplan() directly
+// The isInitialized guard in initStundenplan() prevents double initialization
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initStundenplanPage);
+} else {
+    // DOM already loaded (script loaded dynamically)
+    initStundenplanPage();
 }
 
 // Listen for page reload events (for app navigation)
