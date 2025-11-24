@@ -324,15 +324,31 @@ func GetEvents(c *fiber.Ctx) error {
 	return c.JSON(events)
 }
 
-// GetExams returns all upcoming exams for the user
+// GetExams returns all upcoming exams for the user's entire year (e.g., A24)
 // GET /v1/exams?session_id=...
 func GetExams(c *fiber.Ctx) error {
 	user := middleware.GetCurrentUser(c)
 
+	// Check if user has a zenturie
+	if user.ZenturienID == nil {
+		return c.JSON([]ExamResponse{})
+	}
+
+	// Get user's zenturie to find the year
+	var zenturie models.Zenturie
+	if err := config.DB.First(&zenturie, *user.ZenturienID).Error; err != nil {
+		return c.JSON([]ExamResponse{})
+	}
+
+	// Find all exams from users in the same year
 	var exams []models.Exam
 	config.DB.Preload("Course").Preload("Room").
-		Where("user_id = ? AND start_time >= ?", user.ID, time.Now().UTC()).
-		Order("start_time").Find(&exams)
+		Joins("JOIN users ON users.id = exams.user_id").
+		Joins("JOIN zenturien ON zenturien.id = users.zenturien_id").
+		Where("zenturien.year = ? AND exams.start_time >= ?", zenturie.Year, time.Now().UTC()).
+		Order("exams.start_time").
+		Group("exams.id, courses.id, rooms.id"). // Group to avoid duplicates
+		Find(&exams)
 
 	response := make([]ExamResponse, len(exams))
 	for i, exam := range exams {
@@ -698,6 +714,13 @@ func UpdateCustomHour(c *fiber.Ctx) error {
 func AddExam(c *fiber.Ctx) error {
 	user := middleware.GetCurrentUser(c)
 
+	// Check if user has a zenturie
+	if user.ZenturienID == nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"detail": "Du musst zuerst eine Zenturie auswählen",
+		})
+	}
+
 	var req ExamCreateRequest
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -713,14 +736,26 @@ func AddExam(c *fiber.Ctx) error {
 		})
 	}
 
-	// Check if user already added this exam
+	// Get user's zenturie to find the year
+	var zenturie models.Zenturie
+	if err := config.DB.First(&zenturie, *user.ZenturienID).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"detail": "Zenturie nicht gefunden",
+		})
+	}
+
+	// Check if this exam already exists for someone in the same year
 	var existingExam models.Exam
-	result := config.DB.Where("user_id = ? AND course_id = ? AND start_time = ? AND duration = ?",
-		user.ID, course.ID, req.StartTime, req.Duration).First(&existingExam)
+	result := config.DB.
+		Joins("JOIN users ON users.id = exams.user_id").
+		Joins("JOIN zenturien ON zenturien.id = users.zenturien_id").
+		Where("zenturien.year = ? AND exams.course_id = ? AND exams.start_time = ? AND exams.duration = ?",
+			zenturie.Year, course.ID, req.StartTime, req.Duration).
+		First(&existingExam)
 
 	if result.Error == nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"detail": "Du hast diese Klausur bereits eingetragen",
+			"detail": "Diese Klausur wurde bereits für deinen Jahrgang eingetragen",
 		})
 	}
 
@@ -748,17 +783,22 @@ func AddExam(c *fiber.Ctx) error {
 		})
 	}
 
-	// Check for verification (3+ users)
+	// Check for verification (3+ different years)
 	var count int64
-	config.DB.Model(&models.Exam{}).Where("course_id = ? AND start_time = ? AND duration = ?",
-		course.ID, req.StartTime, req.Duration).Count(&count)
+	config.DB.Model(&models.Exam{}).
+		Joins("JOIN users ON users.id = exams.user_id").
+		Joins("JOIN zenturien ON zenturien.id = users.zenturien_id").
+		Where("exams.course_id = ? AND exams.start_time = ? AND exams.duration = ?",
+			course.ID, req.StartTime, req.Duration).
+		Select("COUNT(DISTINCT zenturien.year)").
+		Count(&count)
 
-	message := "Klausur erfolgreich hinzugefügt"
+	message := "Klausur erfolgreich für deinen Jahrgang hinzugefügt"
 	if count >= 3 {
 		// Mark all matching exams as verified
 		config.DB.Model(&models.Exam{}).Where("course_id = ? AND start_time = ? AND duration = ?",
 			course.ID, req.StartTime, req.Duration).Update("is_verified", true)
-		message = "Klausur hinzugefügt und verifiziert (3+ Bestätigungen)"
+		message = "Klausur hinzugefügt und verifiziert (3+ Jahrgänge haben bestätigt)"
 	}
 
 	return c.JSON(MessageResponse{
