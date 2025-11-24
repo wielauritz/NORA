@@ -617,6 +617,7 @@ if (typeof module !== 'undefined' && module.exports) {
     window.CustomHoursAPI = CustomHoursAPI;
     window.SearchAPI = SearchAPI;
     window.CalendarAPI = CalendarAPI;
+    window.CoursesAPI = CoursesAPI;
 
     // Utilities
     window.formatDateForAPI = formatDateForAPI;
