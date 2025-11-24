@@ -324,19 +324,27 @@
     document.addEventListener('click', function(event) {
         const userDropdown = document.getElementById('userDropdown');
         const userInitials = document.getElementById('userInitials');
+        const userInitialsMobile = document.getElementById('userInitialsMobile');
         const friendRequestsDropdown = document.getElementById('friendRequestsDropdown');
         const friendRequestsBtn = document.getElementById('friendRequestsBtn');
+        const friendRequestsBtnMobile = document.getElementById('friendRequestsBtnMobile');
 
         // Close user dropdown if clicking outside
-        if (userDropdown && userInitials) {
-            if (!userDropdown.contains(event.target) && !userInitials.contains(event.target)) {
+        if (userDropdown && (userInitials || userInitialsMobile)) {
+            const clickedOnDesktop = userInitials && userInitials.contains(event.target);
+            const clickedOnMobile = userInitialsMobile && userInitialsMobile.contains(event.target);
+
+            if (!userDropdown.contains(event.target) && !clickedOnDesktop && !clickedOnMobile) {
                 userDropdown.classList.add('hidden');
             }
         }
 
         // Close friend requests dropdown if clicking outside
-        if (friendRequestsDropdown && friendRequestsBtn) {
-            if (!friendRequestsDropdown.contains(event.target) && !friendRequestsBtn.contains(event.target)) {
+        if (friendRequestsDropdown && (friendRequestsBtn || friendRequestsBtnMobile)) {
+            const clickedOnDesktop = friendRequestsBtn && friendRequestsBtn.contains(event.target);
+            const clickedOnMobile = friendRequestsBtnMobile && friendRequestsBtnMobile.contains(event.target);
+
+            if (!friendRequestsDropdown.contains(event.target) && !clickedOnDesktop && !clickedOnMobile) {
                 friendRequestsDropdown.classList.add('hidden');
             }
         }

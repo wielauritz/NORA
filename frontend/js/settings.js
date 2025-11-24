@@ -102,10 +102,18 @@ function updateUserDisplay() {
     if (!userData) return;
 
     const initials = userData.initials || 'U';
-    const avatarEl = document.getElementById('userInitials');
-    if (avatarEl) {
-        avatarEl.textContent = initials;
+
+    // Update user initials in avatar (Desktop and Mobile)
+    if (typeof window.setUserInitials === 'function') {
+        window.setUserInitials(initials);
         console.log('✅ User initials set:', initials);
+    } else {
+        // Fallback for Desktop only
+        const avatarEl = document.getElementById('userInitials');
+        if (avatarEl) {
+            avatarEl.textContent = initials;
+            console.log('✅ User initials set:', initials);
+        }
     }
 }
 
