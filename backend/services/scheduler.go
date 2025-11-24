@@ -135,7 +135,7 @@ func GetSchedulerStatus() SchedulerStatus {
 
 // FetchAndImportTimetables fetches ICS files and imports them to database
 func FetchAndImportTimetables() error {
-	log.Println("[1/3] Fetching ICS files...")
+	log.Println("[1/3] Fetching and Parse ICS files...")
 
 	// Step 1: Fetch ICS files
 	icsData, err := FetchICSFiles()
@@ -148,24 +148,12 @@ func FetchAndImportTimetables() error {
 	}
 
 	filesDownloaded := len(icsData)
-	log.Printf("[1/3] Fetched %d ICS files", filesDownloaded)
-	log.Println("[2/3] Parsing ICS files...")
+	log.Printf("[1/3] Fetched and Parsed %d ICS files", filesDownloaded)
 
-	// Step 2: Parse ICS to events
-	events, err := ParseICSFiles(icsData)
-	if err != nil {
-		// Log error
-		if logErr := utils.LogICSImportStatistics(filesDownloaded, 0, 0, 0, 1); logErr != nil {
-			log.Printf("WARNING: Failed to write to log file: %v", logErr)
-		}
-		return err
-	}
-
-	log.Printf("[2/3] Parsed %d events", len(events))
 	log.Println("[3/3] Importing events to database...")
 
 	// Step 3: Import to database
-	stats, err := ImportEventsToDatabase(events)
+	stats, err := ImportEventsToDatabase(icsData)
 	if err != nil {
 		// Log error
 		if logErr := utils.LogICSImportStatistics(filesDownloaded, 0, 0, 0, 1); logErr != nil {
