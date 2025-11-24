@@ -118,10 +118,17 @@ async function loadUserProfile() {
     try {
         const userData = await UserAPI.getProfile();
 
-        // Update user initials in avatar
-        const avatarEl = document.getElementById('userInitials');
-        if (avatarEl && userData.initials) {
-            avatarEl.textContent = userData.initials;
+        // Update user initials in avatar (Desktop and Mobile)
+        if (userData.initials) {
+            if (typeof window.setUserInitials === 'function') {
+                window.setUserInitials(userData.initials);
+            } else {
+                // Fallback for Desktop only
+                const avatarEl = document.getElementById('userInitials');
+                if (avatarEl) {
+                    avatarEl.textContent = userData.initials;
+                }
+            }
         }
     } catch (error) {
         console.error('Error loading user profile:', error);

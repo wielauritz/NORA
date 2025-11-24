@@ -16,7 +16,7 @@
         <!-- Navigation -->
         <nav class="glass-effect shadow-lg fixed pb-2 top-0 left-0 right-0 z-50 w-full" style="padding-top: max(0.5rem, env(safe-area-inset-top)); display: flex; flex-direction: column; justify-content: center;">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-                <div class="flex justify-between items-center h-12">
+                <div class="flex justify-between items-center h-12 relative">
 
                     <!-- Logo -->
                     <div class="flex items-center space-x-3">
@@ -54,69 +54,12 @@
                                 <!-- Badge Counter -->
                                 <span id="friendRequestsBadge" class="hidden absolute -top-1 -right-1 bg-accent text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"></span>
                             </button>
-
-                            <!-- Friend Requests Dropdown -->
-                            <div id="friendRequestsDropdown" class="hidden absolute right-0 mt-2 w-96 rounded-xl shadow-lg glass-effect dark:bg-slate-800 border border-gray-200 dark:border-slate-700 overflow-hidden z-50 max-h-96 overflow-y-auto">
-                                <!-- Loading State -->
-                                <div id="friendRequestsLoading" class="p-6 text-center">
-                                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                                    <p class="text-sm text-gray-500 mt-2">Lade Anfragen...</p>
-                                </div>
-
-                                <!-- Content -->
-                                <div id="friendRequestsContent" class="hidden">
-                                    <!-- Header -->
-                                    <div class="p-4 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between">
-                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Freundschaftsanfragen</h3>
-                                        <button onclick="showAddFriendModal(); document.getElementById('friendRequestsDropdown').classList.add('hidden');"
-                                                class="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-                                                title="Freundschaftsanfrage senden">
-                                            <svg class="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                                            </svg>
-                                        </button>
-                                    </div>
-
-                                    <!-- Incoming Requests -->
-                                    <div id="incomingRequestsSection">
-                                        <div class="px-4 py-2 bg-gray-50 dark:bg-slate-700/50">
-                                            <h4 class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Eingehende Anfragen</h4>
-                                        </div>
-                                        <div id="incomingRequestsList"></div>
-                                    </div>
-
-                                    <!-- Outgoing Requests -->
-                                    <div id="outgoingRequestsSection" class="border-t border-gray-200 dark:border-slate-700">
-                                        <div class="px-4 py-2 bg-gray-50 dark:bg-slate-700/50">
-                                            <h4 class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Gesendete Anfragen</h4>
-                                        </div>
-                                        <div id="outgoingRequestsList"></div>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
 
-                        <!-- User Profile with Dropdown -->
+                        <!-- User Profile -->
                         <div class="relative">
                             <button onclick="toggleUserDropdown()" class="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center text-white font-semibold hover:ring-2 hover:ring-primary/50 transition-all" id="userInitials" title="Profil-Menü">
                             </button>
-
-                            <!-- Dropdown Menu -->
-                            <div id="userDropdown" class="hidden absolute right-0 mt-2 w-48 rounded-xl shadow-lg glass-effect dark:bg-slate-800 border border-gray-200 dark:border-slate-700 overflow-hidden z-50">
-                                <a href="settings.html" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
-                                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                    </svg>
-                                    Einstellungen
-                                </a>
-                                <button onclick="logout()" class="flex items-center w-full px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-                                    </svg>
-                                    Abmelden
-                                </button>
-                            </div>
                         </div>
                     </div>
 
@@ -136,6 +79,66 @@
                         <!-- User Profile (Mobile) -->
                         <div class="relative">
                             <button onclick="toggleUserDropdown()" class="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center text-white font-semibold hover:ring-2 hover:ring-primary/50 transition-all" id="userInitialsMobile" title="Profil-Menü">
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Shared Dropdowns (positioned relative to container) -->
+                    <div class="absolute top-full right-0 mt-2 z-50">
+                        <!-- Friend Requests Dropdown -->
+                        <div id="friendRequestsDropdown" class="hidden absolute right-0 w-96 max-w-[calc(100vw-2rem)] rounded-xl shadow-lg glass-effect dark:bg-slate-800 border border-gray-200 dark:border-slate-700 overflow-hidden max-h-96 overflow-y-auto">
+                        <!-- Loading State -->
+                        <div id="friendRequestsLoading" class="p-6 text-center">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                            <p class="text-sm text-gray-500 mt-2">Lade Anfragen...</p>
+                        </div>
+
+                        <!-- Content -->
+                        <div id="friendRequestsContent" class="hidden">
+                            <!-- Header -->
+                            <div class="p-4 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between">
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Freundschaftsanfragen</h3>
+                                <button onclick="showAddFriendModal(); document.getElementById('friendRequestsDropdown').classList.add('hidden');"
+                                        class="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                                        title="Freundschaftsanfrage senden">
+                                    <svg class="w-5 h-5 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                    </svg>
+                                </button>
+                            </div>
+
+                            <!-- Incoming Requests -->
+                            <div id="incomingRequestsSection">
+                                <div class="px-4 py-2 bg-gray-50 dark:bg-slate-700/50">
+                                    <h4 class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Eingehende Anfragen</h4>
+                                </div>
+                                <div id="incomingRequestsList"></div>
+                            </div>
+
+                            <!-- Outgoing Requests -->
+                            <div id="outgoingRequestsSection" class="border-t border-gray-200 dark:border-slate-700">
+                                <div class="px-4 py-2 bg-gray-50 dark:bg-slate-700/50">
+                                    <h4 class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase">Gesendete Anfragen</h4>
+                                </div>
+                                <div id="outgoingRequestsList"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                        <!-- User Dropdown Menu -->
+                        <div id="userDropdown" class="hidden absolute right-0 w-48 rounded-xl shadow-lg glass-effect dark:bg-slate-800 border border-gray-200 dark:border-slate-700 overflow-hidden">
+                            <a href="settings.html" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                                Einstellungen
+                            </a>
+                            <button onclick="logout()" class="flex items-center w-full px-4 py-3 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                                </svg>
+                                Abmelden
                             </button>
                         </div>
                     </div>
@@ -324,19 +327,27 @@
     document.addEventListener('click', function(event) {
         const userDropdown = document.getElementById('userDropdown');
         const userInitials = document.getElementById('userInitials');
+        const userInitialsMobile = document.getElementById('userInitialsMobile');
         const friendRequestsDropdown = document.getElementById('friendRequestsDropdown');
         const friendRequestsBtn = document.getElementById('friendRequestsBtn');
+        const friendRequestsBtnMobile = document.getElementById('friendRequestsBtnMobile');
 
         // Close user dropdown if clicking outside
-        if (userDropdown && userInitials) {
-            if (!userDropdown.contains(event.target) && !userInitials.contains(event.target)) {
+        if (userDropdown && (userInitials || userInitialsMobile)) {
+            const clickedOnDesktop = userInitials && userInitials.contains(event.target);
+            const clickedOnMobile = userInitialsMobile && userInitialsMobile.contains(event.target);
+
+            if (!userDropdown.contains(event.target) && !clickedOnDesktop && !clickedOnMobile) {
                 userDropdown.classList.add('hidden');
             }
         }
 
         // Close friend requests dropdown if clicking outside
-        if (friendRequestsDropdown && friendRequestsBtn) {
-            if (!friendRequestsDropdown.contains(event.target) && !friendRequestsBtn.contains(event.target)) {
+        if (friendRequestsDropdown && (friendRequestsBtn || friendRequestsBtnMobile)) {
+            const clickedOnDesktop = friendRequestsBtn && friendRequestsBtn.contains(event.target);
+            const clickedOnMobile = friendRequestsBtnMobile && friendRequestsBtnMobile.contains(event.target);
+
+            if (!friendRequestsDropdown.contains(event.target) && !clickedOnDesktop && !clickedOnMobile) {
                 friendRequestsDropdown.classList.add('hidden');
             }
         }
