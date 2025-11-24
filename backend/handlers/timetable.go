@@ -334,16 +334,24 @@ func GetExams(c *fiber.Ctx) error {
 		return c.JSON([]ExamResponse{})
 	}
 
-	// Get user's zenturie to find the year
+	// Get user's zenturie to find the study program + year
 	var zenturie models.Zenturie
 	if err := config.DB.First(&zenturie, *user.ZenturienID).Error; err != nil {
 		return c.JSON([]ExamResponse{})
 	}
 
-	// Find all zenturien with the same year
+	// Extract study program + year from zenturie name (e.g., "I24c" -> "I24", "A24a" -> "A24")
+	// This is everything except the last character
+	zenturieName := zenturie.Name
+	if len(zenturieName) < 2 {
+		return c.JSON([]ExamResponse{})
+	}
+	studyProgramAndYear := zenturieName[:len(zenturieName)-1] // Remove last character
+
+	// Find all zenturien with the same study program + year (e.g., all "A24*")
 	var zenturienIDs []uint
 	config.DB.Model(&models.Zenturie{}).
-		Where("year = ?", zenturie.Year).
+		Where("name LIKE ?", studyProgramAndYear+"%").
 		Pluck("id", &zenturienIDs)
 
 	// Find all users in these zenturien
@@ -745,7 +753,7 @@ func AddExam(c *fiber.Ctx) error {
 		})
 	}
 
-	// Get user's zenturie to find the year
+	// Get user's zenturie to find the study program + year
 	var zenturie models.Zenturie
 	if err := config.DB.First(&zenturie, *user.ZenturienID).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -753,10 +761,20 @@ func AddExam(c *fiber.Ctx) error {
 		})
 	}
 
-	// Find all zenturien with the same year
+	// Extract study program + year from zenturie name (e.g., "I24c" -> "I24", "A24a" -> "A24")
+	// This is everything except the last character
+	zenturieName := zenturie.Name
+	if len(zenturieName) < 2 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"detail": "Ungültiger Zenturie-Name",
+		})
+	}
+	studyProgramAndYear := zenturieName[:len(zenturieName)-1] // Remove last character
+
+	// Find all zenturien with the same study program + year (e.g., all "A24*")
 	var zenturienIDs []uint
 	config.DB.Model(&models.Zenturie{}).
-		Where("year = ?", zenturie.Year).
+		Where("name LIKE ?", studyProgramAndYear+"%").
 		Pluck("id", &zenturienIDs)
 
 	// Find all users in these zenturien
@@ -774,7 +792,7 @@ func AddExam(c *fiber.Ctx) error {
 
 	if result.Error == nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"detail": "Diese Klausur wurde bereits für deinen Jahrgang eingetragen",
+			"detail": "Diese Klausur wurde bereits für deinen Studiengang eingetragen",
 		})
 	}
 
@@ -818,12 +836,12 @@ func AddExam(c *fiber.Ctx) error {
 		}
 	}
 
-	message := "Klausur erfolgreich für deinen Jahrgang hinzugefügt"
+	message := "Klausur erfolgreich für deinen Studiengang hinzugefügt"
 	if len(uniqueYears) >= 3 {
 		// Mark all matching exams as verified
 		config.DB.Model(&models.Exam{}).Where("course_id = ? AND start_time = ? AND duration = ?",
 			course.ID, req.StartTime, req.Duration).Update("is_verified", true)
-		message = "Klausur hinzugefügt und verifiziert (3+ Jahrgänge haben bestätigt)"
+		message = "Klausur hinzugefügt und verifiziert (3+ Studiengänge haben bestätigt)"
 	}
 
 	return c.JSON(MessageResponse{
