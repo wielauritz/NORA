@@ -41,7 +41,7 @@ func GetICSSubscription(c *fiber.Ctx) error {
 	// Add timetable events
 	if user.ZenturienID != nil {
 		var timetables []models.Timetable
-		config.DB.Preload("RoomID").Where("zenturien_id = ? AND start_time >= ? AND start_time <= ?",
+		config.DB.Preload("Room").Where("zenturien_id = ? AND start_time >= ? AND start_time <= ?",
 			*user.ZenturienID, startDate, endDate).Find(&timetables)
 
 		for _, tt := range timetables {
