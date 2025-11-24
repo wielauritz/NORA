@@ -34,21 +34,29 @@ func GetICSSubscription(c *fiber.Ctx) error {
 	// Time range: Next 6 months
 	now := time.Now()
 	endDate := now.AddDate(0, 6, 0)
+	startDate := now.AddDate(-4, 0, 0)
 
 	var events []string
 
 	// Add timetable events
 	if user.ZenturienID != nil {
 		var timetables []models.Timetable
-		config.DB.Where("zenturien_id = ? AND start_time >= ? AND start_time <= ?",
-			*user.ZenturienID, now, endDate).Find(&timetables)
+		config.DB.Preload("Room").Where("zenturien_id = ? AND start_time >= ? AND start_time <= ?",
+			*user.ZenturienID, startDate, endDate).Find(&timetables)
 
 		for _, tt := range timetables {
+			location := ""
+			if tt.Room != nil {
+				location = tt.Room.RoomNumber
+			} else if tt.Location != nil {
+				location = *tt.Location
+			}
+
 			event := generateICSEvent(
 				tt.UID,
 				tt.Summary,
-				stringValue(tt.Description),
-				stringValue(tt.Location),
+				strings.Replace(stringValue(tt.Description), "\\n", "\n", -1),
+				location,
 				tt.StartTime,
 				tt.EndTime,
 			)
