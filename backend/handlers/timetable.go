@@ -340,14 +340,23 @@ func GetExams(c *fiber.Ctx) error {
 		return c.JSON([]ExamResponse{})
 	}
 
-	// Find all exams from users in the same year
+	// Find all zenturien with the same year
+	var zenturienIDs []uint
+	config.DB.Model(&models.Zenturie{}).
+		Where("year = ?", zenturie.Year).
+		Pluck("id", &zenturienIDs)
+
+	// Find all users in these zenturien
+	var userIDs []uint
+	config.DB.Model(&models.User{}).
+		Where("zenturien_id IN ?", zenturienIDs).
+		Pluck("id", &userIDs)
+
+	// Find all exams from these users
 	var exams []models.Exam
 	config.DB.Preload("Course").Preload("Room").
-		Joins("JOIN users ON users.id = exams.user_id").
-		Joins("JOIN zenturien ON zenturien.id = users.zenturien_id").
-		Where("zenturien.year = ? AND exams.start_time >= ?", zenturie.Year, time.Now().UTC()).
-		Order("exams.start_time").
-		Group("exams.id, courses.id, rooms.id"). // Group to avoid duplicates
+		Where("user_id IN ? AND start_time >= ?", userIDs, time.Now().UTC()).
+		Order("start_time").
 		Find(&exams)
 
 	response := make([]ExamResponse, len(exams))
@@ -744,13 +753,23 @@ func AddExam(c *fiber.Ctx) error {
 		})
 	}
 
+	// Find all zenturien with the same year
+	var zenturienIDs []uint
+	config.DB.Model(&models.Zenturie{}).
+		Where("year = ?", zenturie.Year).
+		Pluck("id", &zenturienIDs)
+
+	// Find all users in these zenturien
+	var userIDs []uint
+	config.DB.Model(&models.User{}).
+		Where("zenturien_id IN ?", zenturienIDs).
+		Pluck("id", &userIDs)
+
 	// Check if this exam already exists for someone in the same year
 	var existingExam models.Exam
 	result := config.DB.
-		Joins("JOIN users ON users.id = exams.user_id").
-		Joins("JOIN zenturien ON zenturien.id = users.zenturien_id").
-		Where("zenturien.year = ? AND exams.course_id = ? AND exams.start_time = ? AND exams.duration = ?",
-			zenturie.Year, course.ID, req.StartTime, req.Duration).
+		Where("user_id IN ? AND course_id = ? AND start_time = ? AND duration = ?",
+			userIDs, course.ID, req.StartTime, req.Duration).
 		First(&existingExam)
 
 	if result.Error == nil {
@@ -784,17 +803,23 @@ func AddExam(c *fiber.Ctx) error {
 	}
 
 	// Check for verification (3+ different years)
-	var count int64
-	config.DB.Model(&models.Exam{}).
-		Joins("JOIN users ON users.id = exams.user_id").
-		Joins("JOIN zenturien ON zenturien.id = users.zenturien_id").
-		Where("exams.course_id = ? AND exams.start_time = ? AND exams.duration = ?",
+	// Get all exams with same course, time, and duration
+	var allMatchingExams []models.Exam
+	config.DB.Preload("User.Zenturie").
+		Where("course_id = ? AND start_time = ? AND duration = ?",
 			course.ID, req.StartTime, req.Duration).
-		Select("COUNT(DISTINCT zenturien.year)").
-		Count(&count)
+		Find(&allMatchingExams)
+
+	// Count unique years
+	uniqueYears := make(map[string]bool)
+	for _, e := range allMatchingExams {
+		if e.User != nil && e.User.Zenturie != nil {
+			uniqueYears[e.User.Zenturie.Year] = true
+		}
+	}
 
 	message := "Klausur erfolgreich für deinen Jahrgang hinzugefügt"
-	if count >= 3 {
+	if len(uniqueYears) >= 3 {
 		// Mark all matching exams as verified
 		config.DB.Model(&models.Exam{}).Where("course_id = ? AND start_time = ? AND duration = ?",
 			course.ID, req.StartTime, req.Duration).Update("is_verified", true)
