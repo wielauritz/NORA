@@ -34,6 +34,7 @@ func GetICSSubscription(c *fiber.Ctx) error {
 	// Time range: Next 6 months
 	now := time.Now()
 	endDate := now.AddDate(0, 6, 0)
+	startDate := now.AddDate(-4, 0, 0)
 
 	var events []string
 
@@ -41,7 +42,7 @@ func GetICSSubscription(c *fiber.Ctx) error {
 	if user.ZenturienID != nil {
 		var timetables []models.Timetable
 		config.DB.Where("zenturien_id = ? AND start_time >= ? AND start_time <= ?",
-			*user.ZenturienID, now, endDate).Find(&timetables)
+			*user.ZenturienID, startDate, endDate).Find(&timetables)
 
 		for _, tt := range timetables {
 			event := generateICSEvent(
