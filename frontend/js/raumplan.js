@@ -415,7 +415,8 @@ async function loadRoomOccupanciesForToday() {
 
             // Filter only today's occupancy
             const todayOccupancy = occupancy.filter(event => {
-                const eventDate = new Date(event.start_time).toISOString().split('T')[0];
+                // Use local date to match todayStr (which is also local)
+                const eventDate = formatDateForAPI(new Date(event.start_time));
                 return eventDate === todayStr;
             });
 
@@ -789,10 +790,10 @@ function renderRoomModal(roomData) {
     const { room, occupancy } = roomData;
     const modalContent = document.getElementById('roomModalContent');
 
-    // Group occupancy by date
+    // Group occupancy by date (use local date for consistency)
     const occupancyByDate = {};
     occupancy.forEach(event => {
-        const date = new Date(event.start_time).toISOString().split('T')[0];
+        const date = formatDateForAPI(new Date(event.start_time));
         if (!occupancyByDate[date]) {
             occupancyByDate[date] = [];
         }
@@ -981,10 +982,26 @@ if (!document.getElementById('spinner-style')) {
     document.head.appendChild(style);
 }
 
-// Initialize when page loads
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize when page loads (works for both static and dynamic loading)
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initRaumplanPage);
+} else {
+    // DOM already loaded (script loaded dynamically) - initialize immediately
+    initRaumplanPage();
+}
+
+function initRaumplanPage() {
     console.log('🚀 Initializing Raumplan...');
     initRaumplan();
+}
+
+// Listen for page reload events (for app navigation)
+// This ensures re-initialization even when script is already loaded
+window.addEventListener('nora:pageLoaded', (event) => {
+    if (event.detail.page === 'raumplan') {
+        console.log('🔄 [Raumplan] Page reload detected - re-initializing');
+        initRaumplan();
+    }
 });
 
 // Close modal when clicking outside

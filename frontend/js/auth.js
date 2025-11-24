@@ -3,6 +3,9 @@
  * Gemeinsame Funktionen für Auth-Flows
  */
 
+(function() {
+// Local reference to storage (exported by storage-manager.js to window.storage)
+const storage = window.storage;
 
 /**
  * Get URL parameter by name
@@ -790,3 +793,87 @@ async function clearAuthStorage() {
         }
     }
 }
+
+/**
+ * Setup email autocomplete for @nordakademie.de domain
+ * When user types @, it auto-completes with @nordakademie.de
+ */
+function setupEmailAutocomplete(inputElement) {
+    if (!inputElement) return;
+
+    // If string ID is passed, get the element
+    if (typeof inputElement === 'string') {
+        inputElement = document.getElementById(inputElement);
+        if (!inputElement) return;
+    }
+
+    inputElement.addEventListener('input', function(e) {
+        const value = this.value;
+        const atIndex = value.indexOf('@');
+
+        // If @ was just typed (not part of existing @nordakademie.de)
+        if (atIndex !== -1 && !value.endsWith('@nordakademie.de')) {
+            // Get the part before @
+            const localPart = value.substring(0, atIndex);
+
+            // Replace with full email
+            this.value = localPart + '@nordakademie.de';
+
+            // Position cursor just before @nordakademie.de (after the local part)
+            const cursorPos = localPart.length;
+            this.setSelectionRange(cursorPos, cursorPos);
+        }
+    });
+
+    // Also handle paste events
+    inputElement.addEventListener('paste', function(e) {
+        setTimeout(() => {
+            const value = this.value;
+            const atIndex = value.indexOf('@');
+
+            if (atIndex !== -1 && !value.endsWith('@nordakademie.de')) {
+                const localPart = value.substring(0, atIndex);
+                this.value = localPart + '@nordakademie.de';
+            }
+        }, 0);
+    });
+}
+
+/**
+ * Auto-setup email autocomplete for common email fields
+ */
+function initEmailAutocomplete() {
+    // Common email input IDs
+    const emailInputIds = ['email', 'friendEmail', 'resetEmail'];
+
+    emailInputIds.forEach(id => {
+        const input = document.getElementById(id);
+        if (input) {
+            setupEmailAutocomplete(input);
+        }
+    });
+}
+
+// Initialize email autocomplete when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initEmailAutocomplete);
+} else {
+    initEmailAutocomplete();
+}
+
+// Export auth functions to window for global access
+window.storeToken = storeToken;
+window.checkAuth = checkAuth;
+window.clearAuthStorage = clearAuthStorage;
+window.getUrlParameter = getUrlParameter;
+window.formatName = formatName;
+window.disableSubmitButton = disableSubmitButton;
+window.enableSubmitButton = enableSubmitButton;
+window.showError = showError;
+window.showLoginSuccess = showLoginSuccess;
+window.showVerificationRequired = showVerificationRequired;
+window.showConfirmDialog = showConfirmDialog;
+window.closeConfirmDialog = closeConfirmDialog;
+window.setupEmailAutocomplete = setupEmailAutocomplete;
+console.log('[Auth] Functions exported to window');
+})();

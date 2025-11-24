@@ -3,6 +3,10 @@
  * Lädt und zeigt Dashboard-Daten vom NORA Backend
  */
 
+(function() {
+// Local reference to storage (exported by storage-manager.js to window.storage)
+const storage = window.storage;
+
 // Initialize dashboard with auto-login support
 // This ensures auto-login completes BEFORE authentication check
 (async function initializeAuth() {
@@ -254,36 +258,62 @@ function updateUserDisplay() {
     const lastName = userData.last_name || '';
     const initials = userData.initials || 'U';
 
-    // Update welcome message
-    const welcomeEl = document.querySelector('h1 .gradient-text');
-    if (welcomeEl) {
+    // Retry mechanism to wait for DOM elements to be ready
+    const maxRetries = 20; // Increased from 10 to 20 for better reliability
+    let retryCount = 0;
+
+    const tryUpdate = () => {
+        const welcomeEl = document.querySelector('h1 .gradient-text');
+        const dateEl = document.getElementById('dashboardDateText');
+
+        // Check if critical elements exist
+        if (!welcomeEl || !dateEl) {
+            retryCount++;
+            if (retryCount < maxRetries) {
+                console.log(`⏳ [Dashboard] Waiting for DOM elements... retry ${retryCount}/${maxRetries}`);
+                setTimeout(tryUpdate, 100); // Increased from 50ms to 100ms (total: 2000ms timeout)
+                return;
+            } else {
+                console.warn('⚠️ [Dashboard] DOM elements not found after retries');
+                return;
+            }
+        }
+
+        // Now we know elements exist - update them
         welcomeEl.textContent = firstName;
-    }
 
-    // Update user initials in avatar
-    const avatarEl = document.getElementById('userInitials');
-    if (avatarEl) {
-        avatarEl.textContent = initials;
-    }
+        // Update user initials in avatar (local dashboard element if exists)
+        const avatarEl = document.getElementById('userInitials');
+        if (avatarEl) {
+            avatarEl.textContent = initials;
+        }
 
-    // Update current date display
-    const today = new Date();
-    const dateOptions = {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    };
-    const dateStr = today.toLocaleDateString('de-DE', dateOptions);
+        // CRITICAL: Also update initials in shell navbar (app/index.html)
+        if (typeof window.setUserInitials === 'function') {
+            window.setUserInitials(initials);
+            console.log('[Dashboard] User initials set in shell navbar:', initials);
+        }
 
-    const dateEl = document.getElementById('dashboardDateText');
-    if (dateEl) {
+        // Update current date display
+        const today = new Date();
+        const dateOptions = {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        };
+        const dateStr = today.toLocaleDateString('de-DE', dateOptions);
+
         if (userData.zenturie) {
             dateEl.textContent = `Hier ist deine Übersicht für heute, ${dateStr} • Zenturie: ${userData.zenturie}`;
         } else {
             dateEl.textContent = `Hier ist deine Übersicht für heute, ${dateStr}`;
         }
-    }
+
+        console.log('✅ [Dashboard] User display updated');
+    };
+
+    tryUpdate();
 }
 
 /**
@@ -291,7 +321,18 @@ function updateUserDisplay() {
  */
 async function loadTodaySchedule() {
     try {
-        const today = formatDateForAPI(new Date());
+        const now = new Date();
+        const today = formatDateForAPI(now);
+
+        // DEBUG: Show exactly what date is being used
+        console.log('[Dashboard] 📅 Date debug:', {
+            localDate: `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`,
+            utcDate: now.toISOString().split('T')[0],
+            apiDate: today,
+            localTime: now.toLocaleString('de-DE'),
+            utcTime: now.toISOString()
+        });
+
         todayEvents = await ScheduleAPI.getEvents(today);
 
         console.log('✅ Today events loaded:', todayEvents.length);
@@ -314,8 +355,13 @@ async function loadTodaySchedule() {
  * Render today's schedule
  */
 function renderTodaySchedule() {
+    console.log('[Dashboard] renderTodaySchedule() called, todayEvents:', todayEvents.length);
+
     const container = document.getElementById('todaySchedule');
-    if (!container) return;
+    if (!container) {
+        console.warn('[Dashboard] todaySchedule container NOT FOUND - cannot render!');
+        return;
+    }
 
     const now = new Date();
 
@@ -325,7 +371,10 @@ function renderTodaySchedule() {
         return endTime > now; // Only show events that haven't ended yet
     });
 
+    console.log('[Dashboard] Filtered to', upcomingEvents.length, 'upcoming events (from', todayEvents.length, 'total)');
+
     if (upcomingEvents.length === 0) {
+        console.log('[Dashboard] No upcoming events, showing empty state');
         container.innerHTML = `
             <div class="text-center py-8 text-gray-500">
                 <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -394,6 +443,8 @@ function renderTodaySchedule() {
             </div>
         `;
     }).join('');
+
+    console.log('[Dashboard] ✅ Today schedule rendered successfully with', upcomingEvents.length, 'events');
 }
 
 /**
@@ -500,8 +551,8 @@ async function loadFriends() {
  * Render friends list
  */
 function renderFriends() {
-    // Update friends count in stats (now 4th card after reordering)
-    const friendsCountEl = document.querySelectorAll('.glass-effect h3')[3];
+    // Update friends count in stats
+    const friendsCountEl = document.getElementById('friendsCount');
     if (friendsCountEl) {
         friendsCountEl.textContent = friendsList.length;
     }
@@ -565,6 +616,8 @@ function renderFriends() {
  * Update dashboard statistics
  */
 function updateStatistics() {
+    console.log('[Dashboard] updateStatistics() called');
+
     const now = new Date();
 
     // Filter out past events
@@ -573,27 +626,35 @@ function updateStatistics() {
         return endTime > now;
     });
 
-    // Total upcoming events today (timetable + custom hours) - now 1st card
+    console.log('[Dashboard] Statistics: todayEvents=', todayEvents.length, 'upcomingEvents=', upcomingEvents.length);
+
+    // Total upcoming events today (timetable + custom hours) - 1st card
     const todayEventsCountEl = document.getElementById('todayEventsCount');
     if (todayEventsCountEl) {
         todayEventsCountEl.textContent = upcomingEvents.length;
+        console.log('[Dashboard] Set todayEventsCount to:', upcomingEvents.length);
+    } else {
+        console.warn('[Dashboard] todayEventsCountEl NOT FOUND!');
     }
 
-    // Upcoming courses today (only timetable events, not custom hours) - now 2nd card
-    const coursesCount = upcomingEvents.filter(e => e.event_type === 'timetable').length;
-    const coursesEl = document.querySelectorAll('.glass-effect h3')[1];
+    // Courses today (only timetable events, not custom hours) - 2nd card
+    // NOTE: Uses todayEvents (all events today) not upcomingEvents (only future events)
+    // because we want to show total courses for the day, not just upcoming ones
+    const coursesCount = todayEvents.filter(e => e.event_type === 'timetable').length;
+    const coursesEl = document.getElementById('coursesTodayCount');
     if (coursesEl) {
         coursesEl.textContent = coursesCount;
+        console.log('[Dashboard] Set coursesTodayCount to:', coursesCount);
     }
 
-    // Upcoming exams (next 30 days) - now 3rd card
+    // Upcoming exams (next 30 days) - 3rd card
     const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
     const upcomingExamsCount = upcomingExams.filter(e => {
         const examDate = new Date(e.start_time);
         return examDate <= thirtyDaysFromNow;
     }).length;
 
-    const examsEl = document.querySelectorAll('.glass-effect h3')[2];
+    const examsEl = document.getElementById('upcomingExamsCount');
     if (examsEl) {
         examsEl.textContent = upcomingExamsCount;
     }
@@ -728,12 +789,12 @@ function showCalendarSubscription() {
                             <label class="block text-sm font-medium text-gray-700 mb-2">
                                 Abonnement-URL:
                             </label>
-                            <div class="flex space-x-2">
+                            <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                                 <input type="text" readonly
                                        value="${subscriptionURL}"
                                        id="subscriptionURL"
-                                       class="flex-1 px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 text-sm font-mono">
-                                <button onclick="copySubscriptionURL()" class="px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-xl font-medium transition-colors">
+                                       class="w-full sm:flex-1 px-4 py-3 border border-gray-300 rounded-xl bg-gray-50 text-sm font-mono overflow-x-auto">
+                                <button onclick="copySubscriptionURL()" class="w-full sm:w-auto px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-xl font-medium transition-colors whitespace-nowrap">
                                     Kopieren
                                 </button>
                             </div>
@@ -809,17 +870,25 @@ function showCalendarSubscription() {
 /**
  * Copy subscription URL to clipboard
  */
-function copySubscriptionURL() {
+async function copySubscriptionURL() {
     const input = document.getElementById('subscriptionURL');
-    input.select();
-    input.setSelectionRange(0, 99999); // For mobile
 
     try {
-        document.execCommand('copy');
+        // Modern Clipboard API
+        await navigator.clipboard.writeText(input.value);
         showToast('URL in Zwischenablage kopiert!', 'success');
     } catch (err) {
-        console.error('Copy failed:', err);
-        showToast('Kopieren fehlgeschlagen', 'error');
+        // Fallback for older browsers
+        console.log('Modern clipboard API failed, trying fallback:', err);
+        try {
+            input.select();
+            input.setSelectionRange(0, 99999); // For mobile
+            document.execCommand('copy');
+            showToast('URL in Zwischenablage kopiert!', 'success');
+        } catch (fallbackErr) {
+            console.error('Copy failed:', fallbackErr);
+            showToast('Kopieren fehlgeschlagen', 'error');
+        }
     }
 }
 
@@ -967,8 +1036,15 @@ function closeEventModal() {
     }
 }
 
-// Initialize dashboard when page loads
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize dashboard when page loads (works for both static and dynamic loading)
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDashboardAndStartRefresh);
+} else {
+    // DOM already loaded (script loaded dynamically) - initialize immediately
+    initDashboardAndStartRefresh();
+}
+
+function initDashboardAndStartRefresh() {
     console.log('🚀 Initializing dashboard...');
     initDashboard();
 
@@ -977,4 +1053,37 @@ document.addEventListener('DOMContentLoaded', () => {
         renderTodaySchedule();
         updateStatistics();
     }, 60000); // 60 seconds
-});
+}
+
+// REMOVED: nora:pageLoaded event listener to prevent double initialization
+// Shell.triggerPageInit() now handles re-initialization directly
+// Old code (removed to prevent double-init):
+// window.addEventListener('nora:pageLoaded', (event) => {
+//     if (event.detail.page === 'dashboard') {
+//         console.log('🔄 [Dashboard] Page reload detected - re-initializing');
+//         initDashboard();
+//     }
+// });
+
+// Export dashboard functions to window for global access
+window.initDashboard = initDashboard;
+window.loadUserData = loadUserData;
+window.updateUserDisplay = updateUserDisplay;
+window.loadTodaySchedule = loadTodaySchedule;
+window.renderTodaySchedule = renderTodaySchedule;
+window.loadUpcomingExams = loadUpcomingExams;
+window.renderUpcomingExams = renderUpcomingExams;
+window.loadFriends = loadFriends;
+window.renderFriends = renderFriends;
+window.updateStatistics = updateStatistics;
+window.viewFriendSchedule = viewFriendSchedule;
+window.removeFriend = removeFriend;
+window.logout = logout;
+window.showCalendarSubscription = showCalendarSubscription;
+window.copySubscriptionURL = copySubscriptionURL;
+window.closeCalendarSubModal = closeCalendarSubModal;
+window.showEventDetails = showEventDetails;
+window.closeEventModal = closeEventModal;
+window.initDashboardAndStartRefresh = initDashboardAndStartRefresh;
+console.log('[Dashboard] Functions exported to window');
+})();

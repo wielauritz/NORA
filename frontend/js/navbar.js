@@ -3,6 +3,10 @@
  * Renders navbar dynamically with preloader
  */
 
+(function() {
+// Local reference to storage (exported by storage-manager.js to window.storage)
+const storage = window.storage;
+
 /**
  * Render navbar
  * @param {string} activePage - Current active page ('dashboard', 'stundenplan', or 'raumplan')
@@ -113,6 +117,26 @@ function renderNavbar(activePage = '') {
                                     Abmelden
                                 </button>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Mobile User Menu (Friend Requests + Profile) -->
+                    <div class="flex md:hidden items-center space-x-2">
+                        <!-- Friend Requests (Mobile) -->
+                        <div class="relative">
+                            <button onclick="toggleFriendRequestsDropdown()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors relative" id="friendRequestsBtnMobile" title="Freundschaftsanfragen">
+                                <svg class="w-6 h-6 text-gray-600 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                </svg>
+                                <!-- Badge Counter (Mobile) -->
+                                <span id="friendRequestsBadgeMobile" class="hidden absolute -top-1 -right-1 bg-accent text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"></span>
+                            </button>
+                        </div>
+
+                        <!-- User Profile (Mobile) -->
+                        <div class="relative">
+                            <button onclick="toggleUserDropdown()" class="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center text-white font-semibold hover:ring-2 hover:ring-primary/50 transition-all" id="userInitialsMobile" title="Profil-Menü">
+                            </button>
                         </div>
                     </div>
 
@@ -484,19 +508,33 @@ function renderFriendRequests() {
 }
 
 /**
- * Update friend requests badge count
+ * Update friend requests badge count (Desktop + Mobile)
  */
 function updateFriendRequestsBadge() {
-    const badge = document.getElementById('friendRequestsBadge');
-    if (!badge) return;
+    const badgeDesktop = document.getElementById('friendRequestsBadge');
+    const badgeMobile = document.getElementById('friendRequestsBadgeMobile');
 
     const incomingCount = friendRequestsData.incoming ? friendRequestsData.incoming.length : 0;
+    const badgeText = incomingCount > 9 ? '9+' : incomingCount;
 
-    if (incomingCount > 0) {
-        badge.textContent = incomingCount > 9 ? '9+' : incomingCount;
-        badge.classList.remove('hidden');
-    } else {
-        badge.classList.add('hidden');
+    // Update Desktop Badge
+    if (badgeDesktop) {
+        if (incomingCount > 0) {
+            badgeDesktop.textContent = badgeText;
+            badgeDesktop.classList.remove('hidden');
+        } else {
+            badgeDesktop.classList.add('hidden');
+        }
+    }
+
+    // Update Mobile Badge
+    if (badgeMobile) {
+        if (incomingCount > 0) {
+            badgeMobile.textContent = badgeText;
+            badgeMobile.classList.remove('hidden');
+        } else {
+            badgeMobile.classList.add('hidden');
+        }
     }
 }
 
@@ -630,6 +668,28 @@ function stopFriendRequestsPolling() {
     }
 }
 
+/**
+ * Set user initials in navbar (Desktop + Mobile)
+ * @param {string} initials - User initials (e.g., "AB")
+ */
+function setUserInitials(initials) {
+    // This function exists in BOTH navbar.js (for browser) and navbar-utils.js (for app)
+    // In the app, navbar-utils.js loads FIRST and sets window.setUserInitials
+    // In the browser, this version will be used
+    const avatarDesktop = document.getElementById('userInitials');
+    const avatarMobile = document.getElementById('userInitialsMobile');
+
+    if (avatarDesktop) {
+        avatarDesktop.textContent = initials;
+    }
+
+    if (avatarMobile) {
+        avatarMobile.textContent = initials;
+    }
+
+    console.log('[Navbar] User initials set to:', initials);
+}
+
 // Initialize polling when navbar is loaded
 if (typeof storage !== 'undefined' && storage.getItem('token')) {
     // Start polling after a short delay to allow page to load
@@ -637,3 +697,25 @@ if (typeof storage !== 'undefined' && storage.getItem('token')) {
         startFriendRequestsPolling();
     }, 1000);
 }
+
+// Export navbar functions to window for global access
+window.renderNavbar = renderNavbar;
+window.showContentLoader = showContentLoader;
+window.hideContentLoader = hideContentLoader;
+window.initNavbar = initNavbar;
+window.attachNavbarPreloaderHandlers = attachNavbarPreloaderHandlers;
+window.restorePreloaderIfNeeded = restorePreloaderIfNeeded;
+window.pageContentReady = pageContentReady;
+window.toggleUserDropdown = toggleUserDropdown;
+window.toggleFriendRequestsDropdown = toggleFriendRequestsDropdown;
+window.loadFriendRequests = loadFriendRequests;
+window.renderFriendRequests = renderFriendRequests;
+window.updateFriendRequestsBadge = updateFriendRequestsBadge;
+window.acceptFriendRequest = acceptFriendRequest;
+window.rejectFriendRequest = rejectFriendRequest;
+window.cancelFriendRequest = cancelFriendRequest;
+window.startFriendRequestsPolling = startFriendRequestsPolling;
+window.stopFriendRequestsPolling = stopFriendRequestsPolling;
+window.setUserInitials = setUserInitials;
+console.log('[Navbar] Functions exported to window');
+})();

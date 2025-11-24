@@ -102,5 +102,8 @@ class StorageManager {
     }
 }
 
-// Erstelle globale Instanz
-const storage = new StorageManager();
+// Erstelle globale Instanz - only export to window.storage
+// NO global 'storage' variable to avoid conflicts and readonly property errors
+window.storage = new StorageManager();
+
+console.log('[StorageManager] Exported to window.storage');

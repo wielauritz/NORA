@@ -8,10 +8,48 @@ let currentSettings = null;
 let allZenturien = [];
 let userData = null;
 
+// Initialization guards to prevent double initialization
+let isInitializing = false;
+let isInitialized = false;
+
 /**
  * Initialize settings page
  */
 async function initSettings() {
+    // Prevent double initialization
+    if (isInitializing) {
+        console.log('⏭️ [Settings] Already initializing, skipping...');
+        return;
+    }
+
+    if (isInitialized) {
+        console.log('🔄 [Settings] Already initialized, reloading data only...');
+        // Just reload settings data and refresh UI
+        try {
+            const settingsData = await UserAPI.getSettings();
+            currentSettings = settingsData;
+
+            // Refresh the form with current settings
+            populateForm();
+
+            // Refresh user display (initials)
+            updateUserDisplay();
+
+            console.log('✅ [Settings] Data reloaded successfully');
+
+            // CRITICAL: Hide loader after reload complete
+            pageContentReady();
+        } catch (error) {
+            console.error('[Settings] Error reloading data:', error);
+            // Even on error, hide the loader
+            pageContentReady();
+        }
+        return;
+    }
+
+    isInitializing = true;
+    console.log('🚀 [Settings] Starting initialization...');
+
     try {
         // Check authentication first
         const isAuthenticated = await checkAuth();
@@ -45,11 +83,15 @@ async function initSettings() {
         // Populate form with current settings
         populateForm();
 
+        isInitialized = true;
+        console.log('✅ [Settings] Initialization complete');
         pageContentReady();
     } catch (error) {
         console.error('Failed to load settings:', error);
         showToast('Fehler beim Laden der Einstellungen', 'error');
         pageContentReady();
+    } finally {
+        isInitializing = false;
     }
 }
 
@@ -379,5 +421,15 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', initSettings);
+// Initialize on DOMContentLoaded for BROWSER compatibility
+// In the app, Shell.triggerPageInit() will call initSettings() directly
+// The isInitialized guard in initSettings() prevents double initialization
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSettings);
+} else {
+    // DOM already loaded (script loaded dynamically)
+    initSettings();
+}
+
+// CRITICAL: Export initSettings to window so Shell.triggerPageInit() can call it
+window.initSettings = initSettings;

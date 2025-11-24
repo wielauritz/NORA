@@ -101,6 +101,11 @@ function createAddFriendModal() {
     `;
 
     document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+    // Setup email autocomplete for the friend email input
+    if (typeof setupEmailAutocomplete === 'function') {
+        setupEmailAutocomplete('friendEmail');
+    }
 }
 
 /**
@@ -180,3 +185,8 @@ function closeAddFriendModal() {
         document.body.style.overflow = 'auto';
     }
 }
+
+// Export to window for navbar button access on all pages
+window.showAddFriendModal = showAddFriendModal;
+window.closeAddFriendModal = closeAddFriendModal;
+window.submitAddFriend = submitAddFriend;

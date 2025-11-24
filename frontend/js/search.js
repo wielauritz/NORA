@@ -13,7 +13,14 @@ let searchDebounceTimer = null;
 function showGlobalSearch() {
     // On mobile, navigate to search page
     if (window.innerWidth < 768) {
-        window.location.href = 'search.html';
+        console.log('📱 [Search] Mobile detected - navigating to search page');
+        if (window.Shell && typeof window.Shell.navigateTo === 'function') {
+            // App shell environment
+            window.Shell.navigateTo('search');
+        } else {
+            // Browser environment
+            window.location.href = 'search.html';
+        }
         return;
     }
 
@@ -332,20 +339,35 @@ function renderResultItem(result, type) {
  * Handle click on a search result
  */
 function handleResultClick(type, id) {
+    console.log('🔗 [Search] Result clicked:', type, id);
     closeSearchModal();
+
+    // Helper function to navigate - works in both app shell and browser
+    const navigateTo = (page) => {
+        console.log('🔗 [Search] Navigating to:', page);
+        if (window.Shell && typeof window.Shell.navigateTo === 'function') {
+            // App shell environment - use Shell navigation
+            console.log('📱 [Search] Using Shell navigation');
+            window.Shell.navigateTo(page);
+        } else {
+            // Browser environment - use location.href
+            console.log('🌐 [Search] Using location.href navigation');
+            window.location.href = page + '.html';
+        }
+    };
 
     switch (type) {
         case 'event':
             // Navigate to schedule page
-            window.location.href = 'stundenplan.html';
+            navigateTo('stundenplan');
             break;
         case 'exam':
             // Stay on current page or navigate to dashboard
-            window.location.href = 'dashboard.html';
+            navigateTo('dashboard');
             break;
         case 'room':
             // Navigate to room plan
-            window.location.href = 'raumplan.html';
+            navigateTo('raumplan');
             break;
         case 'friend':
             // Get the friend's zenturie from the result
@@ -354,7 +376,12 @@ function handleResultClick(type, id) {
                 // Extract zenturie from details string "Zenturie: I24c"
                 const zenturies = friendResult.details.match(/Zenturie: (\w+)/);
                 if (zenturies && zenturies[1]) {
-                    window.location.href = `stundenplan.html?zenturie=${zenturies[1]}`;
+                    // TODO: Support zenturie parameter in Shell navigation
+                    if (window.Shell && typeof window.Shell.navigateTo === 'function') {
+                        window.Shell.navigateTo('stundenplan'); // For now, just navigate to stundenplan
+                    } else {
+                        window.location.href = `stundenplan.html?zenturie=${zenturies[1]}`;
+                    }
                 }
             }
             break;

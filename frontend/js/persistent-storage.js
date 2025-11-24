@@ -7,6 +7,26 @@ const STORAGE_DIR = 'nora_secure';
 const TOKEN_FILE = 'token.json';
 
 /**
+ * Get the correct Directory constant for Capacitor Filesystem
+ * Handles Capacitor 6+ API differences
+ */
+function getDocumentsDirectory() {
+    if (typeof Capacitor === 'undefined' || !Capacitor.Plugins || !Capacitor.Plugins.Filesystem) {
+        return 'DOCUMENTS'; // Fallback string
+    }
+
+    const Filesystem = Capacitor.Plugins.Filesystem;
+
+    // Try different ways to access Directory enum (Capacitor version compatibility)
+    if (Filesystem.Directory && Filesystem.Directory.Documents) {
+        return Filesystem.Directory.Documents;
+    }
+
+    // Fallback to string constant
+    return 'DOCUMENTS';
+}
+
+/**
  * Initialize filesystem storage
  */
 async function initPersistentStorage() {
@@ -20,14 +40,14 @@ async function initPersistentStorage() {
         try {
             await Capacitor.Plugins.Filesystem.stat({
                 path: STORAGE_DIR,
-                directory: 'Documents'
+                directory: getDocumentsDirectory()
             });
             console.log('✅ [PersistentStorage] Storage directory exists');
         } catch (e) {
             console.log('📁 [PersistentStorage] Creating storage directory...');
             await Capacitor.Plugins.Filesystem.mkdir({
                 path: STORAGE_DIR,
-                directory: 'Documents',
+                directory: getDocumentsDirectory(),
                 recursive: true
             });
             console.log('✅ [PersistentStorage] Storage directory created');
@@ -71,7 +91,7 @@ async function storeTokenPersistent(token) {
             await Capacitor.Plugins.Filesystem.writeFile({
                 path: `${STORAGE_DIR}/${TOKEN_FILE}`,
                 data: JSON.stringify(data),
-                directory: 'Documents',
+                directory: getDocumentsDirectory(),
                 encoding: 'utf8',
                 recursive: true
             });
@@ -101,7 +121,7 @@ async function loadTokenPersistent() {
 
                 const fileContent = await Capacitor.Plugins.Filesystem.readFile({
                     path: `${STORAGE_DIR}/${TOKEN_FILE}`,
-                    directory: 'Documents',
+                    directory: getDocumentsDirectory(),
                     encoding: 'utf8'
                 });
 
@@ -163,7 +183,7 @@ async function clearTokenPersistent() {
         try {
             await Capacitor.Plugins.Filesystem.deleteFile({
                 path: `${STORAGE_DIR}/${TOKEN_FILE}`,
-                directory: 'Documents'
+                directory: getDocumentsDirectory()
             });
             console.log('✅ Token cleared from filesystem');
         } catch (e) {
@@ -173,3 +193,10 @@ async function clearTokenPersistent() {
         }
     }
 }
+
+// Export functions to window for global access
+window.initPersistentStorage = initPersistentStorage;
+window.storeTokenPersistent = storeTokenPersistent;
+window.loadTokenPersistent = loadTokenPersistent;
+window.clearTokenPersistent = clearTokenPersistent;
+console.log('[PersistentStorage] Functions exported to window');

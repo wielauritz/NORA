@@ -3,12 +3,16 @@
  * Diese Datei enthält wiederverwendbare Funktionen für API-Calls
  */
 
+(function() {
 // API Base URL - Backend Login Service
 const API_BASE_URL = 'https://api.new.nora-nak.de/v1';
 const API_BASE_URL_V2 = 'https://api.new.nora-nak.de/v2';
 // For local development, uncomment:
 // const API_BASE_URL = 'http://localhost:8000/v1';
 // const API_BASE_URL_V2 = 'http://localhost:8000/v2';
+
+// Local reference to storage (exported by storage-manager.js to window.storage)
+const storage = window.storage;
 
 /**
  * Helper: Detect if running in Capacitor
@@ -578,7 +582,11 @@ function handleAPIError(error, fallbackMessage = 'Ein Fehler ist aufgetreten') {
 }
 
 // Export APIs for use in other files
+console.log('[API Helper] Script loaded, beginning exports...');
+console.log('[API Helper] module check:', typeof module, typeof module !== 'undefined' && module.exports);
+
 if (typeof module !== 'undefined' && module.exports) {
+    // Node.js environment
     module.exports = {
         AuthAPI,
         UserAPI,
@@ -598,4 +606,27 @@ if (typeof module !== 'undefined' && module.exports) {
         showToast,
         handleAPIError,
     };
+} else {
+    // Browser environment - assign to window for global access
+    window.AuthAPI = AuthAPI;
+    window.UserAPI = UserAPI;
+    window.ScheduleAPI = ScheduleAPI;
+    window.ExamsAPI = ExamsAPI;
+    window.RoomAPI = RoomAPI;
+    window.FriendsAPI = FriendsAPI;
+    window.CustomHoursAPI = CustomHoursAPI;
+    window.SearchAPI = SearchAPI;
+    window.CalendarAPI = CalendarAPI;
+
+    // Utilities
+    window.formatDateForAPI = formatDateForAPI;
+    window.formatTime = formatTime;
+    window.calculateDuration = calculateDuration;
+    window.getCurrentWeekNumber = getCurrentWeekNumber;
+    window.getDayName = getDayName;
+    window.showToast = showToast;
+    window.handleAPIError = handleAPIError;
+
+    console.log('[API Helper] APIs exported to window globally');
 }
+})();

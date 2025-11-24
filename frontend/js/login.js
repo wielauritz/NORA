@@ -2,16 +2,29 @@
  * Login Page JavaScript
  */
 
+// Flag to prevent double auth check
+let authChecked = false;
+
 /**
  * Check if user is already authenticated (for login page)
  * Returns true if user should stay on login page, false if redirect to dashboard
  */
 async function checkAuthOnLoginPage() {
+    if (authChecked) {
+        console.log('ℹ️ Auth already checked, skipping');
+        return true;
+    }
+    authChecked = true;
+
     try {
         // Initialize persistent storage
         await initPersistentStorage();
     } catch (e) {
-        console.warn('⚠️ Failed to initialize persistent storage:', e);
+        console.warn('⚠️ Failed to initialize persistent storage:', {
+            message: e.message,
+            code: e.code,
+            error: JSON.stringify(e)
+        });
     }
 
     // Try to load token from persistent storage
@@ -19,7 +32,15 @@ async function checkAuthOnLoginPage() {
 
     if (token) {
         console.log('✅ Token found on login page - redirecting to dashboard');
-        window.location.href = 'dashboard.html';
+        // Check if running in mobile app shell
+        if (typeof window.Shell !== 'undefined' && typeof window.Shell.loadDashboard === 'function') {
+            // Mobile app - use shell navigation
+            console.log('[Login] Using Shell navigation to dashboard');
+            window.Shell.loadDashboard();
+        } else {
+            // Web app - use traditional redirect
+            window.location.href = 'dashboard.html';
+        }
         return false; // Redirect happened
     }
 
@@ -50,6 +71,15 @@ function initLoginForm() {
         const originalText = disableSubmitButton(submitBtn, 'Wird verarbeitet...');
 
         try {
+            // Debug: Check if AuthAPI is available
+            console.log('[Login] Checking AuthAPI availability:', typeof AuthAPI, typeof window.AuthAPI);
+            console.log('[Login] AuthAPI object:', window.AuthAPI);
+
+            // Verify AuthAPI is loaded and functional
+            if (typeof AuthAPI === 'undefined' || !AuthAPI.login) {
+                throw new Error('AuthAPI nicht verfügbar. Bitte lade die Seite neu.');
+            }
+
             // Call Backend Login API
             const data = await AuthAPI.login(email, password);
 
@@ -59,8 +89,17 @@ function initLoginForm() {
             const token = data.token;
 
             try {
-                // Use the helper function to store token
+                // Store token using persistent storage (localStorage + Capacitor Filesystem)
                 await storeToken(token);
+                console.log('✅ Token stored successfully');
+
+                // Notify shell about successful login (shell will store in AppStorage)
+                if (typeof window.Shell !== 'undefined') {
+                    console.log('[Login] Dispatching loginSuccess event to shell');
+                    window.dispatchEvent(new CustomEvent('nora:loginSuccess', {
+                        detail: { token }
+                    }));
+                }
             } catch (e) {
                 console.error('❌ Fehler beim Token speichern:', e.message || JSON.stringify(e));
             }
@@ -84,7 +123,15 @@ function initLoginForm() {
 
             // Weiterleitung zum Dashboard - nutze replace() für saubere Weiterleitung
             setTimeout(() => {
-                window.location.replace('dashboard.html');
+                // Check if running in mobile app shell
+                if (typeof window.Shell !== 'undefined' && typeof window.Shell.loadDashboard === 'function') {
+                    // Mobile app - use shell navigation
+                    console.log('[Login] Using Shell navigation to dashboard');
+                    window.Shell.loadDashboard();
+                } else {
+                    // Web app - use traditional redirect
+                    window.location.replace('dashboard.html');
+                }
             }, 1000);
         } else {
             // New user created, verification email sent

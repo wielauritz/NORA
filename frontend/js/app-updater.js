@@ -3,6 +3,10 @@
  * Prüft beim App-Start, ob neue Versionen verfügbar sind
  */
 
+(function() {
+// Local reference to storage (exported by storage-manager.js to window.storage)
+const storage = window.storage;
+
 const APP_VERSION = '1.0.0';
 const UPDATE_CHECK_INTERVAL = 60000; // 1 Minute (für Development - in Production auf 3600000 setzen)
 const VERSION_STORAGE_KEY = 'app_version';
@@ -156,16 +160,24 @@ class AppUpdater {
 // Globale Instanz
 const appUpdater = new AppUpdater();
 
-// Auto-Check beim Laden
-document.addEventListener('DOMContentLoaded', () => {
+// Auto-Check beim Laden (works for both static and dynamic loading)
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startAppUpdater);
+} else {
+    // DOM already loaded (script loaded dynamically) - initialize immediately
+    startAppUpdater();
+}
+
+function startAppUpdater() {
     // Verzögert starten, damit andere Initialisierungen zuerst laufen
     setTimeout(() => {
         // Force beim ersten Laden, um Interval zu umgehen
         appUpdater.checkForUpdates(true);
     }, 2000);
-});
+}
 
 // Periodischer Check alle 10 Minuten (wenn App offen)
 setInterval(() => {
     appUpdater.checkForUpdates(false);
 }, 600000);
+})();
