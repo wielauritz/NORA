@@ -12,8 +12,21 @@
         if (!(await checkAuth())) return;
 
         // Check if user is admin
-        const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+        let userData = JSON.parse(localStorage.getItem('userData') || '{}');
+
+        // If not admin in local storage, try to fetch fresh profile to be sure
         if (!userData.is_admin) {
+            try {
+                console.log('Checking admin status from server...');
+                userData = await UserAPI.getProfile();
+                localStorage.setItem('userData', JSON.stringify(userData));
+            } catch (e) {
+                console.error('Failed to fetch profile:', e);
+            }
+        }
+
+        if (!userData.is_admin) {
+            console.log('User is not admin, redirecting...');
             window.location.href = 'dashboard.html';
             return;
         }
