@@ -105,6 +105,7 @@ func AutoMigrate() error {
 	}
 
 	log.Println("Database migrations completed successfully")
+
 	return nil
 }
 

@@ -3,8 +3,8 @@
  * Renders navbar dynamically with preloader
  */
 
-(function() {
-// Local reference to storage (exported by storage-manager.js to window.storage)
+(function () {
+    // Local reference to storage (exported by storage-manager.js to window.storage)
     const storage = window.storage;
 
     /**
@@ -33,6 +33,9 @@
                         </a>
                         <a href="raumplan.html" class="px-4 py-2 rounded-lg ${activePage === 'raumplan' ? 'bg-primary/10 text-primary font-medium' : 'text-gray-600 hover:bg-gray-100'} transition-colors">
                             Raumplan
+                        </a>
+                        <a href="admin.html" id="admin-link" class="hidden px-4 py-2 rounded-lg ${activePage === 'admin' ? 'bg-primary/10 text-primary font-medium' : 'text-gray-600 hover:bg-gray-100'} transition-colors">
+                            Admin
                         </a>
                     </div>
 
@@ -127,6 +130,12 @@
 
                         <!-- User Dropdown Menu -->
                         <div id="userDropdown" class="hidden absolute right-0 w-48 rounded-xl shadow-lg glass-effect dark:bg-slate-800 border border-gray-200 dark:border-slate-700 overflow-hidden">
+                            <a href="admin.html" id="admin-dropdown-link" class="hidden flex items-center px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
+                                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+                                </svg>
+                                Admin
+                            </a>
                             <a href="settings.html" class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors">
                                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
@@ -259,8 +268,38 @@
         // Attach preloader handlers to tab navigation links
         attachNavbarPreloaderHandlers();
 
+        // Show/hide admin link based on user role
+        checkAdminStatus();
+
         // Hide loader after a short delay or when content is ready
         // This will be called by the page's init function
+    }
+
+    async function checkAdminStatus() {
+        try {
+            // Try to get from localStorage first to avoid delay
+            let userData = null;
+            try {
+                userData = JSON.parse(localStorage.getItem('userData'));
+            } catch (e) { }
+
+            if (!userData) {
+                // If not in storage, try to fetch
+                if (typeof UserAPI !== 'undefined') {
+                    userData = await UserAPI.getProfile();
+                }
+            }
+
+            if (userData && userData.is_admin) {
+                const adminLink = document.getElementById('admin-link');
+                if (adminLink) adminLink.classList.remove('hidden');
+
+                const adminDropdownLink = document.getElementById('admin-dropdown-link');
+                if (adminDropdownLink) adminDropdownLink.classList.remove('hidden');
+            }
+        } catch (error) {
+            console.log('Could not verify admin status for navbar:', error);
+        }
     }
 
     /**
@@ -324,7 +363,7 @@
     /**
      * Close dropdowns when clicking outside
      */
-    document.addEventListener('click', function(event) {
+    document.addEventListener('click', function (event) {
         const userDropdown = document.getElementById('userDropdown');
         const userInitials = document.getElementById('userInitials');
         const userInitialsMobile = document.getElementById('userInitialsMobile');
@@ -357,7 +396,7 @@
      * Friend Requests Management
      */
 
-// Global state for friend requests
+    // Global state for friend requests
     let friendRequestsData = { incoming: [], outgoing: [] };
     let friendRequestsPollingInterval = null;
 
@@ -628,7 +667,7 @@
      */
     function startFriendRequestsPolling() {
         // Only poll if user is authenticated
-        if (!storage.getItem('token')) return;
+        if (!storage.getItem('sessionToken')) return;
 
         // Initial load
         updateFriendRequestsBadge();
@@ -701,15 +740,15 @@
         console.log('[Navbar] User initials set to:', initials);
     }
 
-// Initialize polling when navbar is loaded
-    if (typeof storage !== 'undefined' && storage.getItem('token')) {
+    // Initialize polling when navbar is loaded
+    if (typeof storage !== 'undefined' && storage.getItem('sessionToken')) {
         // Start polling after a short delay to allow page to load
         setTimeout(() => {
             startFriendRequestsPolling();
         }, 1000);
     }
 
-// Export navbar functions to window for global access
+    // Export navbar functions to window for global access
     window.renderNavbar = renderNavbar;
     window.showContentLoader = showContentLoader;
     window.hideContentLoader = hideContentLoader;

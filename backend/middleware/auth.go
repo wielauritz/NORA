@@ -56,6 +56,23 @@ func AuthMiddleware(c *fiber.Ctx) error {
 	return c.Next()
 }
 
+func AdminMiddleware(c *fiber.Ctx) error {
+	user, ok := c.Locals("user").(*models.User)
+	if !ok || user == nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"detail": "User not authenticated",
+		})
+	}
+
+	if !user.IsAdmin {
+		return c.Status(fiber.StatusForbidden).JSON(fiber.Map{
+			"detail": "Admin access required",
+		})
+	}
+
+	return c.Next()
+}
+
 // GetCurrentUser retrieves the current user from context
 func GetCurrentUser(c *fiber.Ctx) *models.User {
 	user, ok := c.Locals("user").(*models.User)
