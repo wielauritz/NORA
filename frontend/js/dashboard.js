@@ -3,81 +3,22 @@
  * Lädt und zeigt Dashboard-Daten vom NORA Backend
  */
 
-(function() {
-// Local reference to storage (exported by storage-manager.js to window.storage)
-const storage = window.storage;
+(function () {
+    // Local reference to storage (exported by storage-manager.js to window.storage)
+    const storage = window.storage;
 
-// Initialize dashboard with auto-login support
-// This ensures auto-login completes BEFORE authentication check
-(async function initializeAuth() {
-    // Check URL parameter for token (from email verification)
-    // Format: ?token=xxx
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
+    // Initialize dashboard with auto-login support
+    // This ensures auto-login completes BEFORE authentication check
+    (async function initializeAuth() {
+        // Check URL parameter for token (from email verification)
+        // Format: ?token=xxx
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
 
-    if (token) {
-        try {
-            console.log('✅ Auto-login token detected from email verification');
-            console.log('🔑 Token:', token.substring(0, 8) + '...');
-
-            // Initialize persistent storage
+        if (token) {
             try {
-                await initPersistentStorage();
-                console.log('✅ Persistent storage initialized');
-            } catch (e) {
-                console.warn('⚠️ Failed to initialize persistent storage:', e);
-            }
-
-            // Store token using persistent storage (filesystem + localStorage)
-            try {
-                await storeTokenPersistent(token);
-                console.log('✅ Token stored via persistent storage');
-            } catch (e) {
-                console.error('❌ Error storing token via persistent storage:', e);
-                // Fallback to localStorage only
-                try {
-                    localStorage.setItem('token', token);
-                    console.log('✅ Token stored to localStorage (fallback)');
-                } catch (storageError) {
-                    console.error('❌ localStorage error:', storageError);
-                }
-            }
-
-            // Also store to StorageManager if available
-            if (typeof storage !== 'undefined' && storage.setItem) {
-                try {
-                    storage.setItem('token', token);
-                    console.log('✅ Token stored to StorageManager');
-                } catch (e) {
-                    console.warn('⚠️ StorageManager error:', e);
-                }
-            }
-
-            // Remove token parameter from URL without reload
-            const cleanUrl = window.location.pathname;
-            history.replaceState(null, '', cleanUrl);
-
-            console.log('✅ Auto-login completed - token stored for all future requests');
-        } catch (error) {
-            console.error('❌ Error processing auto-login token:', error);
-            // Continue with normal auth check even if auto-login fails
-        }
-    }
-
-    // Check URL hash for auto-login (password reset legacy support)
-    // Format: #auth=base64({"token":"xxx","email":"yyy"})
-    const hash = window.location.hash;
-    if (hash && hash.startsWith('#auth=')) {
-        try {
-            console.log('✅ Auto-login from hash detected (password reset)');
-            // Extract and decode credentials from hash
-            const encodedCreds = hash.substring(6); // Remove '#auth='
-            const decodedCreds = atob(encodedCreds);
-            const { token: hashToken, email: hashEmail } = JSON.parse(decodedCreds);
-
-            if (hashToken && hashEmail) {
-                console.log('📧 Email:', hashEmail);
-                console.log('🔑 Token:', hashToken.substring(0, 8) + '...');
+                console.log('✅ Auto-login token detected from email verification');
+                console.log('🔑 Token:', token.substring(0, 8) + '...');
 
                 // Initialize persistent storage
                 try {
@@ -87,14 +28,15 @@ const storage = window.storage;
                     console.warn('⚠️ Failed to initialize persistent storage:', e);
                 }
 
-                // Store token using persistent storage
+                // Store token using persistent storage (filesystem + localStorage)
                 try {
-                    await storeTokenPersistent(hashToken);
+                    await storeTokenPersistent(token);
                     console.log('✅ Token stored via persistent storage');
                 } catch (e) {
                     console.error('❌ Error storing token via persistent storage:', e);
+                    // Fallback to localStorage only
                     try {
-                        localStorage.setItem('token', hashToken);
+                        localStorage.setItem('sessionToken', token);
                         console.log('✅ Token stored to localStorage (fallback)');
                     } catch (storageError) {
                         console.error('❌ localStorage error:', storageError);
@@ -104,243 +46,301 @@ const storage = window.storage;
                 // Also store to StorageManager if available
                 if (typeof storage !== 'undefined' && storage.setItem) {
                     try {
-                        storage.setItem('token', hashToken);
+                        storage.setItem('sessionToken', token);
                         console.log('✅ Token stored to StorageManager');
                     } catch (e) {
                         console.warn('⚠️ StorageManager error:', e);
                     }
                 }
 
-                // Extract user info from email
-                const userName = hashEmail.split('@')[0];
-                const userInfo = {
-                    email: hashEmail,
-                    name: userName,
-                };
-                try {
-                    localStorage.setItem('user', JSON.stringify(userInfo));
-                    console.log('✅ User info stored');
-                } catch (e) {
-                    console.error('❌ Error storing user info:', e);
+                // Remove token parameter from URL without reload
+                const cleanUrl = window.location.pathname;
+                history.replaceState(null, '', cleanUrl);
+
+                console.log('✅ Auto-login completed - token stored for all future requests');
+            } catch (error) {
+                console.error('❌ Error processing auto-login token:', error);
+                // Continue with normal auth check even if auto-login fails
+            }
+        }
+
+        // Check URL hash for auto-login (password reset legacy support)
+        // Format: #auth=base64({"token":"xxx","email":"yyy"})
+        const hash = window.location.hash;
+        if (hash && hash.startsWith('#auth=')) {
+            try {
+                console.log('✅ Auto-login from hash detected (password reset)');
+                // Extract and decode credentials from hash
+                const encodedCreds = hash.substring(6); // Remove '#auth='
+                const decodedCreds = atob(encodedCreds);
+                const { token: hashToken, email: hashEmail } = JSON.parse(decodedCreds);
+
+                if (hashToken && hashEmail) {
+                    console.log('📧 Email:', hashEmail);
+                    console.log('🔑 Token:', hashToken.substring(0, 8) + '...');
+
+                    // Initialize persistent storage
+                    try {
+                        await initPersistentStorage();
+                        console.log('✅ Persistent storage initialized');
+                    } catch (e) {
+                        console.warn('⚠️ Failed to initialize persistent storage:', e);
+                    }
+
+                    // Store token using persistent storage
+                    try {
+                        await storeTokenPersistent(hashToken);
+                        console.log('✅ Token stored via persistent storage');
+                    } catch (e) {
+                        console.error('❌ Error storing token via persistent storage:', e);
+                        try {
+                            localStorage.setItem('sessionToken', hashToken);
+                            console.log('✅ Token stored to localStorage (fallback)');
+                        } catch (storageError) {
+                            console.error('❌ localStorage error:', storageError);
+                        }
+                    }
+
+                    // Also store to StorageManager if available
+                    if (typeof storage !== 'undefined' && storage.setItem) {
+                        try {
+                            storage.setItem('sessionToken', hashToken);
+                            console.log('✅ Token stored to StorageManager');
+                        } catch (e) {
+                            console.warn('⚠️ StorageManager error:', e);
+                        }
+                    }
+
+                    // Extract user info from email
+                    const userName = hashEmail.split('@')[0];
+                    const userInfo = {
+                        email: hashEmail,
+                        name: userName,
+                    };
+                    try {
+                        localStorage.setItem('user', JSON.stringify(userInfo));
+                        console.log('✅ User info stored');
+                    } catch (e) {
+                        console.error('❌ Error storing user info:', e);
+                    }
+
+                    // Remove hash from URL without reload
+                    history.replaceState(null, '', window.location.pathname + window.location.search);
+
+                    console.log('✅ Auto-login from hash completed');
+                }
+            } catch (error) {
+                console.error('❌ Error processing auto-login hash:', error);
+                // Continue with normal auth check even if auto-login fails
+            }
+        }
+
+        // NOW check authentication (after auto-login is complete)
+        console.log('🔍 Checking authentication...');
+        if (!(await checkAuth())) {
+            // checkAuth() redirects to login if not authenticated
+            console.log('❌ Authentication check failed - redirecting to login');
+        } else {
+            console.log('✅ Authentication check passed');
+        }
+    })();
+
+    // Global state
+    let userData = null;
+    let todayEvents = [];
+    let upcomingExams = [];
+    let friendsList = [];
+
+    /**
+     * Helper: Clean event title (remove everything after first comma)
+     */
+    function cleanEventTitle(title) {
+        if (!title) return '';
+        const commaIndex = title.indexOf(',');
+        return commaIndex !== -1 ? title.substring(0, commaIndex).trim() : title;
+    }
+
+    /**
+     * Helper: Convert newlines to <br> tags
+     */
+    function nl2br(text) {
+        if (!text) return '';
+        return text.replace(/\n/g, '<br>');
+    }
+
+    /**
+     * Initialize dashboard
+     */
+    async function initDashboard() {
+        try {
+            // Always show preloader on dashboard load (both initial load and tab navigation)
+            if (typeof showContentLoader === 'function') {
+                showContentLoader();
+            }
+
+            // Load user data
+            await loadUserData();
+
+            // Check if user has a Zenturie assigned
+            if (!userData || !userData.zenturie) {
+                console.log('⚠️ User has no Zenturie assigned, showing selection modal');
+
+                // Hide content loader first
+                if (typeof pageContentReady === 'function') {
+                    pageContentReady();
                 }
 
-                // Remove hash from URL without reload
-                history.replaceState(null, '', window.location.pathname + window.location.search);
-
-                console.log('✅ Auto-login from hash completed');
+                // Show Zenturie selection modal
+                await showZenturieSelectionModal();
+                return; // Stop here, page will reload after Zenturie is selected
             }
-        } catch (error) {
-            console.error('❌ Error processing auto-login hash:', error);
-            // Continue with normal auth check even if auto-login fails
-        }
-    }
 
-    // NOW check authentication (after auto-login is complete)
-    console.log('🔍 Checking authentication...');
-    if (!(await checkAuth())) {
-        // checkAuth() redirects to login if not authenticated
-        console.log('❌ Authentication check failed - redirecting to login');
-    } else {
-        console.log('✅ Authentication check passed');
-    }
-})();
+            // Update UI with user info
+            updateUserDisplay();
 
-// Global state
-let userData = null;
-let todayEvents = [];
-let upcomingExams = [];
-let friendsList = [];
+            // Load dashboard data in parallel
+            await Promise.all([
+                loadTodaySchedule(),
+                loadUpcomingExams(),
+                loadFriends()
+            ]);
 
-/**
- * Helper: Clean event title (remove everything after first comma)
- */
-function cleanEventTitle(title) {
-    if (!title) return '';
-    const commaIndex = title.indexOf(',');
-    return commaIndex !== -1 ? title.substring(0, commaIndex).trim() : title;
-}
+            // Update statistics
+            updateStatistics();
 
-/**
- * Helper: Convert newlines to <br> tags
- */
-function nl2br(text) {
-    if (!text) return '';
-    return text.replace(/\n/g, '<br>');
-}
-
-/**
- * Initialize dashboard
- */
-async function initDashboard() {
-    try {
-        // Always show preloader on dashboard load (both initial load and tab navigation)
-        if (typeof showContentLoader === 'function') {
-            showContentLoader();
-        }
-
-        // Load user data
-        await loadUserData();
-
-        // Check if user has a Zenturie assigned
-        if (!userData || !userData.zenturie) {
-            console.log('⚠️ User has no Zenturie assigned, showing selection modal');
-
-            // Hide content loader first
+            // Hide content loader
             if (typeof pageContentReady === 'function') {
                 pageContentReady();
             }
 
-            // Show Zenturie selection modal
-            await showZenturieSelectionModal();
-            return; // Stop here, page will reload after Zenturie is selected
-        }
+        } catch (error) {
+            console.error('Dashboard initialization error:', error);
+            handleAPIError(error, 'Fehler beim Laden der Dashboard-Daten');
 
-        // Update UI with user info
-        updateUserDisplay();
-
-        // Load dashboard data in parallel
-        await Promise.all([
-            loadTodaySchedule(),
-            loadUpcomingExams(),
-            loadFriends()
-        ]);
-
-        // Update statistics
-        updateStatistics();
-
-        // Hide content loader
-        if (typeof pageContentReady === 'function') {
-            pageContentReady();
-        }
-
-    } catch (error) {
-        console.error('Dashboard initialization error:', error);
-        handleAPIError(error, 'Fehler beim Laden der Dashboard-Daten');
-
-        // Hide loader even on error
-        if (typeof pageContentReady === 'function') {
-            pageContentReady();
-        }
-    }
-}
-
-/**
- * Load user data from API
- */
-async function loadUserData() {
-    try {
-        userData = await UserAPI.getProfile();
-        console.log('✅ User data loaded:', userData);
-
-        // Store in localStorage for offline access
-        localStorage.setItem('userData', JSON.stringify(userData));
-    } catch (error) {
-        console.error('Error loading user data:', error);
-
-        // Try to load from localStorage as fallback
-        const cached = localStorage.getItem('userData');
-        if (cached) {
-            userData = JSON.parse(cached);
-            console.log('📦 Using cached user data');
-        } else {
-            throw error;
-        }
-    }
-}
-
-/**
- * Update user display in UI
- */
-function updateUserDisplay() {
-    if (!userData) return;
-
-    const firstName = userData.first_name || 'User';
-    const lastName = userData.last_name || '';
-    const initials = userData.initials || 'U';
-
-    // Retry mechanism to wait for DOM elements to be ready
-    const maxRetries = 20; // Increased from 10 to 20 for better reliability
-    let retryCount = 0;
-
-    const tryUpdate = () => {
-        const welcomeEl = document.querySelector('h1 .gradient-text');
-        const dateEl = document.getElementById('dashboardDateText');
-
-        // Check if critical elements exist
-        if (!welcomeEl || !dateEl) {
-            retryCount++;
-            if (retryCount < maxRetries) {
-                console.log(`⏳ [Dashboard] Waiting for DOM elements... retry ${retryCount}/${maxRetries}`);
-                setTimeout(tryUpdate, 100); // Increased from 50ms to 100ms (total: 2000ms timeout)
-                return;
-            } else {
-                console.warn('⚠️ [Dashboard] DOM elements not found after retries');
-                return;
+            // Hide loader even on error
+            if (typeof pageContentReady === 'function') {
+                pageContentReady();
             }
         }
+    }
 
-        // Now we know elements exist - update them
-        welcomeEl.textContent = firstName;
+    /**
+     * Load user data from API
+     */
+    async function loadUserData() {
+        try {
+            userData = await UserAPI.getProfile();
+            console.log('✅ User data loaded:', userData);
 
-        // Update user initials in avatar (local dashboard element if exists)
-        const avatarEl = document.getElementById('userInitials');
-        if (avatarEl) {
-            avatarEl.textContent = initials;
+            // Store in localStorage for offline access
+            localStorage.setItem('userData', JSON.stringify(userData));
+        } catch (error) {
+            console.error('Error loading user data:', error);
+
+            // Try to load from localStorage as fallback
+            const cached = localStorage.getItem('userData');
+            if (cached) {
+                userData = JSON.parse(cached);
+                console.log('📦 Using cached user data');
+            } else {
+                throw error;
+            }
         }
+    }
 
-        // CRITICAL: Also update initials in shell navbar (app/index.html)
-        if (typeof window.setUserInitials === 'function') {
-            window.setUserInitials(initials);
-            console.log('[Dashboard] User initials set in shell navbar:', initials);
-        }
+    /**
+     * Update user display in UI
+     */
+    function updateUserDisplay() {
+        if (!userData) return;
 
-        // Update current date display
-        const today = new Date();
-        const dateOptions = {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
+        const firstName = userData.first_name || 'User';
+        const lastName = userData.last_name || '';
+        const initials = userData.initials || 'U';
+
+        // Retry mechanism to wait for DOM elements to be ready
+        const maxRetries = 20; // Increased from 10 to 20 for better reliability
+        let retryCount = 0;
+
+        const tryUpdate = () => {
+            const welcomeEl = document.querySelector('h1 .gradient-text');
+            const dateEl = document.getElementById('dashboardDateText');
+
+            // Check if critical elements exist
+            if (!welcomeEl || !dateEl) {
+                retryCount++;
+                if (retryCount < maxRetries) {
+                    console.log(`⏳ [Dashboard] Waiting for DOM elements... retry ${retryCount}/${maxRetries}`);
+                    setTimeout(tryUpdate, 100); // Increased from 50ms to 100ms (total: 2000ms timeout)
+                    return;
+                } else {
+                    console.warn('⚠️ [Dashboard] DOM elements not found after retries');
+                    return;
+                }
+            }
+
+            // Now we know elements exist - update them
+            welcomeEl.textContent = firstName;
+
+            // Update user initials in avatar (local dashboard element if exists)
+            const avatarEl = document.getElementById('userInitials');
+            if (avatarEl) {
+                avatarEl.textContent = initials;
+            }
+
+            // CRITICAL: Also update initials in shell navbar (app/index.html)
+            if (typeof window.setUserInitials === 'function') {
+                window.setUserInitials(initials);
+                console.log('[Dashboard] User initials set in shell navbar:', initials);
+            }
+
+            // Update current date display
+            const today = new Date();
+            const dateOptions = {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            };
+            const dateStr = today.toLocaleDateString('de-DE', dateOptions);
+
+            if (userData.zenturie) {
+                dateEl.textContent = `Hier ist deine Übersicht für heute, ${dateStr} • Zenturie: ${userData.zenturie}`;
+            } else {
+                dateEl.textContent = `Hier ist deine Übersicht für heute, ${dateStr}`;
+            }
+
+            console.log('✅ [Dashboard] User display updated');
         };
-        const dateStr = today.toLocaleDateString('de-DE', dateOptions);
 
-        if (userData.zenturie) {
-            dateEl.textContent = `Hier ist deine Übersicht für heute, ${dateStr} • Zenturie: ${userData.zenturie}`;
-        } else {
-            dateEl.textContent = `Hier ist deine Übersicht für heute, ${dateStr}`;
-        }
+        tryUpdate();
+    }
 
-        console.log('✅ [Dashboard] User display updated');
-    };
+    /**
+     * Load today's schedule
+     */
+    async function loadTodaySchedule() {
+        try {
+            const now = new Date();
+            const today = formatDateForAPI(now);
 
-    tryUpdate();
-}
+            // DEBUG: Show exactly what date is being used
+            console.log('[Dashboard] 📅 Date debug:', {
+                localDate: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`,
+                utcDate: now.toISOString().split('T')[0],
+                apiDate: today,
+                localTime: now.toLocaleString('de-DE'),
+                utcTime: now.toISOString()
+            });
 
-/**
- * Load today's schedule
- */
-async function loadTodaySchedule() {
-    try {
-        const now = new Date();
-        const today = formatDateForAPI(now);
+            todayEvents = await ScheduleAPI.getEvents(today);
 
-        // DEBUG: Show exactly what date is being used
-        console.log('[Dashboard] 📅 Date debug:', {
-            localDate: `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`,
-            utcDate: now.toISOString().split('T')[0],
-            apiDate: today,
-            localTime: now.toLocaleString('de-DE'),
-            utcTime: now.toISOString()
-        });
-
-        todayEvents = await ScheduleAPI.getEvents(today);
-
-        console.log('✅ Today events loaded:', todayEvents.length);
-        renderTodaySchedule();
-    } catch (error) {
-        console.error('Error loading today schedule:', error);
-        // Show placeholder
-        document.getElementById('todaySchedule').innerHTML = `
+            console.log('✅ Today events loaded:', todayEvents.length);
+            renderTodaySchedule();
+        } catch (error) {
+            console.error('Error loading today schedule:', error);
+            // Show placeholder
+            document.getElementById('todaySchedule').innerHTML = `
             <div class="text-center py-8 text-gray-500">
                 <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -348,34 +348,34 @@ async function loadTodaySchedule() {
                 <p>Keine Termine für heute</p>
             </div>
         `;
-    }
-}
-
-/**
- * Render today's schedule
- */
-function renderTodaySchedule() {
-    console.log('[Dashboard] renderTodaySchedule() called, todayEvents:', todayEvents.length);
-
-    const container = document.getElementById('todaySchedule');
-    if (!container) {
-        console.warn('[Dashboard] todaySchedule container NOT FOUND - cannot render!');
-        return;
+        }
     }
 
-    const now = new Date();
+    /**
+     * Render today's schedule
+     */
+    function renderTodaySchedule() {
+        console.log('[Dashboard] renderTodaySchedule() called, todayEvents:', todayEvents.length);
 
-    // Filter out events that have already ended
-    const upcomingEvents = todayEvents.filter(event => {
-        const endTime = new Date(event.end_time);
-        return endTime > now; // Only show events that haven't ended yet
-    });
+        const container = document.getElementById('todaySchedule');
+        if (!container) {
+            console.warn('[Dashboard] todaySchedule container NOT FOUND - cannot render!');
+            return;
+        }
 
-    console.log('[Dashboard] Filtered to', upcomingEvents.length, 'upcoming events (from', todayEvents.length, 'total)');
+        const now = new Date();
 
-    if (upcomingEvents.length === 0) {
-        console.log('[Dashboard] No upcoming events, showing empty state');
-        container.innerHTML = `
+        // Filter out events that have already ended
+        const upcomingEvents = todayEvents.filter(event => {
+            const endTime = new Date(event.end_time);
+            return endTime > now; // Only show events that haven't ended yet
+        });
+
+        console.log('[Dashboard] Filtered to', upcomingEvents.length, 'upcoming events (from', todayEvents.length, 'total)');
+
+        if (upcomingEvents.length === 0) {
+            console.log('[Dashboard] No upcoming events, showing empty state');
+            container.innerHTML = `
             <div class="text-center py-8 text-gray-500">
                 <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -383,27 +383,27 @@ function renderTodaySchedule() {
                 <p>Keine weiteren Termine für heute</p>
             </div>
         `;
-        return;
-    }
+            return;
+        }
 
-    container.innerHTML = upcomingEvents.map((event, index) => {
-        const startTime = new Date(event.start_time);
-        const endTime = new Date(event.end_time);
-        const duration = Math.round((endTime - startTime) / 60000); // minutes
+        container.innerHTML = upcomingEvents.map((event, index) => {
+            const startTime = new Date(event.start_time);
+            const endTime = new Date(event.end_time);
+            const duration = Math.round((endTime - startTime) / 60000); // minutes
 
-        // Check if event is currently active
-        const isActive = now >= startTime && now <= endTime;
+            // Check if event is currently active
+            const isActive = now >= startTime && now <= endTime;
 
-        // Different styling for timetable vs custom_hour vs exam
-        const borderColor = event.event_type === 'timetable' ? 'border-primary' : (event.event_type === 'exam' ? 'border-accent' : 'border-purple');
-        const eventColorKey = event.event_type === 'timetable' ? 'primary' : (event.event_type === 'exam' ? 'accent' : 'purple');
-        const bgColor = isActive
-            ? `bg-gradient-to-r from-${eventColorKey}/5 to-${eventColorKey}/10`
-            : 'bg-gray-50 dark:bg-slate-800';
+            // Different styling for timetable vs custom_hour vs exam
+            const borderColor = event.event_type === 'timetable' ? 'border-primary' : (event.event_type === 'exam' ? 'border-accent' : 'border-purple');
+            const eventColorKey = event.event_type === 'timetable' ? 'primary' : (event.event_type === 'exam' ? 'accent' : 'purple');
+            const bgColor = isActive
+                ? `bg-gradient-to-r from-${eventColorKey}/5 to-${eventColorKey}/10`
+                : 'bg-gray-50 dark:bg-slate-800';
 
-        const startTimeStr = formatTime(startTime.toTimeString());
+            const startTimeStr = formatTime(startTime.toTimeString());
 
-        return `
+            return `
             <div class="flex items-start space-x-4 p-4 ${bgColor} rounded-xl border-l-4 ${borderColor} cursor-pointer hover:shadow-md transition-shadow" onclick='showEventDetails(${JSON.stringify(event).replace(/'/g, "&#39;")})'>
                 <div class="text-center flex-shrink-0">
                     <div class="text-sm font-medium text-gray-600 dark:text-gray-400">${startTimeStr}</div>
@@ -431,90 +431,90 @@ function renderTodaySchedule() {
                         ` : ''}
                     </div>
                     ${(() => {
-                        const filteredDesc = filterDescription(event.description);
-                        return filteredDesc ? `
+                    const filteredDesc = filterDescription(event.description);
+                    return filteredDesc ? `
                             <div class="mt-2 text-xs text-gray-500 dark:text-gray-400" style="white-space: pre-line;">${filteredDesc}</div>
                         ` : '';
-                    })()}
+                })()}
                 </div>
                 ${isActive ? `
                     <span class="text-xs px-3 py-1 bg-green-100 text-green-700 rounded-full font-medium">Aktiv</span>
                 ` : ''}
             </div>
         `;
-    }).join('');
+        }).join('');
 
-    console.log('[Dashboard] ✅ Today schedule rendered successfully with', upcomingEvents.length, 'events');
-}
-
-/**
- * Load upcoming exams
- */
-async function loadUpcomingExams() {
-    try {
-        upcomingExams = await ExamsAPI.getUpcomingExams();
-        console.log('✅ Exams loaded:', upcomingExams.length);
-        renderUpcomingExams();
-    } catch (error) {
-        console.error('Error loading exams:', error);
+        console.log('[Dashboard] ✅ Today schedule rendered successfully with', upcomingEvents.length, 'events');
     }
-}
 
-/**
- * Render upcoming exams
- */
-function renderUpcomingExams() {
-    const container = document.getElementById('upcomingExamsContainer');
-    if (!container) return;
+    /**
+     * Load upcoming exams
+     */
+    async function loadUpcomingExams() {
+        try {
+            upcomingExams = await ExamsAPI.getUpcomingExams();
+            console.log('✅ Exams loaded:', upcomingExams.length);
+            renderUpcomingExams();
+        } catch (error) {
+            console.error('Error loading exams:', error);
+        }
+    }
 
-    if (upcomingExams.length === 0) {
-        container.innerHTML = `
+    /**
+     * Render upcoming exams
+     */
+    function renderUpcomingExams() {
+        const container = document.getElementById('upcomingExamsContainer');
+        if (!container) return;
+
+        if (upcomingExams.length === 0) {
+            container.innerHTML = `
             <div class="text-center py-8 text-gray-500">
                 <p>Keine anstehenden Klausuren</p>
             </div>
         `;
-        return;
-    }
+            return;
+        }
 
-    const now = new Date();
+        const now = new Date();
 
-    // Take only next 3 exams
-    const nextExams = upcomingExams.slice(0, 3);
+        // Take only next 3 exams
+        const nextExams = upcomingExams.slice(0, 3);
 
-    container.innerHTML = nextExams.map(exam => {
-        const examDate = new Date(exam.start_time);
-        const daysUntil = Math.ceil((examDate - now) / (1000 * 60 * 60 * 24));
+        container.innerHTML = nextExams.map(exam => {
+            const examDate = new Date(exam.start_time);
+            const daysUntil = Math.ceil((examDate - now) / (1000 * 60 * 60 * 24));
 
-        const dateStr = examDate.toLocaleDateString('de-DE', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-        const timeStr = examDate.toLocaleTimeString('de-DE', {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+            const dateStr = examDate.toLocaleDateString('de-DE', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            const timeStr = examDate.toLocaleTimeString('de-DE', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
 
-        const isUrgent = daysUntil <= 7;
-        const bgColor = isUrgent ? 'bg-gradient-to-r from-accent/5 to-accent/10' : 'bg-gray-50 dark:bg-slate-800';
-        const iconBg = isUrgent ? 'bg-accent/20' : 'bg-gray-200 dark:bg-slate-700';
-        const iconColor = isUrgent ? 'text-accent' : 'text-gray-600 dark:text-gray-400';
-        const daysColor = isUrgent ? 'text-accent' : 'text-gray-600 dark:text-gray-400';
+            const isUrgent = daysUntil <= 7;
+            const bgColor = isUrgent ? 'bg-gradient-to-r from-accent/5 to-accent/10' : 'bg-gray-50 dark:bg-slate-800';
+            const iconBg = isUrgent ? 'bg-accent/20' : 'bg-gray-200 dark:bg-slate-700';
+            const iconColor = isUrgent ? 'text-accent' : 'text-gray-600 dark:text-gray-400';
+            const daysColor = isUrgent ? 'text-accent' : 'text-gray-600 dark:text-gray-400';
 
-        // Convert exam to event format for modal
-        const endTime = new Date(examDate.getTime() + exam.duration * 60000);
-        const eventData = {
-            title: exam.course_name,
-            start_time: exam.start_time,
-            end_time: endTime.toISOString(),
-            location: exam.room || null,
-            room: exam.room || null,
-            professor: null,
-            description: exam.is_verified ? 'Status: Verifiziert' : 'Status: Nicht verifiziert',
-            event_type: 'exam'
-        };
+            // Convert exam to event format for modal
+            const endTime = new Date(examDate.getTime() + exam.duration * 60000);
+            const eventData = {
+                title: exam.course_name,
+                start_time: exam.start_time,
+                end_time: endTime.toISOString(),
+                location: exam.room || null,
+                room: exam.room || null,
+                professor: null,
+                description: exam.is_verified ? 'Status: Verifiziert' : 'Status: Nicht verifiziert',
+                event_type: 'exam'
+            };
 
-        return `
+            return `
             <div class="flex items-center justify-between p-4 ${bgColor} rounded-xl cursor-pointer hover:shadow-md transition-shadow" onclick='showEventDetails(${JSON.stringify(eventData).replace(/'/g, "&#39;")})'>
                 <div class="flex items-center space-x-4">
                     <div class="p-3 ${iconBg} rounded-xl">
@@ -531,38 +531,38 @@ function renderUpcomingExams() {
                 <span class="text-sm font-medium ${daysColor}">In ${daysUntil} ${daysUntil === 1 ? 'Tag' : 'Tagen'}</span>
             </div>
         `;
-    }).join('');
-}
-
-/**
- * Load friends list
- */
-async function loadFriends() {
-    try {
-        friendsList = await FriendsAPI.getFriends();
-        console.log('✅ Friends loaded:', friendsList.length);
-        renderFriends();
-    } catch (error) {
-        console.error('Error loading friends:', error);
-    }
-}
-
-/**
- * Render friends list
- */
-function renderFriends() {
-    // Update friends count in stats
-    const friendsCountEl = document.getElementById('friendsCount');
-    if (friendsCountEl) {
-        friendsCountEl.textContent = friendsList.length;
+        }).join('');
     }
 
-    // Render friends list in sidebar
-    const container = document.getElementById('friendsListContainer');
-    if (!container) return;
+    /**
+     * Load friends list
+     */
+    async function loadFriends() {
+        try {
+            friendsList = await FriendsAPI.getFriends();
+            console.log('✅ Friends loaded:', friendsList.length);
+            renderFriends();
+        } catch (error) {
+            console.error('Error loading friends:', error);
+        }
+    }
 
-    if (friendsList.length === 0) {
-        container.innerHTML = `
+    /**
+     * Render friends list
+     */
+    function renderFriends() {
+        // Update friends count in stats
+        const friendsCountEl = document.getElementById('friendsCount');
+        if (friendsCountEl) {
+            friendsCountEl.textContent = friendsList.length;
+        }
+
+        // Render friends list in sidebar
+        const container = document.getElementById('friendsListContainer');
+        if (!container) return;
+
+        if (friendsList.length === 0) {
+            container.innerHTML = `
             <div class="text-center py-4 text-gray-500">
                 <p class="text-sm">Noch keine Freunde</p>
                 <button onclick="showAddFriendModal()" class="mt-3 text-sm text-primary hover:text-secondary font-medium">
@@ -570,18 +570,18 @@ function renderFriends() {
                 </button>
             </div>
         `;
-        return;
-    }
+            return;
+        }
 
-    // Show max 3 friends
-    const displayFriends = friendsList.slice(0, 3);
+        // Show max 3 friends
+        const displayFriends = friendsList.slice(0, 3);
 
-    container.innerHTML = displayFriends.map(friend => {
-        const initials = friend.initials || 'UN';
-        const fullName = `${friend.first_name || ''} ${friend.last_name || ''}`.trim() || 'Unbekannt';
-        const zenturie = friend.zenturie || 'Keine Zenturie';
+        container.innerHTML = displayFriends.map(friend => {
+            const initials = friend.initials || 'UN';
+            const fullName = `${friend.first_name || ''} ${friend.last_name || ''}`.trim() || 'Unbekannt';
+            const zenturie = friend.zenturie || 'Keine Zenturie';
 
-        return `
+            return `
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-3">
                     <div class="relative">
@@ -609,118 +609,118 @@ function renderFriends() {
                 </div>
             </div>
         `;
-    }).join('');
-}
-
-/**
- * Update dashboard statistics
- */
-function updateStatistics() {
-    console.log('[Dashboard] updateStatistics() called');
-
-    const now = new Date();
-
-    // Filter out past events
-    const upcomingEvents = todayEvents.filter(event => {
-        const endTime = new Date(event.end_time);
-        return endTime > now;
-    });
-
-    console.log('[Dashboard] Statistics: todayEvents=', todayEvents.length, 'upcomingEvents=', upcomingEvents.length);
-
-    // Total upcoming events today (timetable + custom hours) - 1st card
-    const todayEventsCountEl = document.getElementById('todayEventsCount');
-    if (todayEventsCountEl) {
-        todayEventsCountEl.textContent = upcomingEvents.length;
-        console.log('[Dashboard] Set todayEventsCount to:', upcomingEvents.length);
-    } else {
-        console.warn('[Dashboard] todayEventsCountEl NOT FOUND!');
+        }).join('');
     }
 
-    // Courses today (only timetable events, not custom hours) - 2nd card
-    // NOTE: Uses todayEvents (all events today) not upcomingEvents (only future events)
-    // because we want to show total courses for the day, not just upcoming ones
-    const coursesCount = todayEvents.filter(e => e.event_type === 'timetable').length;
-    const coursesEl = document.getElementById('coursesTodayCount');
-    if (coursesEl) {
-        coursesEl.textContent = coursesCount;
-        console.log('[Dashboard] Set coursesTodayCount to:', coursesCount);
-    }
+    /**
+     * Update dashboard statistics
+     */
+    function updateStatistics() {
+        console.log('[Dashboard] updateStatistics() called');
 
-    // Upcoming exams (next 30 days) - 3rd card
-    const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-    const upcomingExamsCount = upcomingExams.filter(e => {
-        const examDate = new Date(e.start_time);
-        return examDate <= thirtyDaysFromNow;
-    }).length;
+        const now = new Date();
 
-    const examsEl = document.getElementById('upcomingExamsCount');
-    if (examsEl) {
-        examsEl.textContent = upcomingExamsCount;
-    }
-}
+        // Filter out past events
+        const upcomingEvents = todayEvents.filter(event => {
+            const endTime = new Date(event.end_time);
+            return endTime > now;
+        });
 
-/**
- * View friend's schedule
- */
-function viewFriendSchedule(zenturie) {
-    if (!zenturie) return;
-    window.location.href = `stundenplan.html?zenturie=${zenturie}`;
-}
+        console.log('[Dashboard] Statistics: todayEvents=', todayEvents.length, 'upcomingEvents=', upcomingEvents.length);
 
-/**
- * Remove friend from friends list
- */
-async function removeFriend(friendUserId, friendName) {
-    // Confirmation dialog
-    showConfirmDialog(`Möchtest du ${friendName} wirklich aus deiner Freundesliste entfernen?`, async () => {
-        try {
-            const result = await FriendsAPI.removeFriend(friendUserId);
-
-            // Show success message
-            showToast(result.message || 'Freund erfolgreich entfernt!', 'success');
-
-            // Reload friends list
-            await loadFriends();
-
-        } catch (error) {
-            console.error('Error removing friend:', error);
-            showToast(error.message || 'Fehler beim Entfernen des Freundes', 'error');
+        // Total upcoming events today (timetable + custom hours) - 1st card
+        const todayEventsCountEl = document.getElementById('todayEventsCount');
+        if (todayEventsCountEl) {
+            todayEventsCountEl.textContent = upcomingEvents.length;
+            console.log('[Dashboard] Set todayEventsCount to:', upcomingEvents.length);
+        } else {
+            console.warn('[Dashboard] todayEventsCountEl NOT FOUND!');
         }
-    });
-}
 
-/**
- * Logout function
- */
-function logout() {
-    showConfirmDialog('Möchtest du dich wirklich abmelden?', async () => {
-        await AuthAPI.logout();
-    });
-}
+        // Courses today (only timetable events, not custom hours) - 2nd card
+        // NOTE: Uses todayEvents (all events today) not upcomingEvents (only future events)
+        // because we want to show total courses for the day, not just upcoming ones
+        const coursesCount = todayEvents.filter(e => e.event_type === 'timetable').length;
+        const coursesEl = document.getElementById('coursesTodayCount');
+        if (coursesEl) {
+            coursesEl.textContent = coursesCount;
+            console.log('[Dashboard] Set coursesTodayCount to:', coursesCount);
+        }
 
-/**
- * Helper: Format time from Date object
- */
-function formatTime(timeString) {
-    const parts = timeString.split(':');
-    return `${parts[0]}:${parts[1]}`;
-}
+        // Upcoming exams (next 30 days) - 3rd card
+        const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+        const upcomingExamsCount = upcomingExams.filter(e => {
+            const examDate = new Date(e.start_time);
+            return examDate <= thirtyDaysFromNow;
+        }).length;
 
-/**
- * Show calendar subscription modal
- */
-function showCalendarSubscription() {
-    if (!userData || !userData.subscription_uuid) {
-        showToast('Subscription UUID nicht gefunden', 'error');
-        return;
+        const examsEl = document.getElementById('upcomingExamsCount');
+        if (examsEl) {
+            examsEl.textContent = upcomingExamsCount;
+        }
     }
 
-    const subscriptionURL = CalendarAPI.getSubscriptionURL(userData.subscription_uuid);
-    const webcalURL = subscriptionURL.replace('https://', 'webcal://').replace('http://', 'webcal://');
+    /**
+     * View friend's schedule
+     */
+    function viewFriendSchedule(zenturie) {
+        if (!zenturie) return;
+        window.location.href = `stundenplan.html?zenturie=${zenturie}`;
+    }
 
-    // Create modal
-    const modalHTML = `
+    /**
+     * Remove friend from friends list
+     */
+    async function removeFriend(friendUserId, friendName) {
+        // Confirmation dialog
+        showConfirmDialog(`Möchtest du ${friendName} wirklich aus deiner Freundesliste entfernen?`, async () => {
+            try {
+                const result = await FriendsAPI.removeFriend(friendUserId);
+
+                // Show success message
+                showToast(result.message || 'Freund erfolgreich entfernt!', 'success');
+
+                // Reload friends list
+                await loadFriends();
+
+            } catch (error) {
+                console.error('Error removing friend:', error);
+                showToast(error.message || 'Fehler beim Entfernen des Freundes', 'error');
+            }
+        });
+    }
+
+    /**
+     * Logout function
+     */
+    function logout() {
+        showConfirmDialog('Möchtest du dich wirklich abmelden?', async () => {
+            await AuthAPI.logout();
+        });
+    }
+
+    /**
+     * Helper: Format time from Date object
+     */
+    function formatTime(timeString) {
+        const parts = timeString.split(':');
+        return `${parts[0]}:${parts[1]}`;
+    }
+
+    /**
+     * Show calendar subscription modal
+     */
+    function showCalendarSubscription() {
+        if (!userData || !userData.subscription_uuid) {
+            showToast('Subscription UUID nicht gefunden', 'error');
+            return;
+        }
+
+        const subscriptionURL = CalendarAPI.getSubscriptionURL(userData.subscription_uuid);
+        const webcalURL = subscriptionURL.replace('https://', 'webcal://').replace('http://', 'webcal://');
+
+        // Create modal
+        const modalHTML = `
         <div id="calendarSubModal" class="modal-overlay">
             <div class="modal-content glass-effect rounded-3xl w-full max-w-2xl p-8 relative" onclick="event.stopPropagation()">
                 <!-- Close Button -->
@@ -852,115 +852,115 @@ function showCalendarSubscription() {
         </div>
     `;
 
-    // Remove existing modal if any
-    const existingModal = document.getElementById('calendarSubModal');
-    if (existingModal) {
-        existingModal.remove();
+        // Remove existing modal if any
+        const existingModal = document.getElementById('calendarSubModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+        // Show modal
+        setTimeout(() => {
+            document.getElementById('calendarSubModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }, 10);
     }
 
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    /**
+     * Copy subscription URL to clipboard
+     */
+    async function copySubscriptionURL() {
+        const input = document.getElementById('subscriptionURL');
 
-    // Show modal
-    setTimeout(() => {
-        document.getElementById('calendarSubModal').classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }, 10);
-}
-
-/**
- * Copy subscription URL to clipboard
- */
-async function copySubscriptionURL() {
-    const input = document.getElementById('subscriptionURL');
-
-    try {
-        // Modern Clipboard API
-        await navigator.clipboard.writeText(input.value);
-        showToast('URL in Zwischenablage kopiert!', 'success');
-    } catch (err) {
-        // Fallback for older browsers
-        console.log('Modern clipboard API failed, trying fallback:', err);
         try {
-            input.select();
-            input.setSelectionRange(0, 99999); // For mobile
-            document.execCommand('copy');
+            // Modern Clipboard API
+            await navigator.clipboard.writeText(input.value);
             showToast('URL in Zwischenablage kopiert!', 'success');
-        } catch (fallbackErr) {
-            console.error('Copy failed:', fallbackErr);
-            showToast('Kopieren fehlgeschlagen', 'error');
+        } catch (err) {
+            // Fallback for older browsers
+            console.log('Modern clipboard API failed, trying fallback:', err);
+            try {
+                input.select();
+                input.setSelectionRange(0, 99999); // For mobile
+                document.execCommand('copy');
+                showToast('URL in Zwischenablage kopiert!', 'success');
+            } catch (fallbackErr) {
+                console.error('Copy failed:', fallbackErr);
+                showToast('Kopieren fehlgeschlagen', 'error');
+            }
         }
     }
-}
 
-/**
- * Close calendar subscription modal
- */
-function closeCalendarSubModal() {
-    const modal = document.getElementById('calendarSubModal');
-    if (modal) {
-        modal.classList.remove('active');
-        document.body.style.overflow = 'auto';
-        setTimeout(() => modal.remove(), 300);
+    /**
+     * Close calendar subscription modal
+     */
+    function closeCalendarSubModal() {
+        const modal = document.getElementById('calendarSubModal');
+        if (modal) {
+            modal.classList.remove('active');
+            document.body.style.overflow = 'auto';
+            setTimeout(() => modal.remove(), 300);
+        }
     }
-}
 
-/**
- * Helper: Convert newlines to <br> tags
- */
-function nl2br(text) {
-    if (!text) return '';
-    return text.replace(/\n/g, '<br>');
-}
+    /**
+     * Helper: Convert newlines to <br> tags
+     */
+    function nl2br(text) {
+        if (!text) return '';
+        return text.replace(/\n/g, '<br>');
+    }
 
-/**
- * Helper: Filter description to remove redundant information
- */
-function filterDescription(description) {
-    if (!description) return '';
+    /**
+     * Helper: Filter description to remove redundant information
+     */
+    function filterDescription(description) {
+        if (!description) return '';
 
-    let normalizedDesc = description.replace(/\\n/g, '\n');
-    const lines = normalizedDesc.split('\n');
+        let normalizedDesc = description.replace(/\\n/g, '\n');
+        const lines = normalizedDesc.split('\n');
 
-    const redundantPrefixes = [
-        'Veranstaltung:',
-        'Dozent:',
-        'Raum:',
-        'Zeit:',
-        'Dauer:'
-    ];
+        const redundantPrefixes = [
+            'Veranstaltung:',
+            'Dozent:',
+            'Raum:',
+            'Zeit:',
+            'Dauer:'
+        ];
 
-    const filteredLines = lines.filter(line => {
-        const trimmedLine = line.trim();
-        if (!trimmedLine) return false;
-        return !redundantPrefixes.some(prefix => trimmedLine.startsWith(prefix));
-    });
+        const filteredLines = lines.filter(line => {
+            const trimmedLine = line.trim();
+            if (!trimmedLine) return false;
+            return !redundantPrefixes.some(prefix => trimmedLine.startsWith(prefix));
+        });
 
-    return filteredLines.length > 0 ? filteredLines.join('\n') : '';
-}
+        return filteredLines.length > 0 ? filteredLines.join('\n') : '';
+    }
 
-/**
- * Variable to store currently viewed event
- */
-let currentlyViewedEvent = null;
+    /**
+     * Variable to store currently viewed event
+     */
+    let currentlyViewedEvent = null;
 
-/**
- * Show event details modal
- */
-function showEventDetails(event) {
-    currentlyViewedEvent = event;
+    /**
+     * Show event details modal
+     */
+    function showEventDetails(event) {
+        currentlyViewedEvent = event;
 
-    const modal = document.getElementById('eventModal');
-    if (!modal) return;
+        const modal = document.getElementById('eventModal');
+        if (!modal) return;
 
-    const startTime = new Date(event.start_time);
-    const endTime = new Date(event.end_time);
-    const duration = Math.round((endTime - startTime) / 60000);
+        const startTime = new Date(event.start_time);
+        const endTime = new Date(event.end_time);
+        const duration = Math.round((endTime - startTime) / 60000);
 
-    const cleanTitle = cleanEventTitle(event.title);
+        const cleanTitle = cleanEventTitle(event.title);
 
-    const modalContent = document.getElementById('eventModalContent');
-    if (modalContent) {
-        modalContent.innerHTML = `
+        const modalContent = document.getElementById('eventModalContent');
+        if (modalContent) {
+            modalContent.innerHTML = `
             <h3 class="text-xl font-bold text-gray-900 dark:text-white mb-4">${cleanTitle}</h3>
 
             <div class="space-y-3">
@@ -1014,76 +1014,76 @@ function showEventDetails(event) {
                 </button>
             </div>
         `;
-    }
-
-    modal.classList.add('active');
-
-    // Close modal when clicking outside
-    modal.onclick = (e) => {
-        if (e.target === modal) {
-            closeEventModal();
         }
-    };
-}
 
-/**
- * Close event modal
- */
-function closeEventModal() {
-    const modal = document.getElementById('eventModal');
-    if (modal) {
-        modal.classList.remove('active');
+        modal.classList.add('active');
+
+        // Close modal when clicking outside
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                closeEventModal();
+            }
+        };
     }
-}
 
-// Initialize dashboard when page loads (works for both static and dynamic loading)
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initDashboardAndStartRefresh);
-} else {
-    // DOM already loaded (script loaded dynamically) - initialize immediately
-    initDashboardAndStartRefresh();
-}
+    /**
+     * Close event modal
+     */
+    function closeEventModal() {
+        const modal = document.getElementById('eventModal');
+        if (modal) {
+            modal.classList.remove('active');
+        }
+    }
 
-function initDashboardAndStartRefresh() {
-    console.log('🚀 Initializing dashboard...');
-    initDashboard();
+    // Initialize dashboard when page loads (works for both static and dynamic loading)
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initDashboardAndStartRefresh);
+    } else {
+        // DOM already loaded (script loaded dynamically) - initialize immediately
+        initDashboardAndStartRefresh();
+    }
 
-    // Auto-refresh every 60 seconds to update "Aktiv" badges and remove past events
-    setInterval(() => {
-        renderTodaySchedule();
-        updateStatistics();
-    }, 60000); // 60 seconds
-}
+    function initDashboardAndStartRefresh() {
+        console.log('🚀 Initializing dashboard...');
+        initDashboard();
 
-// REMOVED: nora:pageLoaded event listener to prevent double initialization
-// Shell.triggerPageInit() now handles re-initialization directly
-// Old code (removed to prevent double-init):
-// window.addEventListener('nora:pageLoaded', (event) => {
-//     if (event.detail.page === 'dashboard') {
-//         console.log('🔄 [Dashboard] Page reload detected - re-initializing');
-//         initDashboard();
-//     }
-// });
+        // Auto-refresh every 60 seconds to update "Aktiv" badges and remove past events
+        setInterval(() => {
+            renderTodaySchedule();
+            updateStatistics();
+        }, 60000); // 60 seconds
+    }
 
-// Export dashboard functions to window for global access
-window.initDashboard = initDashboard;
-window.loadUserData = loadUserData;
-window.updateUserDisplay = updateUserDisplay;
-window.loadTodaySchedule = loadTodaySchedule;
-window.renderTodaySchedule = renderTodaySchedule;
-window.loadUpcomingExams = loadUpcomingExams;
-window.renderUpcomingExams = renderUpcomingExams;
-window.loadFriends = loadFriends;
-window.renderFriends = renderFriends;
-window.updateStatistics = updateStatistics;
-window.viewFriendSchedule = viewFriendSchedule;
-window.removeFriend = removeFriend;
-window.logout = logout;
-window.showCalendarSubscription = showCalendarSubscription;
-window.copySubscriptionURL = copySubscriptionURL;
-window.closeCalendarSubModal = closeCalendarSubModal;
-window.showEventDetails = showEventDetails;
-window.closeEventModal = closeEventModal;
-window.initDashboardAndStartRefresh = initDashboardAndStartRefresh;
-console.log('[Dashboard] Functions exported to window');
+    // REMOVED: nora:pageLoaded event listener to prevent double initialization
+    // Shell.triggerPageInit() now handles re-initialization directly
+    // Old code (removed to prevent double-init):
+    // window.addEventListener('nora:pageLoaded', (event) => {
+    //     if (event.detail.page === 'dashboard') {
+    //         console.log('🔄 [Dashboard] Page reload detected - re-initializing');
+    //         initDashboard();
+    //     }
+    // });
+
+    // Export dashboard functions to window for global access
+    window.initDashboard = initDashboard;
+    window.loadUserData = loadUserData;
+    window.updateUserDisplay = updateUserDisplay;
+    window.loadTodaySchedule = loadTodaySchedule;
+    window.renderTodaySchedule = renderTodaySchedule;
+    window.loadUpcomingExams = loadUpcomingExams;
+    window.renderUpcomingExams = renderUpcomingExams;
+    window.loadFriends = loadFriends;
+    window.renderFriends = renderFriends;
+    window.updateStatistics = updateStatistics;
+    window.viewFriendSchedule = viewFriendSchedule;
+    window.removeFriend = removeFriend;
+    window.logout = logout;
+    window.showCalendarSubscription = showCalendarSubscription;
+    window.copySubscriptionURL = copySubscriptionURL;
+    window.closeCalendarSubModal = closeCalendarSubModal;
+    window.showEventDetails = showEventDetails;
+    window.closeEventModal = closeEventModal;
+    window.initDashboardAndStartRefresh = initDashboardAndStartRefresh;
+    console.log('[Dashboard] Functions exported to window');
 })();

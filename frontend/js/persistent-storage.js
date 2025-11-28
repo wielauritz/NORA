@@ -73,7 +73,7 @@ async function storeTokenPersistent(token) {
     try {
         // Always store to localStorage immediately (for current session)
         try {
-            localStorage.setItem('token', token);
+            localStorage.setItem('sessionToken', token);
             console.log('✅ Token stored to localStorage (current session)');
         } catch (e) {
             console.warn('⚠️ localStorage not available:', e.message);
@@ -130,7 +130,7 @@ async function loadTokenPersistent() {
                     console.log('✅ Token loaded from persistent filesystem');
                     // Update localStorage for current session
                     try {
-                        localStorage.setItem('token', data.token);
+                        localStorage.setItem('sessionToken', data.token);
                     } catch (e) {
                         console.warn('localStorage not available:', e.message);
                     }
@@ -147,7 +147,7 @@ async function loadTokenPersistent() {
 
         // Fallback to localStorage
         try {
-            const token = localStorage.getItem('token');
+            const token = localStorage.getItem('sessionToken');
             if (token) {
                 console.log('✅ Token loaded from localStorage (fallback)');
                 return token;
@@ -172,7 +172,7 @@ async function clearTokenPersistent() {
 
     // Clear localStorage
     try {
-        localStorage.removeItem('token');
+        localStorage.removeItem('sessionToken');
         console.log('✅ Token cleared from localStorage');
     } catch (e) {
         console.warn('localStorage error:', e.message);

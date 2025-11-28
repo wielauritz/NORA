@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -12,12 +13,15 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 
 	"github.com/nora-nak/backend/config"
 	"github.com/nora-nak/backend/handlers"
 	"github.com/nora-nak/backend/middleware"
+	"github.com/nora-nak/backend/models"
 	"github.com/nora-nak/backend/services"
+	"github.com/nora-nak/backend/utils"
 )
 
 func main() {
@@ -44,6 +48,11 @@ func main() {
 	if err := config.AutoMigrate(); err != nil {
 		log.Fatal("Failed to run migrations:", err)
 	}
+
+	// Seed initial admin user
+	// if err := seedAdmin(); err != nil {
+	// 	log.Printf("WARNING: Failed to seed admin user: %v", err)
+	// }
 
 	// Start scheduler (run immediately on startup)
 	if err := services.StartScheduler(true); err != nil {
@@ -80,7 +89,7 @@ func main() {
 	// CORS Middleware - must be before routes (Allow all origins with credentials)
 	app.Use(cors.New(cors.Config{
 		AllowOriginsFunc: func(origin string) bool {
-			return true // Allow all origins
+			return origin == "https://new.nora-nak.de" || origin == "https://www.new.nora-nak.de"
 		},
 		AllowHeaders:     "Content-Type,Authorization,Accept,Origin,User-Agent,Cache-Control,Pragma",
 		AllowMethods:     "GET,POST,PUT,DELETE,OPTIONS",
@@ -93,6 +102,9 @@ func main() {
 
 	// Protected routes (requires authentication)
 	setupProtectedRoutes(app)
+
+	// Admin routes
+	setupAdminRoutes(app)
 
 	// Start server
 	port := config.AppConfig.ServerPort
@@ -199,16 +211,28 @@ func setupProtectedRoutes(app *fiber.App) {
 
 	// V2 Protected Routes
 	protectedV2 := app.Group("/v2", middleware.AuthMiddleware)
-	// Friends V2 (bidirectional friend requests)
-	protectedV2.Post("/friends/request", middleware.FriendRequestRateLimiter(), handlers.SendFriendRequest)
-	protectedV2.Get("/friends/requests", handlers.GetFriendRequests)
-	protectedV2.Post("/friends/accept", handlers.AcceptFriendRequest)
-	protectedV2.Post("/friends/reject", handlers.RejectFriendRequest)
-	protectedV2.Delete("/friends/request", handlers.CancelFriendRequest)
-	protectedV2.Get(path, handlers.GetFriendsV2)
-	protectedV2.Delete(path, handlers.RemoveFriendV2)
+
+	// Friends (v2)
+	friendsV2 := protectedV2.Group("/friends")
+	friendsV2.Get("/", handlers.GetFriendsV2)
+	friendsV2.Post("/request", handlers.SendFriendRequest)
+	friendsV2.Put("/request/:request_id", handlers.RespondToFriendRequest)
+	friendsV2.Delete("/:friend_id", handlers.RemoveFriendV2)
 }
 
+func setupAdminRoutes(app *fiber.App) {
+	adminHandler := handlers.NewAdminHandler(config.DB)
+	admin := app.Group("/v1/admin", middleware.AuthMiddleware, middleware.AdminMiddleware)
+	admin.Get("/stats", adminHandler.GetDashboardStats)
+	admin.Get("/users", adminHandler.GetUsers)
+	admin.Put("/users/:id/promote", adminHandler.PromoteToAdmin)
+	admin.Delete("/users/:id", adminHandler.DeleteUser)
+	admin.Put("/users/:id/verify", adminHandler.VerifyUser)
+	admin.Put("/users/:id", adminHandler.UpdateUser)
+	admin.Post("/users/:id/reset-password", adminHandler.ResetUserPassword)
+}
+
+// customErrorHandler defines a custom error handler for the Fiber app.
 func customErrorHandler(c *fiber.Ctx, err error) error {
 	code := fiber.StatusInternalServerError
 
@@ -247,5 +271,54 @@ func setupLogging() error {
 	log.Println("Logging initialized - Writing to console and logs/backend_logs.log")
 	log.Println("=============================================================")
 
+	return nil
+}
+
+// seedAdmin creates the initial admin user if it doesn't exist
+func seedAdmin() error {
+	adminEmail := "nora.admin@nordakademie.de"
+
+	var user models.User
+	result := config.DB.Where("mail = ?", adminEmail).First(&user)
+
+	if result.Error == nil {
+		// User exists, ensure is_admin is true
+		if !user.IsAdmin {
+			user.IsAdmin = true
+			if err := config.DB.Save(&user).Error; err != nil {
+				return fmt.Errorf("failed to update admin user: %w", err)
+			}
+			log.Println("Existing admin user updated with admin privileges")
+		}
+		return nil
+	}
+
+	// User does not exist, create it
+	log.Println("Creating initial admin user...")
+
+	passwordHash, err := utils.HashPassword("Start123!")
+	if err != nil {
+		return fmt.Errorf("failed to hash password: %w", err)
+	}
+
+	subscriptionUUID := uuid.New().String()
+
+	newUser := models.User{
+		Mail:             adminEmail,
+		PasswordHash:     passwordHash,
+		Verified:         true,
+		IsAdmin:          true,
+		FirstName:        "NORA",
+		LastName:         "Admin",
+		Initials:         "NA",
+		UUID:             uuid.New(),
+		SubscriptionUUID: &subscriptionUUID,
+	}
+
+	if err := config.DB.Create(&newUser).Error; err != nil {
+		return fmt.Errorf("failed to create admin user: %w", err)
+	}
+
+	log.Println("Initial admin user created successfully")
 	return nil
 }

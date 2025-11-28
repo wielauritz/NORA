@@ -102,13 +102,53 @@ func SendFriendRequest(c *fiber.Ctx) error {
 
 	if err := config.DB.Create(&friendRequest).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"detail": "Failed to send friend request",
+			"detail": "Fehler beim Senden der Freundschaftsanfrage",
 		})
 	}
 
-	return c.JSON(MessageResponse{
-		Message: "Freundschaftsanfrage an " + friend.FirstName + " " + friend.LastName + " wurde gesendet",
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"message": "Freundschaftsanfrage gesendet",
 	})
+}
+
+// RespondToFriendRequest accepts or rejects a friend request
+// PUT /v2/friends/request/:request_id
+func RespondToFriendRequest(c *fiber.Ctx) error {
+	user := middleware.GetCurrentUser(c)
+	requestID, err := c.ParamsInt("request_id")
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"detail": "Invalid request ID"})
+	}
+
+	var req struct {
+		Action string `json:"action"` // "accept" or "reject"
+	}
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"detail": "Invalid request body"})
+	}
+
+	var friendRequest models.FriendRequest
+	if err := config.DB.Where("id = ? AND receiver_id = ?", requestID, user.ID).First(&friendRequest).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{"detail": "Anfrage nicht gefunden"})
+	}
+
+	if friendRequest.Status != "pending" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"detail": "Anfrage wurde bereits beantwortet"})
+	}
+
+	if req.Action == "accept" {
+		friendRequest.Status = "accepted"
+	} else if req.Action == "reject" {
+		friendRequest.Status = "rejected"
+	} else {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"detail": "Ungültige Aktion"})
+	}
+
+	if err := config.DB.Save(&friendRequest).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"detail": "Fehler beim Aktualisieren der Anfrage"})
+	}
+
+	return c.JSON(fiber.Map{"message": "Anfrage erfolgreich " + friendRequest.Status})
 }
 
 // GetFriendRequests retrieves all friend requests (incoming and outgoing)
