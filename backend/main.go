@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -12,12 +13,15 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 
 	"github.com/nora-nak/backend/config"
 	"github.com/nora-nak/backend/handlers"
 	"github.com/nora-nak/backend/middleware"
+	"github.com/nora-nak/backend/models"
 	"github.com/nora-nak/backend/services"
+	"github.com/nora-nak/backend/utils"
 )
 
 func main() {
@@ -44,6 +48,11 @@ func main() {
 	if err := config.AutoMigrate(); err != nil {
 		log.Fatal("Failed to run migrations:", err)
 	}
+
+	// Seed initial admin user
+	// if err := seedAdmin(); err != nil {
+	// 	log.Printf("WARNING: Failed to seed admin user: %v", err)
+	// }
 
 	// Start scheduler (run immediately on startup)
 	if err := services.StartScheduler(true); err != nil {
@@ -93,6 +102,9 @@ func main() {
 
 	// Protected routes (requires authentication)
 	setupProtectedRoutes(app)
+
+	// Admin routes
+	setupAdminRoutes(app)
 
 	// Start server
 	port := config.AppConfig.ServerPort
@@ -247,5 +259,66 @@ func setupLogging() error {
 	log.Println("Logging initialized - Writing to console and logs/backend_logs.log")
 	log.Println("=============================================================")
 
+	return nil
+}
+
+func setupAdminRoutes(app *fiber.App) {
+	adminHandler := handlers.NewAdminHandler(config.DB)
+	admin := app.Group("/v1/admin", middleware.AuthMiddleware, middleware.AdminMiddleware)
+	admin.Get("/stats", adminHandler.GetDashboardStats)
+	admin.Get("/users", adminHandler.GetUsers)
+	admin.Put("/users/:id/promote", adminHandler.PromoteToAdmin)
+	admin.Delete("/users/:id", adminHandler.DeleteUser)
+	admin.Put("/users/:id/verify", adminHandler.VerifyUser)
+	admin.Put("/users/:id", adminHandler.UpdateUser)
+	admin.Post("/users/:id/reset-password", adminHandler.ResetUserPassword)
+}
+
+// seedAdmin creates the initial admin user if it doesn't exist
+func seedAdmin() error {
+	adminEmail := "nora.admin@nordakademie.de"
+
+	var user models.User
+	result := config.DB.Where("mail = ?", adminEmail).First(&user)
+
+	if result.Error == nil {
+		// User exists, ensure is_admin is true
+		if !user.IsAdmin {
+			user.IsAdmin = true
+			if err := config.DB.Save(&user).Error; err != nil {
+				return fmt.Errorf("failed to update admin user: %w", err)
+			}
+			log.Println("Existing admin user updated with admin privileges")
+		}
+		return nil
+	}
+
+	// User does not exist, create it
+	log.Println("Creating initial admin user...")
+
+	passwordHash, err := utils.HashPassword("Start123!")
+	if err != nil {
+		return fmt.Errorf("failed to hash password: %w", err)
+	}
+
+	subscriptionUUID := uuid.New().String()
+
+	newUser := models.User{
+		Mail:             adminEmail,
+		PasswordHash:     passwordHash,
+		Verified:         true,
+		IsAdmin:          true,
+		FirstName:        "NORA",
+		LastName:         "Admin",
+		Initials:         "NA",
+		UUID:             uuid.New(),
+		SubscriptionUUID: &subscriptionUUID,
+	}
+
+	if err := config.DB.Create(&newUser).Error; err != nil {
+		return fmt.Errorf("failed to create admin user: %w", err)
+	}
+
+	log.Println("Initial admin user created successfully")
 	return nil
 }
