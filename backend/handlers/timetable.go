@@ -20,7 +20,6 @@ type UserResponse struct {
 	SubscriptionUUID *string `json:"subscription_uuid,omitempty"`
 	Zenturie         *string `json:"zenturie"`
 	Year             *string `json:"year"`
-	IsAdmin          bool    `json:"is_admin"`
 }
 
 // ZenturieResponse represents zenturie information
@@ -132,7 +131,6 @@ func GetUser(c *fiber.Ctx) error {
 		SubscriptionUUID: user.SubscriptionUUID,
 		Zenturie:         zenturieName,
 		Year:             zenturieYear,
-		IsAdmin:          user.IsAdmin,
 	})
 }
 

@@ -1,4 +1,4 @@
-package handlers
+package adminservice
 
 import (
 	"fmt"
@@ -108,6 +108,10 @@ func (h *AdminHandler) verifyAdminPassword(c *fiber.Ctx, password string) error 
 	user, ok := c.Locals("user").(*models.User)
 	if !ok || user == nil {
 		return fmt.Errorf("user not authenticated")
+	}
+
+	if !user.IsAdmin {
+		return fmt.Errorf("user is not an admin")
 	}
 
 	if password == "" {
@@ -358,16 +362,6 @@ func (h *AdminHandler) ResetUserPassword(c *fiber.Ctx) error {
 	}
 
 	// Hash new password
-	// Note: We need to import the utils package for HashPassword
-	// Since I cannot add imports easily with replace_file_content in the middle of a file,
-	// I will assume utils is available or I will fix imports in a separate step if needed.
-	// Checking imports... utils IS imported in main.go but NOT in admin.go.
-	// I MUST add "github.com/nora-nak/backend/utils" to imports.
-
-	// For now, I will use a placeholder and fix imports in the next step.
-	// Actually, I can't use utils.HashPassword without importing it.
-	// I will add the handler logic assuming utils is imported, and then fix imports.
-
 	hashedPassword, err := utils.HashPassword(input.NewPassword)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
