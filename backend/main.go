@@ -288,7 +288,13 @@ func seedAdmin() error {
 	// User does not exist, create it
 	log.Println("Creating initial admin user...")
 
-	passwordHash, err := utils.HashPassword("Start123!")
+	adminPassword := os.Getenv("ADMIN_PASSWORD")
+	if adminPassword == "" {
+		adminPassword = "Start123!"
+		log.Println("WARNING: ADMIN_PASSWORD not set, using default password")
+	}
+
+	passwordHash, err := utils.HashPassword(adminPassword)
 	if err != nil {
 		return fmt.Errorf("failed to hash password: %w", err)
 	}

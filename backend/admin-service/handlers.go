@@ -85,7 +85,7 @@ func (h *AdminHandler) GetUsers(c *fiber.Ctx) error {
 		})
 	}
 
-	if err := query.Order("created_at DESC").Offset(offset).Limit(limit).Find(&users).Error; err != nil {
+	if err := query.Select("id, mail, created_at, verified, is_admin, uuid, first_name, last_name, initials, zenturien_id").Order("created_at DESC").Offset(offset).Limit(limit).Find(&users).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"detail": "Failed to fetch users",
 		})
@@ -296,6 +296,13 @@ func (h *AdminHandler) UpdateUser(c *fiber.Ctx) error {
 		})
 	}
 
+	// Validate email domain
+	if len(input.Mail) < 18 || input.Mail[len(input.Mail)-17:] != "@nordakademie.de" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"detail": "Email must end with @nordakademie.de",
+		})
+	}
+
 	var user models.User
 	if err := h.DB.First(&user, id).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
@@ -374,6 +381,12 @@ func (h *AdminHandler) ResetUserPassword(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"detail": "Failed to update password",
 		})
+	}
+
+	// Invalidate all sessions for this user
+	if err := h.DB.Where("user_id = ?", user.ID).Delete(&models.Session{}).Error; err != nil {
+		// Log error but don't fail the request as password is already reset
+		fmt.Printf("Failed to invalidate sessions for user %d: %v\n", user.ID, err)
 	}
 
 	return c.JSON(fiber.Map{
