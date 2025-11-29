@@ -18,8 +18,8 @@ type UserResponse struct {
 	FirstName        string  `json:"first_name"`
 	LastName         string  `json:"last_name"`
 	SubscriptionUUID *string `json:"subscription_uuid,omitempty"`
-	Zenturie         *string `json:"zenturie,omitempty"`
-	Year             *string `json:"year,omitempty"`
+	Zenturie         *string `json:"zenturie"`
+	Year             *string `json:"year"`
 }
 
 // ZenturieResponse represents zenturie information

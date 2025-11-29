@@ -23,6 +23,7 @@ type User struct {
 	PasswordHash       string     `gorm:"not null" json:"-"`
 	CreatedAt          time.Time  `gorm:"autoCreateTime" json:"created_at"`
 	Verified           bool       `gorm:"default:false" json:"verified"`
+	IsAdmin            bool       `gorm:"default:false" json:"is_admin"`
 	UUID               uuid.UUID  `gorm:"type:uuid;default:gen_random_uuid()" json:"uuid"`
 	VerificationCode   *string    `gorm:"size:6;index" json:"verification_code,omitempty"` // 6-digit verification code
 	VerificationExpiry *time.Time `gorm:"index" json:"verification_expiry,omitempty"`      // Expiry for email verification code

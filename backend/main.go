@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -12,12 +13,16 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/google/uuid"
 	"github.com/joho/godotenv"
 
+	adminservice "github.com/nora-nak/backend/admin-service"
 	"github.com/nora-nak/backend/config"
 	"github.com/nora-nak/backend/handlers"
 	"github.com/nora-nak/backend/middleware"
+	"github.com/nora-nak/backend/models"
 	"github.com/nora-nak/backend/services"
+	"github.com/nora-nak/backend/utils"
 )
 
 func main() {
@@ -43,6 +48,11 @@ func main() {
 	// Run migrations
 	if err := config.AutoMigrate(); err != nil {
 		log.Fatal("Failed to run migrations:", err)
+	}
+
+	// Seed initial admin user
+	if err := seedAdmin(); err != nil {
+		log.Printf("WARNING: Failed to seed admin user: %v", err)
 	}
 
 	// Start scheduler (run immediately on startup)
@@ -93,6 +103,9 @@ func main() {
 
 	// Protected routes (requires authentication)
 	setupProtectedRoutes(app)
+
+	// Admin routes
+	adminservice.SetupRoutes(app, config.DB)
 
 	// Start server
 	port := config.AppConfig.ServerPort
@@ -247,5 +260,63 @@ func setupLogging() error {
 	log.Println("Logging initialized - Writing to console and logs/backend_logs.log")
 	log.Println("=============================================================")
 
+	return nil
+}
+
+// seedAdmin creates the initial admin user if it doesn't exist
+func seedAdmin() error {
+	adminEmail := os.Getenv("ADMIN_EMAIL")
+	if adminEmail == "" {
+		adminEmail = "nora.team@nordakademie.de"
+	}
+
+	var user models.User
+	result := config.DB.Where("mail = ?", adminEmail).First(&user)
+
+	if result.Error == nil {
+		// User exists, ensure is_admin is true
+		if !user.IsAdmin {
+			user.IsAdmin = true
+			if err := config.DB.Save(&user).Error; err != nil {
+				return fmt.Errorf("failed to update admin user: %w", err)
+			}
+			log.Println("Existing admin user updated with admin privileges")
+		}
+		return nil
+	}
+
+	// User does not exist, create it
+	log.Println("Creating initial admin user...")
+
+	adminPassword := os.Getenv("ADMIN_PASSWORD")
+	if adminPassword == "" {
+		adminPassword = "Start123!"
+		log.Println("WARNING: ADMIN_PASSWORD not set, using default password")
+	}
+
+	passwordHash, err := utils.HashPassword(adminPassword)
+	if err != nil {
+		return fmt.Errorf("failed to hash password: %w", err)
+	}
+
+	subscriptionUUID := uuid.New().String()
+
+	newUser := models.User{
+		Mail:             adminEmail,
+		PasswordHash:     passwordHash,
+		Verified:         true,
+		IsAdmin:          true,
+		FirstName:        "NORA",
+		LastName:         "Admin",
+		Initials:         "NA",
+		UUID:             uuid.New(),
+		SubscriptionUUID: &subscriptionUUID,
+	}
+
+	if err := config.DB.Create(&newUser).Error; err != nil {
+		return fmt.Errorf("failed to create admin user: %w", err)
+	}
+
+	log.Println("Initial admin user created successfully")
 	return nil
 }
