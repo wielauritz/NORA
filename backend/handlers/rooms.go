@@ -35,8 +35,9 @@ type FreeRoomsResponse struct {
 // GetRooms returns all rooms
 // GET /v1/rooms
 func GetRooms(c *fiber.Ctx) error {
+	tenantID := middleware.GetCurrentTenantID(c)
 	var rooms []models.Room
-	if err := config.DB.Order("room_number").Find(&rooms).Error; err != nil {
+	if err := config.DB.Where("tenant_id = ?", tenantID).Order("room_number").Find(&rooms).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"detail": "Failed to fetch rooms",
 		})
@@ -66,9 +67,10 @@ func GetRoomDetails(c *fiber.Ctx) error {
 		})
 	}
 
-	// Find room
+	// Find room within tenant
+	tenantID := middleware.GetCurrentTenantID(c)
 	var room models.Room
-	if err := config.DB.Where("room_number = ?", roomNumber).First(&room).Error; err != nil {
+	if err := config.DB.Where("tenant_id = ? AND room_number = ?", tenantID, roomNumber).First(&room).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"detail": "Raum nicht gefunden",
 		})
@@ -155,9 +157,10 @@ func GetFreeRooms(c *fiber.Ctx) error {
 		})
 	}
 
-	// Get all rooms
+	// Get all rooms within tenant
+	tenantID := middleware.GetCurrentTenantID(c)
 	var allRooms []models.Room
-	config.DB.Find(&allRooms)
+	config.DB.Where("tenant_id = ?", tenantID).Find(&allRooms)
 
 	freeRooms := make([]RoomResponse, 0)
 
@@ -166,8 +169,8 @@ func GetFreeRooms(c *fiber.Ctx) error {
 		// Two time ranges overlap if: start1 < end2 AND end1 > start2
 		var timetableCount int64
 		config.DB.Model(&models.Timetable{}).Where(
-			"room_id = ? AND start_time < ? AND end_time > ?",
-			room.ID, endTime, startTime,
+			"tenant_id = ? AND room_id = ? AND start_time < ? AND end_time > ?",
+			tenantID, room.ID, endTime, startTime,
 		).Count(&timetableCount)
 
 		// Check for custom hour conflicts

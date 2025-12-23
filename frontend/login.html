@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Login - Stundenplan Dashboard</title>
+    <title>Login - NORA Stundenplan</title>
     <script src="js/dark-mode.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
-	theme: {
+            theme: {
                 extend: {
                     colors: {
                         primary: '#3cd2ff',
@@ -21,8 +21,11 @@
         }
     </script>
     <link rel="stylesheet" href="css/common.css">
+
+    <!-- Keycloak JS -->
+    <script src="https://auth.nora-nak.de/js/keycloak.js"></script>
 </head>
-<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+<body class="bg-gray-50 dark:bg-gray-900 min-h-screen flex items-center justify-center p-4">
 
     <!-- Login Container -->
     <div class="w-full max-w-md">
@@ -30,88 +33,160 @@
         <!-- Logo/Header -->
         <div class="text-center mb-8">
             <img src="https://cdn.nora-nak.de/img/logo.png" alt="NORA Logo" class="h-20 mx-auto mb-4">
-            <p class="text-gray-600 text-sm">Melde dich an oder erstelle einen Account</p>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">NORA Stundenplan</h1>
+            <p class="text-gray-600 dark:text-gray-400 text-sm">Willkommen zurück!</p>
         </div>
 
-        <!-- Login Form -->
-        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
-            <form id="loginForm" class="space-y-5">
+        <!-- Login Card -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-8">
 
-                <!-- E-Mail Input -->
-                <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700 mb-2">
-                        E-Mail-Adresse
-                    </label>
-                    <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        required
-                        autocomplete="email"
-                        class="input-focus block w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none transition-all bg-white"
-                        placeholder="vorname.nachname@nordakademie.de"
+            <!-- Loading State -->
+            <div id="loadingState" class="text-center">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+                <p class="text-gray-600 dark:text-gray-400">Lade Authentifizierung...</p>
+            </div>
+
+            <!-- Login Content (hidden initially) -->
+            <div id="loginContent" class="hidden">
+                <div class="space-y-6">
+
+                    <!-- Info Text -->
+                    <div class="text-center">
+                        <p class="text-gray-700 dark:text-gray-300 mb-6">
+                            Melde dich mit deinem Keycloak-Account an
+                        </p>
+                    </div>
+
+                    <!-- Login Button -->
+                    <button
+                        id="loginButton"
+                        onclick="handleLogin()"
+                        class="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                     >
-                </div>
+                        <svg class="inline-block w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                        </svg>
+                        Anmelden
+                    </button>
 
-                <!-- Passwort Input -->
-                <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
-                        Passwort
-                    </label>
-                    <input
-                        type="password"
-                        id="password"
-                        name="password"
-                        required
-                        autocomplete="current-password"
-                        minlength="6"
-                        class="input-focus block w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none transition-all bg-white"
-                        placeholder="Mindestens 6 Zeichen"
+                    <!-- Divider -->
+                    <div class="relative">
+                        <div class="absolute inset-0 flex items-center">
+                            <div class="w-full border-t border-gray-200 dark:border-gray-700"></div>
+                        </div>
+                        <div class="relative flex justify-center text-sm">
+                            <span class="px-4 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">
+                                Noch kein Account?
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Register Button -->
+                    <button
+                        onclick="handleRegister()"
+                        class="w-full bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-semibold py-3 px-6 rounded-lg border-2 border-gray-200 dark:border-gray-600 transition-all duration-200 hover:border-primary dark:hover:border-primary"
                     >
+                        <svg class="inline-block w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                        </svg>
+                        Registrieren
+                    </button>
+
                 </div>
+            </div>
 
-                <!-- Forgot Password -->
-                <div class="text-right">
-                    <a href="password-reset.html" class="text-sm font-medium text-primary hover:text-secondary transition-colors">
-                        Passwort vergessen?
-                    </a>
+            <!-- Error Message (hidden initially) -->
+            <div id="errorMessage" class="hidden mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                <div class="flex items-start">
+                    <svg class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <div class="ml-3">
+                        <p class="text-sm text-red-800 dark:text-red-200" id="errorText"></p>
+                    </div>
                 </div>
+            </div>
 
-                <!-- Login Button -->
-                <button
-                    type="submit"
-                    class="btn-hover w-full bg-gradient-to-r from-primary to-secondary text-white py-3 px-4 rounded-lg font-medium"
-                >
-                    Anmelden
-                </button>
-
-                <!-- Info Text -->
-                <p class="text-xs text-center text-gray-500 mt-4">
-                    Neuer Account? Wird automatisch bei erster Anmeldung erstellt
-                </p>
-
-            </form>
         </div>
 
-        <!-- Footer -->
-        <div class="text-center mt-6 text-gray-400 text-xs space-y-2">
-            <p>&copy; 2025 NORA – Nordakademie Organizer & Room Assistant</p><p>Diese Seite wird nicht von der <a href="//nordakdemie.de">NORDAKADEMIE</a> betrieben.</p><br>
-            <p class="space-x-3">
-                <a href="/impressum.html" class="hover:text-primary transition-colors">Impressum</a>
-                <span>•</span>
-                <a href="/privacy.html" class="hover:text-primary transition-colors">Datenschutz</a>
-            </p>
+        <!-- Footer Links -->
+        <div class="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
+            <a href="impressum.html" class="hover:text-primary transition-colors">Impressum</a>
+            <span class="mx-2">•</span>
+            <a href="privacy.html" class="hover:text-primary transition-colors">Datenschutz</a>
         </div>
 
     </div>
 
-    <script src="js/storage-ios.js"></script>
-    <script src="js/storage-manager.js"></script>
-    <script src="js/persistent-storage.js"></script>
-    <script src="js/api-helper.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/app-updater.js"></script>
-    <script src="js/login.js"></script>
+    <!-- Scripts -->
+    <script src="js/keycloak-auth.js"></script>
+    <script>
+        // Initialize Keycloak when page loads
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('[Login] Page loaded, initializing Keycloak');
+
+            try {
+                // Initialize Keycloak
+                const authenticated = await KeycloakAuth.init();
+
+                // Hide loading, show login content
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('loginContent').classList.remove('hidden');
+
+                // If already authenticated, redirect to dashboard
+                if (authenticated) {
+                    console.log('[Login] Already authenticated, redirecting to dashboard');
+                    window.location.href = 'dashboard.html';
+                    return;
+                }
+
+                console.log('[Login] Not authenticated, showing login options');
+
+            } catch (error) {
+                console.error('[Login] Initialization failed:', error);
+                showError('Fehler beim Laden der Authentifizierung. Bitte lade die Seite neu.');
+
+                // Still show login content to allow retry
+                document.getElementById('loadingState').classList.add('hidden');
+                document.getElementById('loginContent').classList.remove('hidden');
+            }
+        });
+
+        // Handle Login Button Click
+        function handleLogin() {
+            console.log('[Login] Login button clicked');
+            try {
+                KeycloakAuth.login();
+            } catch (error) {
+                console.error('[Login] Login failed:', error);
+                showError('Fehler bei der Weiterleitung zur Anmeldung.');
+            }
+        }
+
+        // Handle Register Button Click
+        function handleRegister() {
+            console.log('[Login] Register button clicked');
+            try {
+                KeycloakAuth.register();
+            } catch (error) {
+                console.error('[Login] Registration failed:', error);
+                showError('Fehler bei der Weiterleitung zur Registrierung.');
+            }
+        }
+
+        // Show Error Message
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            const errorText = document.getElementById('errorText');
+            errorText.textContent = message;
+            errorDiv.classList.remove('hidden');
+
+            // Auto-hide after 8 seconds
+            setTimeout(() => {
+                errorDiv.classList.add('hidden');
+            }, 8000);
+        }
+    </script>
 
 </body>
 </html>

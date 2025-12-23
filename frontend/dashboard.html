@@ -23,6 +23,9 @@
     </script>
     <link rel="stylesheet" href="css/common.css">
 
+    <!-- Keycloak JS -->
+    <script src="https://auth.nora-nak.de/js/keycloak.js"></script>
+
     <!-- Flatpickr -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
@@ -402,15 +405,47 @@
         </div>
     </div>
 
+    <!-- Keycloak Auth -->
+    <script src="js/keycloak-auth.js"></script>
+
     <!-- API Helper -->
     <script src="js/storage-ios.js"></script>
     <script src="js/storage-manager.js"></script>
     <script src="js/persistent-storage.js"></script>
     <script src="js/api-helper.js"></script>
 
-    <!-- Auth Helper -->
-    <script src="js/auth.js"></script>
+    <!-- App Updater -->
     <script src="js/app-updater.js"></script>
+
+    <!-- Auth Check -->
+    <script>
+        // Check authentication before loading dashboard
+        (async function() {
+            console.log('[Dashboard] Checking Keycloak authentication');
+
+            try {
+                const authenticated = await KeycloakAuth.init();
+
+                if (!authenticated) {
+                    console.log('[Dashboard] Not authenticated, redirecting to login');
+                    window.location.replace('login.html');
+                    return;
+                }
+
+                console.log('[Dashboard] Authentication successful');
+
+                // Optionally get user info
+                const userInfo = await KeycloakAuth.getUserInfo();
+                if (userInfo) {
+                    console.log('[Dashboard] User:', userInfo.email, 'Roles:', userInfo.roles);
+                }
+
+            } catch (error) {
+                console.error('[Dashboard] Auth check failed:', error);
+                window.location.replace('login.html');
+            }
+        })();
+    </script>
 
     <!-- Navbar Component -->
     <script src="js/navbar.js"></script>
