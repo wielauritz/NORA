@@ -60,9 +60,10 @@ func SendFriendRequest(c *fiber.Ctx) error {
 		})
 	}
 
-	// Find friend by email
+	// Find friend by email within same tenant
+	tenantID := middleware.GetCurrentTenantID(c)
 	var friend models.User
-	if err := config.DB.Where("mail = ?", req.FriendMail).First(&friend).Error; err != nil {
+	if err := config.DB.Where("tenant_id = ? AND email = ?", tenantID, req.FriendMail).First(&friend).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"detail": "Benutzer nicht gefunden",
 		})

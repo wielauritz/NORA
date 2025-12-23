@@ -141,28 +141,28 @@ func setupPublicRoutes(app *fiber.App) {
 		})
 	})
 
-	// Login Service (with rate limiting)
-	app.Post("/v1/login", middleware.LoginRateLimiter(), handlers.Login)
-	app.Get("/v1/verify", handlers.VerifyEmail)
-	app.Post("/v1/verify-code", middleware.LoginRateLimiter(), handlers.VerifyEmailWithCode)
-	app.Post("/v1/reset", middleware.PasswordResetRateLimiter(), handlers.RequestPasswordReset)
-	app.Get("/v1/reset-password", handlers.ShowPasswordResetForm)
-	app.Post("/v1/reset-confirm", handlers.ConfirmPasswordReset)
-	app.Post("/v1/reset-password-code", middleware.PasswordResetRateLimiter(), handlers.ResetPasswordWithCode)
-	app.Post("/v1/resend-email", middleware.ResendEmailRateLimiter(), handlers.ResendVerificationEmail)
+	// NOTE: Login/Auth endpoints removed - Keycloak handles authentication
+	// Old endpoints: /v1/login, /v1/verify, /v1/reset, etc.
+	// Users now authenticate via Keycloak and receive JWT tokens
 
-	// Public endpoints (no auth required)
-	app.Get("/v1/rooms", handlers.GetRooms)
-	app.Get("/v1/room", handlers.GetRoomDetails)
-	app.Get("/v1/free-rooms", handlers.GetFreeRooms)
-	app.Get("/v1/view", handlers.ViewZenturieTimetable)
-	app.Get("/v1/subscription/:uuid", handlers.GetICSSubscription)
-	app.Get("/v1/all_zenturie", handlers.GetAllZenturien)
+	// Public endpoints with tenant context (no auth required)
+	publicTenant := app.Group("/v1", middleware.TenantMiddleware)
+	publicTenant.Get("/rooms", handlers.GetRooms)
+	publicTenant.Get("/room", handlers.GetRoomDetails)
+	publicTenant.Get("/free-rooms", handlers.GetFreeRooms)
+	publicTenant.Get("/view", handlers.ViewZenturieTimetable)
+	publicTenant.Get("/subscription/:uuid", handlers.GetICSSubscription)
+	publicTenant.Get("/all_zenturie", handlers.GetAllZenturien)
 }
 
 func setupProtectedRoutes(app *fiber.App) {
-	// Protected group with auth middleware (v1)
-	protected := app.Group("/v1", middleware.AuthMiddleware)
+	// Protected group with new Keycloak auth middleware chain (v1)
+	// 1. TenantMiddleware - Extract tenant from subdomain
+	// 2. KeycloakAuthMiddleware - Validate JWT and auto-create user
+	protected := app.Group("/v1",
+		middleware.TenantMiddleware,
+		middleware.KeycloakAuthMiddleware,
+	)
 
 	// User & Zenturie
 	protected.Get("/user", handlers.GetUser)
@@ -197,8 +197,11 @@ func setupProtectedRoutes(app *fiber.App) {
 	// Scheduler status
 	protected.Get("/scheduler/status", handlers.GetSchedulerStatus)
 
-	// V2 Protected Routes
-	protectedV2 := app.Group("/v2", middleware.AuthMiddleware)
+	// V2 Protected Routes (Keycloak auth)
+	protectedV2 := app.Group("/v2",
+		middleware.TenantMiddleware,
+		middleware.KeycloakAuthMiddleware,
+	)
 	// Friends V2 (bidirectional friend requests)
 	protectedV2.Post("/friends/request", middleware.FriendRequestRateLimiter(), handlers.SendFriendRequest)
 	protectedV2.Get("/friends/requests", handlers.GetFriendRequests)
@@ -207,6 +210,21 @@ func setupProtectedRoutes(app *fiber.App) {
 	protectedV2.Delete("/friends/request", handlers.CancelFriendRequest)
 	protectedV2.Get(path, handlers.GetFriendsV2)
 	protectedV2.Delete(path, handlers.RemoveFriendV2)
+
+	// Admin Routes (requires admin role)
+	admin := protected.Group("/admin", middleware.RequireAdmin())
+	admin.Post("/tenants", handlers.CreateTenant)
+	admin.Get("/tenants", handlers.GetAllTenants)
+	admin.Get("/tenants/:id", handlers.GetTenant)
+	admin.Put("/tenants/:id", handlers.UpdateTenant)
+	admin.Delete("/tenants/:id", handlers.DeleteTenant)
+	admin.Get("/tenants/:id/stats", handlers.GetTenantStats)
+
+	// Teacher Routes (requires teacher or admin role)
+	teacher := protected.Group("/teacher", middleware.RequireRole("teacher", "admin"))
+	// Future teacher-specific endpoints can be added here
+	// Example: teacher.Post("/timetables", handlers.CreateTimetable)
+	_ = teacher // Prevent unused variable warning
 }
 
 func customErrorHandler(c *fiber.Ctx, err error) error {

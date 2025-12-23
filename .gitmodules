@@ -1,0 +1,3 @@
+[submodule "modules/NORA-Auth"]
+	path = modules/NORA-Auth
+	url = https://github.com/FinnK04/NORA-Auth.git

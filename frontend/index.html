@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>NORA - Nordakademie Organizer & Room Assistant</title>
     <script src="js/dark-mode.js"></script>
-    <script src="js/storage-ios.js"></script>
-    <script src="js/storage-manager.js"></script>
-    <script src="js/persistent-storage.js"></script>
-    <script src="js/app-updater.js"></script>
     <style>
         /* Prevent white flash in dark mode during app initialization */
         @media (prefers-color-scheme: dark) {
@@ -21,63 +17,64 @@
         html.dark, html.dark body {
             background-color: #0f172a;
         }
+
+        /* Loading spinner */
+        .spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #3cd2ff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-center;
+            min-height: 100vh;
+            color: #6b7280;
+        }
     </style>
+
+    <!-- Keycloak JS -->
+    <script src="https://auth.nora-nak.de/js/keycloak.js"></script>
 </head>
 <body>
+    <div class="loading-container">
+        <div class="spinner"></div>
+        <p>Authentifizierung wird überprüft...</p>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/keycloak-auth.js"></script>
     <script>
-        // API Base URL
-        const API_BASE_URL = 'https://api.new.nora-nak.de/v1';
-
         (async function() {
+            console.log('[Index] Initializing Keycloak authentication check');
+
             try {
-                // 1. Check for content updates FIRST
-                // This may reload the page if new content is available
-                // Token is preserved in persistent storage
-                if (typeof appUpdater !== 'undefined') {
-                    await appUpdater.checkContentUpdates();
-                }
+                // Initialize Keycloak
+                const authenticated = await KeycloakAuth.init();
 
-                // 2. Initialize persistent storage
-                await initPersistentStorage();
-
-                // 3. Check if user has a token
-                const token = await loadTokenPersistent();
-
-                if (!token) {
-                    // No token found, redirect to login
-                    window.location.replace('login.html');
-                    return;
-                }
-
-                // 4. Validate token with server before redirecting to dashboard
-                try {
-                    const response = await fetch(`${API_BASE_URL}/user`, {
-                        method: 'GET',
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json'
-                        }
-                    });
-
-                    if (response.ok) {
-                        // Token is valid, redirect to dashboard
-                        console.log('✅ Token validated, redirecting to dashboard');
-                        window.location.replace('dashboard.html');
-                    } else {
-                        // Token is invalid (401, 403, etc.), clear and redirect to login
-                        console.log('❌ Token invalid, clearing and redirecting to login');
-                        await clearTokenPersistent();
-                        window.location.replace('login.html');
-                    }
-                } catch (error) {
-                    // Network error or token validation failed
-                    console.error('❌ Token validation failed:', error);
-                    await clearTokenPersistent();
+                if (authenticated) {
+                    // User is authenticated, redirect to dashboard
+                    console.log('[Index] User authenticated, redirecting to dashboard');
+                    window.location.replace('dashboard.html');
+                } else {
+                    // User is not authenticated, redirect to login
+                    console.log('[Index] User not authenticated, redirecting to login');
                     window.location.replace('login.html');
                 }
             } catch (error) {
-                console.error('Error during auth check:', error);
-                // If anything fails, redirect to login
+                // Error during initialization, redirect to login
+                console.error('[Index] Keycloak initialization failed:', error);
                 window.location.replace('login.html');
             }
         })();

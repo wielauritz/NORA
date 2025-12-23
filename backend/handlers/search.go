@@ -50,10 +50,11 @@ func Search(c *fiber.Ctx) error {
 	roomResults := make([]SearchResult, 0)
 	friendResults := make([]SearchResult, 0)
 
-	// 1. Search in Timetables (user's zenturie)
+	// 1. Search in Timetables (user's zenturie within tenant)
+	tenantID := middleware.GetCurrentTenantID(c)
 	if user.ZenturienID != nil {
 		var timetables []models.Timetable
-		config.DB.Where("zenturien_id = ?", *user.ZenturienID).Find(&timetables)
+		config.DB.Where("tenant_id = ? AND zenturien_id = ?", tenantID, *user.ZenturienID).Find(&timetables)
 
 		for _, tt := range timetables {
 			score := getBestMatchScore(query,
@@ -157,9 +158,9 @@ func Search(c *fiber.Ctx) error {
 		}
 	}
 
-	// 4. Search in Rooms
+	// 4. Search in Rooms (within tenant)
 	var rooms []models.Room
-	config.DB.Find(&rooms)
+	config.DB.Where("tenant_id = ?", tenantID).Find(&rooms)
 
 	for _, room := range rooms {
 		roomNameStr := ""
@@ -209,8 +210,9 @@ func Search(c *fiber.Ctx) error {
 	}
 
 	if len(friendIDs) > 0 {
+		// Load friend user details (within same tenant)
 		var friends []models.User
-		config.DB.Preload("Zenturie").Where("id IN ?", friendIDs).Find(&friends)
+		config.DB.Preload("Zenturie").Where("tenant_id = ? AND id IN ?", tenantID, friendIDs).Find(&friends)
 
 		for _, friend := range friends {
 			zenturieName := ""
@@ -223,7 +225,7 @@ func Search(c *fiber.Ctx) error {
 				friend.LastName,
 				friend.Initials,
 				&zenturieName,
-				friend.Mail,
+				friend.Email,
 			)
 
 			if score >= minScore {
