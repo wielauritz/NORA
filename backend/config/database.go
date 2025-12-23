@@ -68,9 +68,9 @@ func AutoMigrate() error {
 	log.Println("Running database migrations...")
 
 	err := DB.AutoMigrate(
+		&models.Tenant{},
 		&models.Zenturie{},
 		&models.User{},
-		&models.Session{},
 		&models.Course{},
 		&models.Room{},
 		&models.Timetable{},
@@ -91,12 +91,13 @@ func AutoMigrate() error {
 	// Add unique constraint for friend_requests table (v2) - prevent duplicate requests
 	DB.Exec("CREATE UNIQUE INDEX IF NOT EXISTS unique_friend_request ON friend_requests(LEAST(requester_id, receiver_id), GREATEST(requester_id, receiver_id)) WHERE status IN ('pending', 'accepted')")
 
-	// Migration: Drop old UID unique index and create composite index
-	// This allows Wahlpflichtmodule (same UID) for different zenturien
-	log.Println("Migrating timetable indexes for Wahlpflichtmodule support...")
+	// Migration: Drop old indexes and create tenant-scoped composite index
+	// This allows same UID across different tenants and zenturien
+	log.Println("Migrating timetable indexes for multi-tenancy support...")
 	DB.Exec("DROP INDEX IF EXISTS idx_timetables_uid")
 	DB.Exec("DROP INDEX IF EXISTS timetables_uid_key")
-	DB.Exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_uid_zenturie ON timetables(uid, zenturien_id)")
+	DB.Exec("DROP INDEX IF EXISTS idx_uid_zenturie")
+	DB.Exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_tenant_uid_zenturie ON timetables(tenant_id, uid, zenturien_id)")
 
 	// Migration: Fix room numbers to exactly 4 characters (Letter + 3 digits)
 	// Removes trailing letters from room numbers like "A001E" -> "A001"

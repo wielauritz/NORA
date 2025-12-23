@@ -137,8 +137,9 @@ func GetUser(c *fiber.Ctx) error {
 // GetAllZenturien returns all available zenturien
 // GET /v1/all_zenturie
 func GetAllZenturien(c *fiber.Ctx) error {
+	tenantID := middleware.GetCurrentTenantID(c)
 	var zenturien []models.Zenturie
-	if err := config.DB.Order("name").Find(&zenturien).Error; err != nil {
+	if err := config.DB.Where("tenant_id = ?", tenantID).Order("name").Find(&zenturien).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"detail": "Failed to fetch zenturien",
 		})
@@ -167,9 +168,10 @@ func SetZenturie(c *fiber.Ctx) error {
 		})
 	}
 
-	// Find zenturie
+	// Find zenturie within tenant
+	tenantID := middleware.GetCurrentTenantID(c)
 	var zenturie models.Zenturie
-	if err := config.DB.Where("name = ?", req.Zenturie).First(&zenturie).Error; err != nil {
+	if err := config.DB.Where("tenant_id = ? AND name = ?", tenantID, req.Zenturie).First(&zenturie).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"detail": "Zenturie '" + req.Zenturie + "' nicht gefunden",
 		})
@@ -187,8 +189,9 @@ func SetZenturie(c *fiber.Ctx) error {
 // GetCourses returns all available courses
 // GET /v1/courses?session_id=...
 func GetCourses(c *fiber.Ctx) error {
+	tenantID := middleware.GetCurrentTenantID(c)
 	var courses []models.Course
-	if err := config.DB.Order("module_number").Find(&courses).Error; err != nil {
+	if err := config.DB.Where("tenant_id = ?", tenantID).Order("module_number").Find(&courses).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"detail": "Failed to fetch courses",
 		})
@@ -260,10 +263,11 @@ func GetEvents(c *fiber.Ctx) error {
 	events := make([]map[string]interface{}, 0)
 
 	// Timetable events for user's zenturie
+	tenantID := middleware.GetCurrentTenantID(c)
 	if user.ZenturienID != nil {
 		var timetables []models.Timetable
-		config.DB.Preload("Room").Where("zenturien_id = ? AND start_time >= ? AND start_time <= ?",
-			*user.ZenturienID, startOfDay, endOfDay).Find(&timetables)
+		config.DB.Preload("Room").Where("tenant_id = ? AND zenturien_id = ? AND start_time >= ? AND start_time <= ?",
+			tenantID, *user.ZenturienID, startOfDay, endOfDay).Find(&timetables)
 
 		for _, tt := range timetables {
 			var roomStr *string
@@ -567,9 +571,10 @@ func ViewZenturieTimetable(c *fiber.Ctx) error {
 		endDate = eventDate
 	}
 
-	// Find zenturie
+	// Find zenturie within tenant
+	tenantID := middleware.GetCurrentTenantID(c)
 	var zenturie models.Zenturie
-	if err := config.DB.Where("name = ?", zenturieName).First(&zenturie).Error; err != nil {
+	if err := config.DB.Where("tenant_id = ? AND name = ?", tenantID, zenturieName).First(&zenturie).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"detail": "Zenturie nicht gefunden",
 		})
@@ -579,10 +584,10 @@ func ViewZenturieTimetable(c *fiber.Ctx) error {
 	startOfDay := time.Date(eventDate.Year(), eventDate.Month(), eventDate.Day(), 0, 0, 0, 0, time.UTC)
 	endOfDay := time.Date(endDate.Year(), endDate.Month(), endDate.Day(), 23, 59, 59, 999999999, time.UTC)
 
-	// Get timetables
+	// Get timetables within tenant
 	var timetables []models.Timetable
-	config.DB.Preload("Room").Where("zenturien_id = ? AND start_time >= ? AND start_time <= ?",
-		zenturie.ID, startOfDay, endOfDay).Find(&timetables)
+	config.DB.Preload("Room").Where("tenant_id = ? AND zenturien_id = ? AND start_time >= ? AND start_time <= ?",
+		tenantID, zenturie.ID, startOfDay, endOfDay).Find(&timetables)
 
 	events := make([]map[string]interface{}, 0)
 	for _, tt := range timetables {
@@ -645,10 +650,11 @@ func CreateCustomHour(c *fiber.Ctx) error {
 		CustomLocation: req.CustomLocation,
 	}
 
-	// If room is specified, find it
+	// If room is specified, find it within tenant
 	if req.Room != nil {
+		tenantID := middleware.GetCurrentTenantID(c)
 		var room models.Room
-		if err := config.DB.Where("room_number = ?", *req.Room).First(&room).Error; err != nil {
+		if err := config.DB.Where("tenant_id = ? AND room_number = ?", tenantID, *req.Room).First(&room).Error; err != nil {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 				"detail": "Raum nicht gefunden",
 			})
@@ -705,8 +711,9 @@ func UpdateCustomHour(c *fiber.Ctx) error {
 		customHour.RoomID = nil // Clear room if custom location is set
 	}
 	if req.Room != nil {
+		tenantID := middleware.GetCurrentTenantID(c)
 		var room models.Room
-		if err := config.DB.Where("room_number = ?", *req.Room).First(&room).Error; err != nil {
+		if err := config.DB.Where("tenant_id = ? AND room_number = ?", tenantID, *req.Room).First(&room).Error; err != nil {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 				"detail": "Raum nicht gefunden",
 			})
@@ -745,9 +752,10 @@ func AddExam(c *fiber.Ctx) error {
 		})
 	}
 
-	// Find course
+	// Find course within tenant
+	tenantID := middleware.GetCurrentTenantID(c)
 	var course models.Course
-	if err := config.DB.Where("module_number = ?", req.Course).First(&course).Error; err != nil {
+	if err := config.DB.Where("tenant_id = ? AND module_number = ?", tenantID, req.Course).First(&course).Error; err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"detail": "Kurs nicht gefunden",
 		})
@@ -803,10 +811,10 @@ func AddExam(c *fiber.Ctx) error {
 		Duration:  req.Duration,
 	}
 
-	// If room specified, find it
+	// If room specified, find it within tenant
 	if req.Room != nil {
 		var room models.Room
-		if err := config.DB.Where("room_number = ?", *req.Room).First(&room).Error; err != nil {
+		if err := config.DB.Where("tenant_id = ? AND room_number = ?", tenantID, *req.Room).First(&room).Error; err != nil {
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 				"detail": "Raum nicht gefunden",
 			})

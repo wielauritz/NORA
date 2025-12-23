@@ -10,11 +10,17 @@ type Config struct {
 	ServerHost  string
 	Environment string
 
-	// JWT
-	JWTSecret          string
-	JWTExpirationHours int
+	// Keycloak
+	KeycloakURL           string
+	KeycloakAdminUser     string
+	KeycloakAdminPassword string
+	KeycloakMasterRealm   string
 
-	// Email/SMTP
+	// Multi-Tenancy
+	DefaultTenantSlug     string
+	EnableTenantSubdomain bool
+
+	// Email/SMTP (optional - Keycloak can handle emails)
 	SMTPHost     string
 	SMTPPort     string
 	SMTPUser     string
@@ -28,14 +34,8 @@ type Config struct {
 	// ICS Import
 	ICSBaseURL string
 
-	// Session expiration (days)
-	SessionExpirationDays int
-
 	// Logging
 	LogLevel string // debug, info, warning, error
-
-	// Authentication Mode (LINK, OTP, BOTH)
-	AuthMode string
 }
 
 var AppConfig *Config
@@ -43,40 +43,34 @@ var AppConfig *Config
 // LoadConfig loads configuration from environment variables
 func LoadConfig() *Config {
 	AppConfig = &Config{
-		ServerPort:            getEnvConfig("PORT", "8000"),
-		ServerHost:            getEnvConfig("HOST", "0.0.0.0"),
-		Environment:           getEnvConfig("ENV", "development"),
-		JWTSecret:             getEnvConfig("JWT_SECRET", "your-secret-key-change-in-production"),
-		JWTExpirationHours:    168, // 7 days
-		SMTPHost:              getEnvConfig("SMTP_HOST", "smtp.gmail.com"),
-		SMTPPort:              getEnvConfig("SMTP_PORT", "587"),
-		SMTPUser:              getEnvConfig("SMTP_USER", ""),
-		SMTPPassword:          getEnvConfig("SMTP_PASSWORD", ""),
-		SMTPFrom:              getEnvConfig("SMTP_FROM", "nora@nora-nak.de"),
-		TeamEmail:             getEnvConfig("TEAM_EMAIL", "team@nora-nak.de"),
-		FrontendURL:           getEnvConfig("FRONTEND_URL", "https://nora-nak.de"),
-		ICSBaseURL:            getEnvConfig("ICS_BASE_URL", "https://cis.nordakademie.de/fileadmin/Infos/Stundenplaene"),
-		SessionExpirationDays: 7,
-		LogLevel:              getEnvConfig("LOG_LEVEL", "info"), // debug, info, warning, error
-		AuthMode:              normalizeAuthMode(getEnvConfig("AUTH_MODE", "BOTH")),
+		ServerPort:  getEnvConfig("PORT", "8000"),
+		ServerHost:  getEnvConfig("HOST", "0.0.0.0"),
+		Environment: getEnvConfig("ENV", "development"),
+
+		// Keycloak
+		KeycloakURL:           getEnvConfig("KEYCLOAK_URL", "http://localhost:8080"),
+		KeycloakAdminUser:     getEnvConfig("KEYCLOAK_ADMIN_USER", "admin"),
+		KeycloakAdminPassword: getEnvConfig("KEYCLOAK_ADMIN_PASSWORD", ""),
+		KeycloakMasterRealm:   getEnvConfig("KEYCLOAK_MASTER_REALM", "master"),
+
+		// Multi-Tenancy
+		DefaultTenantSlug:     getEnvConfig("DEFAULT_TENANT_SLUG", "default"),
+		EnableTenantSubdomain: getEnvConfig("ENABLE_TENANT_SUBDOMAIN", "false") == "true",
+
+		// Email/SMTP
+		SMTPHost:     getEnvConfig("SMTP_HOST", "smtp.gmail.com"),
+		SMTPPort:     getEnvConfig("SMTP_PORT", "587"),
+		SMTPUser:     getEnvConfig("SMTP_USER", ""),
+		SMTPPassword: getEnvConfig("SMTP_PASSWORD", ""),
+		SMTPFrom:     getEnvConfig("SMTP_FROM", "nora@nora-nak.de"),
+		TeamEmail:    getEnvConfig("TEAM_EMAIL", "team@nora-nak.de"),
+
+		FrontendURL: getEnvConfig("FRONTEND_URL", "https://nora-nak.de"),
+		ICSBaseURL:  getEnvConfig("ICS_BASE_URL", "https://cis.nordakademie.de/fileadmin/Infos/Stundenplaene"),
+		LogLevel:    getEnvConfig("LOG_LEVEL", "info"),
 	}
 
 	return AppConfig
-}
-
-// normalizeAuthMode validates and normalizes the authentication mode
-func normalizeAuthMode(mode string) string {
-	switch mode {
-	case "LINK", "link":
-		return "LINK"
-	case "OTP", "otp":
-		return "OTP"
-	case "BOTH", "both":
-		return "BOTH"
-	default:
-		// Default to BOTH if invalid value provided
-		return "BOTH"
-	}
 }
 
 // getEnvConfig retrieves environment variable or returns default value
