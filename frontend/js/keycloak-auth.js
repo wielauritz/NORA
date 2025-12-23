@@ -42,8 +42,7 @@
             try {
                 const authenticated = await keycloak.init({
                     onLoad: 'check-sso',
-                    silentCheckSsoRedirectUri: window.location.origin + '/silent-check-sso.html',
-                    checkLoginIframe: false,
+                    checkLoginIframe: false, // Disable iframe check to avoid CSP issues
                     pkceMethod: 'S256',
                     enableLogging: true
                 });
