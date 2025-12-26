@@ -14,7 +14,7 @@
      */
     function getTenantSlug() {
         // For now, hardcoded. Could be made dynamic later.
-        return 'nordakademie-hh';
+        return 'nora-nak';
     }
 
     /**
