@@ -32,18 +32,20 @@ func KeycloakCallback(c *fiber.Ctx) error {
 	// Get tenant from context
 	tenant := middleware.GetCurrentTenant(c)
 	if tenant == nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": "Tenant context not found",
-		})
+		fmt.Println("[KeycloakCallback] ERROR: Tenant context not found")
+		// Redirect to login on error
+		return c.Redirect("/login.html?error=tenant_not_found", fiber.StatusFound)
 	}
 
 	// Get authorization code from query params
 	code := c.Query("code")
 	if code == "" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"error": "Authorization code not provided",
-		})
+		fmt.Println("[KeycloakCallback] ERROR: Authorization code not provided")
+		// Redirect to login on error
+		return c.Redirect("/login.html?error=no_code", fiber.StatusFound)
 	}
+
+	fmt.Printf("[KeycloakCallback] Received authorization code (first 10 chars): %s...\n", code[:min(10, len(code))])
 
 	// For now, we'll try without PKCE since the client is public
 	// Keycloak may not require PKCE for public clients
@@ -52,20 +54,31 @@ func KeycloakCallback(c *fiber.Ctx) error {
 	// Exchange code for tokens
 	tokens, err := exchangeCodeForTokens(code, codeVerifier, tenant, c)
 	if err != nil {
-		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-			"error": fmt.Sprintf("Failed to exchange code for tokens: %v", err),
-		})
+		fmt.Printf("[KeycloakCallback] ERROR: Failed to exchange code for tokens: %v\n", err)
+		// Redirect to login on error
+		return c.Redirect("/login.html?error=token_exchange_failed", fiber.StatusFound)
 	}
 
+	fmt.Println("[KeycloakCallback] Successfully exchanged code for tokens")
+
 	// Redirect to dashboard with tokens in URL fragment (for frontend to pick up)
-	redirectURL := fmt.Sprintf("/dashboard.html#session_state=%s&access_token=%s&refresh_token=%s&expires_in=%d",
-		url.QueryEscape(tokens.SessionState),
+	redirectURL := fmt.Sprintf("/dashboard.html#access_token=%s&refresh_token=%s&session_state=%s&expires_in=%d",
 		url.QueryEscape(tokens.AccessToken),
 		url.QueryEscape(tokens.RefreshToken),
+		url.QueryEscape(tokens.SessionState),
 		tokens.ExpiresIn,
 	)
 
+	fmt.Printf("[KeycloakCallback] Redirecting to dashboard: %s\n", "/dashboard.html#...")
 	return c.Redirect(redirectURL, fiber.StatusFound)
+}
+
+// min returns the minimum of two integers
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }
 
 // exchangeCodeForTokens exchanges authorization code for tokens using Keycloak token endpoint
