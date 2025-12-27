@@ -12,7 +12,7 @@
 
         if (!authenticated) {
             console.log('[AuthGuard] Not authenticated, redirecting to login');
-            window.location.replace('login.html');
+            window.location.replace('/login.html');
             return;
         }
 
@@ -20,6 +20,6 @@
 
     } catch (error) {
         console.error('[AuthGuard] Auth check failed:', error);
-        window.location.replace('login.html');
+        window.location.replace('/login.html');
     }
 })();

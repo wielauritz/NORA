@@ -344,7 +344,7 @@ async function handleCodeVerification(e) {
 
             // Redirect after 2 seconds
             setTimeout(() => {
-                window.location.href = 'dashboard.html';
+                window.location.href = '/dashboard.html';
             }, 2000);
         }
     } catch (error) {

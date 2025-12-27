@@ -421,7 +421,7 @@ function showVerificationRequired(email, authMode = "BOTH") {
                 // Show success and redirect
                 showLoginSuccess('E-Mail erfolgreich verifiziert! Du wirst weitergeleitet...', userInfo.name);
                 setTimeout(() => {
-                    window.location.replace('dashboard.html');
+                    window.location.replace('/dashboard.html');
                 }, 1500);
             }
         } catch (error) {
@@ -637,7 +637,7 @@ async function checkAuth() {
 
     if (!token) {
         console.log('❌ Kein Token gefunden - Weiterleitung zum Login');
-        window.location.href = 'login.html';
+        window.location.href = '/login.html';
         return false;
     }
 
@@ -674,7 +674,7 @@ async function checkAuth() {
         await clearTokenPersistent();
 
         console.log('❌ Token ungültig oder abgelaufen - Weiterleitung zum Login');
-        window.location.href = 'login.html';
+        window.location.href = '/login.html';
         return false;
     }
 }

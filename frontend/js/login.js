@@ -39,7 +39,7 @@ async function checkAuthOnLoginPage() {
             window.Shell.loadDashboard();
         } else {
             // Web app - use traditional redirect
-            window.location.href = 'dashboard.html';
+            window.location.href = '/dashboard.html';
         }
         return false; // Redirect happened
     }
@@ -130,7 +130,7 @@ function initLoginForm() {
                     window.Shell.loadDashboard();
                 } else {
                     // Web app - use traditional redirect
-                    window.location.replace('dashboard.html');
+                    window.location.replace('/dashboard.html');
                 }
             }, 1000);
         } else {
