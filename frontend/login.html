@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Login - NORA Stundenplan</title>
+    <title>Login - NORA Stundenplan Test</title>
     <script src="js/dark-mode.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -40,14 +40,8 @@
         <!-- Login Card -->
         <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-8">
 
-            <!-- Loading State -->
-            <div id="loadingState" class="text-center">
-                <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
-                <p class="text-gray-600 dark:text-gray-400">Lade Authentifizierung...</p>
-            </div>
-
-            <!-- Login Content (hidden initially) -->
-            <div id="loginContent" class="hidden">
+            <!-- Login Content -->
+            <div id="loginContent">
                 <div class="space-y-6">
 
                     <!-- Info Text -->
@@ -129,10 +123,6 @@
                 // Initialize Keycloak
                 const authenticated = await KeycloakAuth.init();
 
-                // Hide loading, show login content
-                document.getElementById('loadingState').classList.add('hidden');
-                document.getElementById('loginContent').classList.remove('hidden');
-
                 // If already authenticated, redirect to dashboard
                 if (authenticated) {
                     console.log('[Login] Already authenticated, redirecting to dashboard');
@@ -145,10 +135,6 @@
             } catch (error) {
                 console.error('[Login] Initialization failed:', error);
                 showError('Fehler beim Laden der Authentifizierung. Bitte lade die Seite neu.');
-
-                // Still show login content to allow retry
-                document.getElementById('loadingState').classList.add('hidden');
-                document.getElementById('loginContent').classList.remove('hidden');
             }
         });
 
