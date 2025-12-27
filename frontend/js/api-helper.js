@@ -5,8 +5,8 @@
 
 (function() {
     // API Base URLs
-    const API_BASE_URL = 'https://nora-nak.de/v1';
-    const API_BASE_URL_V2 = 'https://nora-nak.de/v2';
+    const API_BASE_URL = 'https://api.new.nora-nak.de/v1';
+    const API_BASE_URL_V2 = 'https://api.new.nora-nak.de/v2';
 
     // For local development, uncomment:
     // const API_BASE_URL = 'http://localhost:8000/v1';
