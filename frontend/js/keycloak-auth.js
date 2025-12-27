@@ -52,7 +52,7 @@
             keycloak = new Keycloak(keycloakConfig);
 
             try {
-                const authenticated = await keycloak.init({
+                var authenticated = await keycloak.init({
                     onLoad: 'check-sso',
                     checkLoginIframe: false, // Disable iframe check (causes issues with third-party cookie blocking)
                     pkceMethod: 'S256',
@@ -469,13 +469,34 @@
         }
 
         try {
-            const userInfo = await keycloak.loadUserInfo();
             const tokenParsed = keycloak.tokenParsed || {};
             const roles = tokenParsed.realm_access?.roles || [];
 
+            // Try to load userInfo from Keycloak API if method is available
+            // Otherwise, fall back to token claims
+            let userInfo = null;
+            if (keycloak.loadUserInfo && typeof keycloak.loadUserInfo === 'function') {
+                try {
+                    userInfo = await keycloak.loadUserInfo();
+                } catch (err) {
+                    console.warn('[Keycloak] loadUserInfo not available, using token claims:', err.message);
+                }
+            }
+
+            // Fallback to token claims if loadUserInfo failed or is not available
+            if (!userInfo) {
+                userInfo = {
+                    sub: tokenParsed.sub,
+                    email: tokenParsed.email || tokenParsed.preferred_username,
+                    given_name: tokenParsed.given_name,
+                    family_name: tokenParsed.family_name,
+                    preferred_username: tokenParsed.preferred_username
+                };
+            }
+
             return {
                 sub: userInfo.sub,
-                email: userInfo.email,
+                email: userInfo.email || userInfo.preferred_username,
                 firstName: userInfo.given_name || '',
                 lastName: userInfo.family_name || '',
                 fullName: `${userInfo.given_name || ''} ${userInfo.family_name || ''}`.trim(),
