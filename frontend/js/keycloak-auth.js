@@ -43,15 +43,23 @@
                 const authenticated = await keycloak.init({
                     onLoad: 'check-sso',
                     silentCheckSsoRedirectUri: window.location.origin + '/silent-check-sso.html',
-                    checkLoginIframe: false, // Disable iframe check to avoid CSP issues
+                    checkLoginIframe: false, // Disable iframe check (causes issues with third-party cookie blocking)
                     pkceMethod: 'S256',
                     enableLogging: true,
                     flow: 'standard', // Explicitly use Authorization Code Flow
-                    // Add timeSkew to handle minor time differences
                     timeSkew: 10 // Allow 10 seconds skew between browser and server
                 });
 
                 console.log('[Keycloak] Initialized. Authenticated:', authenticated);
+
+                // If not authenticated via check-sso, try to restore from localStorage
+                if (!authenticated) {
+                    const restored = restoreTokenFromStorage();
+                    if (restored) {
+                        console.log('[Keycloak] Token restored from localStorage');
+                        authenticated = true;
+                    }
+                }
 
                 // Setup event handlers
                 setupEventHandlers();
@@ -60,6 +68,9 @@
                 if (authenticated) {
                     setupTokenRefresh();
                     console.log('[Keycloak] Token:', keycloak.token?.substring(0, 50) + '...');
+
+                    // Save token to localStorage for persistence
+                    saveTokenToStorage();
                 }
 
                 return authenticated;
@@ -91,6 +102,120 @@
         })();
 
         return initPromise;
+    }
+
+    /**
+     * Save token to localStorage for persistence across page reloads
+     */
+    function saveTokenToStorage() {
+        if (!keycloak || !keycloak.token) {
+            return;
+        }
+
+        try {
+            const tokenData = {
+                token: keycloak.token,
+                refreshToken: keycloak.refreshToken,
+                idToken: keycloak.idToken,
+                timeSkew: keycloak.timeSkew
+            };
+
+            localStorage.setItem('kc_token', JSON.stringify(tokenData));
+            console.log('[Keycloak] Token saved to localStorage');
+        } catch (error) {
+            console.error('[Keycloak] Failed to save token to localStorage:', error);
+        }
+    }
+
+    /**
+     * Restore token from localStorage
+     * @returns {boolean} - true if token was successfully restored
+     */
+    function restoreTokenFromStorage() {
+        try {
+            const tokenDataStr = localStorage.getItem('kc_token');
+            if (!tokenDataStr) {
+                console.log('[Keycloak] No token found in localStorage');
+                return false;
+            }
+
+            const tokenData = JSON.parse(tokenDataStr);
+
+            // Restore tokens to Keycloak instance
+            keycloak.token = tokenData.token;
+            keycloak.refreshToken = tokenData.refreshToken;
+            keycloak.idToken = tokenData.idToken;
+            keycloak.timeSkew = tokenData.timeSkew;
+
+            // Parse token to get expiration and other claims
+            if (keycloak.token) {
+                keycloak.tokenParsed = decodeToken(keycloak.token);
+                keycloak.sessionId = keycloak.tokenParsed.session_state;
+                keycloak.authenticated = true;
+                keycloak.subject = keycloak.tokenParsed.sub;
+                keycloak.realmAccess = keycloak.tokenParsed.realm_access;
+                keycloak.resourceAccess = keycloak.tokenParsed.resource_access;
+            }
+
+            if (keycloak.refreshToken) {
+                keycloak.refreshTokenParsed = decodeToken(keycloak.refreshToken);
+            }
+
+            if (keycloak.idToken) {
+                keycloak.idTokenParsed = decodeToken(keycloak.idToken);
+            }
+
+            // Check if token is expired
+            if (keycloak.isTokenExpired(5)) {
+                console.log('[Keycloak] Restored token is expired, attempting refresh...');
+                // Token is expired, try to refresh
+                keycloak.updateToken(5).then((refreshed) => {
+                    if (refreshed) {
+                        console.log('[Keycloak] Token refreshed successfully');
+                        saveTokenToStorage(); // Save the new token
+                    } else {
+                        console.log('[Keycloak] Token is still valid');
+                    }
+                }).catch((error) => {
+                    console.error('[Keycloak] Token refresh failed:', error);
+                    // Clear invalid token
+                    localStorage.removeItem('kc_token');
+                    return false;
+                });
+            }
+
+            console.log('[Keycloak] Token restored successfully from localStorage');
+            return true;
+        } catch (error) {
+            console.error('[Keycloak] Failed to restore token from localStorage:', error);
+            localStorage.removeItem('kc_token'); // Remove corrupted token
+            return false;
+        }
+    }
+
+    /**
+     * Decode JWT token (base64url decode)
+     * @param {string} token - JWT token
+     * @returns {object} - Decoded token payload
+     */
+    function decodeToken(token) {
+        try {
+            const parts = token.split('.');
+            if (parts.length !== 3) {
+                throw new Error('Invalid token format');
+            }
+
+            const payload = parts[1];
+            // Replace base64url chars
+            const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+            // Add padding if needed
+            const padded = base64.padEnd(base64.length + (4 - base64.length % 4) % 4, '=');
+            const decoded = atob(padded);
+            return JSON.parse(decoded);
+        } catch (error) {
+            console.error('[Keycloak] Failed to decode token:', error);
+            return null;
+        }
     }
 
     /**
@@ -132,9 +257,12 @@
             keycloak.updateToken(70).then((refreshed) => {
                 if (refreshed) {
                     console.log('[Keycloak] Token auto-refreshed');
+                    // Save the refreshed token to localStorage
+                    saveTokenToStorage();
                 }
             }).catch(() => {
                 console.error('[Keycloak] Failed to auto-refresh token');
+                localStorage.removeItem('kc_token'); // Clear invalid token
                 logout();
             });
         }, 60000); // Every 60 seconds
@@ -184,6 +312,14 @@
         if (!keycloak) {
             console.error('[Keycloak] Not initialized.');
             return;
+        }
+
+        // Clear token from localStorage
+        try {
+            localStorage.removeItem('kc_token');
+            console.log('[Keycloak] Token cleared from localStorage');
+        } catch (error) {
+            console.error('[Keycloak] Failed to clear token from localStorage:', error);
         }
 
         const options = {
