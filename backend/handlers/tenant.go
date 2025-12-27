@@ -47,7 +47,7 @@ func CreateTenant(c *fiber.Ctx) error {
 		Slug:             req.Slug,
 		KeycloakRealmID:  req.Slug + "-realm",
 		KeycloakURL:      config.AppConfig.KeycloakURL,
-		KeycloakClientID: "nora-backend",
+		KeycloakClientID: "nora-frontend",
 		IsActive:         true,
 	}
 

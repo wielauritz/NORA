@@ -32,7 +32,7 @@
             const keycloakConfig = {
                 url: 'https://auth.nora-nak.de',
                 realm: `${tenantSlug}-realm`,
-                clientId: 'nora-backend'
+                clientId: 'nora-frontend'
             };
 
             console.log('[Keycloak] Initializing with config:', keycloakConfig);
