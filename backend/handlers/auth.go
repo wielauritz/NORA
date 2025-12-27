@@ -45,7 +45,7 @@ func KeycloakCallback(c *fiber.Ctx) error {
 		return c.Redirect("/login.html?error=no_code", fiber.StatusFound)
 	}
 
-	fmt.Printf("[KeycloakCallback] Received authorization code (first 10 chars): %s...\n", code[:min(10, len(code))])
+	fmt.Printf("[KeycloakCallback] Received authorization code (first 10 chars): %s...\n", code[:minimum(10, len(code))])
 
 	// For now, we'll try without PKCE since the client is public
 	// Keycloak may not require PKCE for public clients
@@ -74,7 +74,7 @@ func KeycloakCallback(c *fiber.Ctx) error {
 }
 
 // min returns the minimum of two integers
-func min(a, b int) int {
+func minimum(a, b int) int {
 	if a < b {
 		return a
 	}
