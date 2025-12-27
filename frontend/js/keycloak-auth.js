@@ -42,9 +42,13 @@
             try {
                 const authenticated = await keycloak.init({
                     onLoad: 'check-sso',
+                    silentCheckSsoRedirectUri: window.location.origin + '/silent-check-sso.html',
                     checkLoginIframe: false, // Disable iframe check to avoid CSP issues
                     pkceMethod: 'S256',
-                    enableLogging: true
+                    enableLogging: true,
+                    flow: 'standard', // Explicitly use Authorization Code Flow
+                    // Add timeSkew to handle minor time differences
+                    timeSkew: 10 // Allow 10 seconds skew between browser and server
                 });
 
                 console.log('[Keycloak] Initialized. Authenticated:', authenticated);
@@ -61,6 +65,27 @@
                 return authenticated;
             } catch (error) {
                 console.error('[Keycloak] Failed to initialize:', error);
+
+                // If it's a nonce error, clear local storage and try a fresh login
+                if (error && (error.toString().includes('nonce') || error.toString().includes('Invalid'))) {
+                    console.warn('[Keycloak] Nonce/validation error detected. Clearing storage and retrying...');
+                    // Clear any stored Keycloak state
+                    try {
+                        Object.keys(localStorage).forEach(key => {
+                            if (key.startsWith('kc-') || key.includes('keycloak')) {
+                                localStorage.removeItem(key);
+                            }
+                        });
+                        Object.keys(sessionStorage).forEach(key => {
+                            if (key.startsWith('kc-') || key.includes('keycloak')) {
+                                sessionStorage.removeItem(key);
+                            }
+                        });
+                    } catch (storageError) {
+                        console.error('[Keycloak] Failed to clear storage:', storageError);
+                    }
+                }
+
                 return false;
             }
         })();
