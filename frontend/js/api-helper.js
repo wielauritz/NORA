@@ -235,5 +235,47 @@
         V2: API_BASE_URL_V2
     };
 
+    // User API
+    window.UserAPI = {
+        getProfile: async () => get('/user'),
+        getSettings: async () => get('/user_settings'),
+        updateSettings: async (settings) => post('/user_settings', settings),
+        setZenturie: async (zenturieId) => post('/zenturie', { zenturie_id: zenturieId })
+    };
+
+    // Events API
+    window.EventsAPI = {
+        getEvents: async () => get('/events'),
+        getExams: async () => get('/exams'),
+        addExam: async (examData) => post('/add', examData),
+        createCustomHour: async (hourData) => post('/create', hourData),
+        updateCustomHour: async (hourData) => post('/update', hourData),
+        deleteCustomHour: async (hourId) => deleteRequest('/delete', { id: hourId })
+    };
+
+    // Friends API
+    window.FriendsAPI = {
+        getFriends: async () => get('/friends'),
+        addFriend: async (friendData) => post('/friends', friendData),
+        removeFriend: async (friendId) => deleteRequest('/friends', { friend_id: friendId }),
+
+        // V2 endpoints
+        sendRequest: async (email) => post('/friends/request', { email }, API_BASE_URL_V2),
+        getRequests: async () => get('/friends/requests', API_BASE_URL_V2),
+        acceptRequest: async (requestId) => post('/friends/accept', { request_id: requestId }, API_BASE_URL_V2),
+        rejectRequest: async (requestId) => post('/friends/reject', { request_id: requestId }, API_BASE_URL_V2),
+        cancelRequest: async (requestId) => deleteRequest('/friends/request', API_BASE_URL_V2)
+    };
+
+    // Search API
+    window.SearchAPI = {
+        search: async (query) => get(`/search?q=${encodeURIComponent(query)}`)
+    };
+
+    // Courses API
+    window.CoursesAPI = {
+        getCourses: async () => get('/courses')
+    };
+
     console.log('[API] Helper loaded with Keycloak authentication');
 })();

@@ -28,6 +28,18 @@
         }
 
         initPromise = (async () => {
+            // Check if we have tokens from backend callback in URL hash
+            const hash = window.location.hash;
+            if (hash && hash.includes('access_token=')) {
+                console.log('[Keycloak] Detected tokens from backend callback');
+                const authenticated = handleCallbackTokens(hash);
+                if (authenticated) {
+                    // Clean up URL hash
+                    window.location.hash = '';
+                    return true;
+                }
+            }
+
             const tenantSlug = getTenantSlug();
             const keycloakConfig = {
                 url: 'https://auth.nora-nak.de',
@@ -102,6 +114,70 @@
         })();
 
         return initPromise;
+    }
+
+    /**
+     * Handle tokens from backend callback (URL hash)
+     * @param {string} hash - URL hash containing tokens
+     * @returns {boolean} - true if tokens were successfully processed
+     */
+    function handleCallbackTokens(hash) {
+        try {
+            // Parse hash parameters
+            const params = new URLSearchParams(hash.substring(1));
+            const accessToken = params.get('access_token');
+            const refreshToken = params.get('refresh_token');
+            const sessionState = params.get('session_state');
+            const expiresIn = parseInt(params.get('expires_in') || '300');
+
+            if (!accessToken) {
+                console.error('[Keycloak] No access token in callback hash');
+                return false;
+            }
+
+            console.log('[Keycloak] Processing tokens from backend callback');
+
+            // Initialize keycloak object if not exists
+            if (!keycloak) {
+                const tenantSlug = getTenantSlug();
+                keycloak = new Keycloak({
+                    url: 'https://auth.nora-nak.de',
+                    realm: `${tenantSlug}-realm`,
+                    clientId: 'nora-frontend'
+                });
+            }
+
+            // Set tokens manually
+            keycloak.token = accessToken;
+            keycloak.refreshToken = refreshToken;
+            keycloak.sessionId = sessionState;
+            keycloak.authenticated = true;
+
+            // Parse token to get claims
+            keycloak.tokenParsed = decodeToken(accessToken);
+            if (keycloak.tokenParsed) {
+                keycloak.subject = keycloak.tokenParsed.sub;
+                keycloak.realmAccess = keycloak.tokenParsed.realm_access;
+                keycloak.resourceAccess = keycloak.tokenParsed.resource_access;
+            }
+
+            if (refreshToken) {
+                keycloak.refreshTokenParsed = decodeToken(refreshToken);
+            }
+
+            // Save to localStorage
+            saveTokenToStorage();
+
+            // Setup event handlers and token refresh
+            setupEventHandlers();
+            setupTokenRefresh();
+
+            console.log('[Keycloak] ✅ Tokens successfully loaded from backend callback');
+            return true;
+        } catch (error) {
+            console.error('[Keycloak] Failed to process callback tokens:', error);
+            return false;
+        }
     }
 
     /**
@@ -270,20 +346,58 @@
 
     /**
      * Login - Redirect to Keycloak login page
+     * Custom implementation to use backend callback endpoint
      * @param {string} redirectUri - Optional redirect URI after login
      */
     function login(redirectUri = null) {
-        if (!keycloak) {
-            console.error('[Keycloak] Not initialized. Call init() first.');
-            return;
+        // Build backend callback URL
+        const backendCallbackUrl = 'https://new.nora-nak.de/v1/auth/callback';
+
+        // Build Keycloak authorization URL
+        const tenantSlug = getTenantSlug();
+        const state = generateRandomString(32);
+        const nonce = generateRandomString(32);
+
+        const authUrl = new URL(`https://auth.nora-nak.de/realms/${tenantSlug}-realm/protocol/openid-connect/auth`);
+        authUrl.searchParams.set('client_id', 'nora-frontend');
+        authUrl.searchParams.set('redirect_uri', backendCallbackUrl);
+        authUrl.searchParams.set('response_type', 'code');
+        authUrl.searchParams.set('scope', 'openid profile email');
+        authUrl.searchParams.set('state', state);
+        authUrl.searchParams.set('nonce', nonce);
+
+        console.log('[Keycloak] Redirecting to login:', authUrl.toString());
+        window.location.href = authUrl.toString();
+    }
+
+    /**
+     * Generate random string for PKCE
+     */
+    function generateRandomString(length) {
+        const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
+        let result = '';
+        const randomValues = new Uint8Array(length);
+        crypto.getRandomValues(randomValues);
+        for (let i = 0; i < length; i++) {
+            result += charset[randomValues[i] % charset.length];
         }
+        return result;
+    }
 
-        const options = {
-            redirectUri: redirectUri || window.location.origin + '/dashboard.html'
-        };
+    /**
+     * Generate PKCE code verifier
+     */
+    function generateCodeVerifier() {
+        return generateRandomString(128);
+    }
 
-        console.log('[Keycloak] Redirecting to login with options:', options);
-        keycloak.login(options);
+    /**
+     * Generate PKCE code challenge from verifier
+     */
+    function generateCodeChallenge(verifier) {
+        // For simplicity, use plain method (S256 would require crypto.subtle.digest)
+        // Most Keycloak setups accept 'plain' as fallback
+        return verifier;
     }
 
     /**

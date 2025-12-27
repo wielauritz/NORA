@@ -145,6 +145,10 @@ func setupPublicRoutes(app *fiber.App) {
 	// Old endpoints: /v1/login, /v1/verify, /v1/reset, etc.
 	// Users now authenticate via Keycloak and receive JWT tokens
 
+	// Keycloak OAuth2 callback endpoint (public, but with tenant context)
+	authPublic := app.Group("/v1/auth", middleware.TenantMiddleware)
+	authPublic.Get("/callback", handlers.KeycloakCallback)
+
 	// Public endpoints with tenant context (no auth required)
 	publicTenant := app.Group("/v1", middleware.TenantMiddleware)
 	publicTenant.Get("/rooms", handlers.GetRooms)
