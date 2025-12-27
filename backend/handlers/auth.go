@@ -33,16 +33,18 @@ func KeycloakCallback(c *fiber.Ctx) error {
 	tenant := middleware.GetCurrentTenant(c)
 	if tenant == nil {
 		fmt.Println("[KeycloakCallback] ERROR: Tenant context not found")
-		// Redirect to login on error
-		return c.Redirect("/login.html?error=tenant_not_found", fiber.StatusFound)
+		// Redirect to login with absolute URL
+		loginURL := fmt.Sprintf("%s/login.html?error=tenant_not_found", c.BaseURL())
+		return c.Redirect(loginURL, fiber.StatusFound)
 	}
 
 	// Get authorization code from query params
 	code := c.Query("code")
 	if code == "" {
 		fmt.Println("[KeycloakCallback] ERROR: Authorization code not provided")
-		// Redirect to login on error
-		return c.Redirect("/login.html?error=no_code", fiber.StatusFound)
+		// Redirect to login with absolute URL
+		loginURL := fmt.Sprintf("%s/login.html?error=no_code", c.BaseURL())
+		return c.Redirect(loginURL, fiber.StatusFound)
 	}
 
 	fmt.Printf("[KeycloakCallback] Received authorization code (first 10 chars): %s...\n", code[:minimum(10, len(code))])
@@ -55,21 +57,24 @@ func KeycloakCallback(c *fiber.Ctx) error {
 	tokens, err := exchangeCodeForTokens(code, codeVerifier, tenant, c)
 	if err != nil {
 		fmt.Printf("[KeycloakCallback] ERROR: Failed to exchange code for tokens: %v\n", err)
-		// Redirect to login on error
-		return c.Redirect("/login.html?error=token_exchange_failed", fiber.StatusFound)
+		// Redirect to login with absolute URL
+		loginURL := fmt.Sprintf("%s/login.html?error=token_exchange_failed", c.BaseURL())
+		return c.Redirect(loginURL, fiber.StatusFound)
 	}
 
 	fmt.Println("[KeycloakCallback] Successfully exchanged code for tokens")
 
 	// Redirect to dashboard with tokens in URL fragment (for frontend to pick up)
-	redirectURL := fmt.Sprintf("/dashboard.html#access_token=%s&refresh_token=%s&session_state=%s&expires_in=%d",
+	// Use absolute URL to avoid path issues
+	redirectURL := fmt.Sprintf("%s/dashboard.html#access_token=%s&refresh_token=%s&session_state=%s&expires_in=%d",
+		c.BaseURL(),
 		url.QueryEscape(tokens.AccessToken),
 		url.QueryEscape(tokens.RefreshToken),
 		url.QueryEscape(tokens.SessionState),
 		tokens.ExpiresIn,
 	)
 
-	fmt.Printf("[KeycloakCallback] Redirecting to dashboard: %s\n", "/dashboard.html#...")
+	fmt.Printf("[KeycloakCallback] Redirecting to dashboard: %s/dashboard.html#...\n", c.BaseURL())
 	return c.Redirect(redirectURL, fiber.StatusFound)
 }
 
