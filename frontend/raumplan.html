@@ -505,7 +505,7 @@
         if (confirm('Möchtest du dich wirklich abmelden?')) {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
-            window.location.href = 'login.html';
+            window.location.href = '/login.html';
         }
     }
 
@@ -514,7 +514,7 @@
         const token = localStorage.getItem('token');
         if (!token) {
             console.log('❌ Kein Token gefunden - Weiterleitung zum Login');
-            window.location.href = 'login.html';
+            window.location.href = '/login.html';
             return false;
         }
 
