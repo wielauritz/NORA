@@ -3,13 +3,6 @@
  * Zeigt wöchentlichen Stundenplan mit Events vom NORA Backend
  */
 
-// Check authentication (wrapped in async IIFE)
-(async () => {
-    if (!(await checkAuth())) {
-        // Redirects to login
-    }
-})();
-
 // Global state
 let currentDate = new Date();
 let currentWeekStart = null;

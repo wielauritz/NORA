@@ -22,6 +22,9 @@
     </script>
     <link rel="stylesheet" href="css/common.css">
 
+    <!-- Keycloak JS from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/keycloak-js@23.0.7/dist/keycloak.min.js"></script>
+
     <!-- Flatpickr -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 
@@ -1227,7 +1230,10 @@
     <script src="js/persistent-storage.js"></script>
     <script src="js/api-helper.js"></script>
 
-<!-- Auth Helper -->
+<!-- Keycloak Auth -->
+<script src="js/keycloak-auth.js"></script>
+
+<!-- Auth Helper (legacy) -->
 <script src="js/auth.js"></script>
     <script src="js/app-updater.js"></script>
 <!-- Navbar Component -->
@@ -1252,6 +1258,30 @@
 <!-- Initialize Navbar -->
 <script>
     initNavbar('stundenplan');
+</script>
+
+<!-- Auth Check -->
+<script>
+    // Check authentication before loading page
+    (async function() {
+        console.log('[Stundenplan] Checking Keycloak authentication');
+
+        try {
+            const authenticated = await KeycloakAuth.init();
+
+            if (!authenticated) {
+                console.log('[Stundenplan] Not authenticated, redirecting to login');
+                window.location.replace('login.html');
+                return;
+            }
+
+            console.log('[Stundenplan] Authentication successful');
+
+        } catch (error) {
+            console.error('[Stundenplan] Auth check failed:', error);
+            window.location.replace('login.html');
+        }
+    })();
 </script>
 
 </body>

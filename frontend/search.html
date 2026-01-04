@@ -21,6 +21,10 @@
         }
     </script>
     <link rel="stylesheet" href="css/common.css">
+
+    <!-- Keycloak JS from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/keycloak-js@23.0.7/dist/keycloak.min.js"></script>
+
 </head>
 <body class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-800 min-h-screen">
 
@@ -122,6 +126,10 @@
 <script src="js/storage-manager.js"></script>
     <script src="js/persistent-storage.js"></script>
     <script src="js/api-helper.js"></script>
+
+<!-- Keycloak Auth -->
+<script src="js/keycloak-auth.js"></script>
+
 <script src="js/auth.js"></script>
 <script src="js/navbar.js"></script>
 <!-- Friends (for add friend modal in navbar) -->
@@ -151,6 +159,30 @@
 
             // Hide loader when ready
             pageContentReady();
+        }
+    })();
+</script>
+
+<!-- Auth Check -->
+<script>
+    // Check authentication before loading page
+    (async function() {
+        console.log('[Search] Checking Keycloak authentication');
+
+        try {
+            const authenticated = await KeycloakAuth.init();
+
+            if (!authenticated) {
+                console.log('[Search] Not authenticated, redirecting to login');
+                window.location.replace('login.html');
+                return;
+            }
+
+            console.log('[Search] Authentication successful');
+
+        } catch (error) {
+            console.error('[Search] Auth check failed:', error);
+            window.location.replace('login.html');
         }
     })();
 </script>

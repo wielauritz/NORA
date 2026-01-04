@@ -51,12 +51,6 @@ async function initSettings() {
     console.log('🚀 [Settings] Starting initialization...');
 
     try {
-        // Check authentication first
-        const isAuthenticated = await checkAuth();
-        if (!isAuthenticated) {
-            return; // Redirect to login handled by checkAuth()
-        }
-
         restorePreloaderIfNeeded();
         showContentLoader();
 

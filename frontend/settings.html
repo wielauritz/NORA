@@ -21,6 +21,10 @@
         }
     </script>
     <link rel="stylesheet" href="css/common.css">
+
+    <!-- Keycloak JS from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/keycloak-js@23.0.7/dist/keycloak.min.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
@@ -225,7 +229,10 @@
     <script src="js/persistent-storage.js"></script>
     <script src="js/api-helper.js"></script>
 
-    <!-- Auth Helper -->
+    <!-- Keycloak Auth -->
+    <script src="js/keycloak-auth.js"></script>
+
+    <!-- Auth Helper (legacy) -->
     <script src="js/auth.js"></script>
     <script src="js/app-updater.js"></script>
 
@@ -244,6 +251,30 @@
     <!-- Initialize Navbar -->
     <script>
         initNavbar('settings');
+    </script>
+
+    <!-- Auth Check -->
+    <script>
+        // Check authentication before loading page
+        (async function() {
+            console.log('[Settings] Checking Keycloak authentication');
+
+            try {
+                const authenticated = await KeycloakAuth.init();
+
+                if (!authenticated) {
+                    console.log('[Settings] Not authenticated, redirecting to login');
+                    window.location.replace('login.html');
+                    return;
+                }
+
+                console.log('[Settings] Authentication successful');
+
+            } catch (error) {
+                console.error('[Settings] Auth check failed:', error);
+                window.location.replace('login.html');
+            }
+        })();
     </script>
 
 </body>
