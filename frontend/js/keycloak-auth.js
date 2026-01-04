@@ -65,7 +65,7 @@
 
                 // If not authenticated via check-sso, try to restore from localStorage
                 if (!authenticated) {
-                    const restored = restoreTokenFromStorage();
+                    const restored = await restoreTokenFromStorage();
                     if (restored) {
                         console.log('[Keycloak] Token restored from localStorage');
                         authenticated = true;
@@ -204,9 +204,9 @@
 
     /**
      * Restore token from localStorage
-     * @returns {boolean} - true if token was successfully restored
+     * @returns {Promise<boolean>} - true if token was successfully restored
      */
-    function restoreTokenFromStorage() {
+    async function restoreTokenFromStorage() {
         try {
             const tokenDataStr = localStorage.getItem('kc_token');
             if (!tokenDataStr) {
@@ -244,19 +244,20 @@
             if (keycloak.isTokenExpired(5)) {
                 console.log('[Keycloak] Restored token is expired, attempting refresh...');
                 // Token is expired, try to refresh
-                keycloak.updateToken(5).then((refreshed) => {
+                try {
+                    const refreshed = await keycloak.updateToken(5);
                     if (refreshed) {
                         console.log('[Keycloak] Token refreshed successfully');
                         saveTokenToStorage(); // Save the new token
                     } else {
                         console.log('[Keycloak] Token is still valid');
                     }
-                }).catch((error) => {
+                } catch (error) {
                     console.error('[Keycloak] Token refresh failed:', error);
                     // Clear invalid token
                     localStorage.removeItem('kc_token');
                     return false;
-                });
+                }
             }
 
             console.log('[Keycloak] Token restored successfully from localStorage');
