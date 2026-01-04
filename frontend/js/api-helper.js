@@ -240,7 +240,8 @@
         getProfile: async () => get('/user'),
         getSettings: async () => get('/user_settings'),
         updateSettings: async (settings) => post('/user_settings', settings),
-        setZenturie: async (zenturieId) => post('/zenturie', { zenturie_id: zenturieId })
+        setZenturie: async (zenturieId) => post('/zenturie', { zenturie_id: zenturieId }),
+        getAllZenturien: async () => get('/all_zenturie')
     };
 
     // Events API
@@ -254,7 +255,10 @@
     };
 
     // Friends API
-    window.FriendsAPI = {
+    if (!window.FriendsAPI) {
+        window.FriendsAPI = {};
+    }
+    Object.assign(window.FriendsAPI, {
         getFriends: async () => get('/friends'),
         addFriend: async (friendData) => post('/friends', friendData),
         removeFriend: async (friendId) => deleteRequest('/friends', { friend_id: friendId }),
@@ -265,7 +269,7 @@
         acceptRequest: async (requestId) => post('/friends/accept', { request_id: requestId }, API_BASE_URL_V2),
         rejectRequest: async (requestId) => post('/friends/reject', { request_id: requestId }, API_BASE_URL_V2),
         cancelRequest: async (requestId) => deleteRequest('/friends/request', API_BASE_URL_V2)
-    };
+    });
 
     // Search API
     window.SearchAPI = {
@@ -274,7 +278,47 @@
 
     // Courses API
     window.CoursesAPI = {
-        getCourses: async () => get('/courses')
+        getCourses: async () => get('/courses'),
+        getAllCourses: async () => get('/courses')
+    };
+
+    // Room API
+    window.RoomAPI = {
+        getAllRooms: async () => get('/rooms'),
+        getRoomDetails: async (roomNumber) => get(`/room?room_number=${encodeURIComponent(roomNumber)}`),
+        getFreeRooms: async (startTime, endTime) => get(`/free-rooms?start_time=${encodeURIComponent(startTime)}&end_time=${encodeURIComponent(endTime)}`)
+    };
+
+    // Custom Hours API
+    window.CustomHoursAPI = {
+        createCustomHour: async (title, description, startTime, endTime, room, customLocation) =>
+            post('/create', {
+                title,
+                description,
+                start_time: startTime,
+                end_time: endTime,
+                room,
+                custom_location: customLocation
+            }),
+        updateCustomHour: async (customHourId, updates) =>
+            post('/update', {
+                custom_hour_id: customHourId,
+                ...updates
+            }),
+        deleteCustomHour: async (customHourId) =>
+            deleteRequest(`/delete?custom_hour_id=${customHourId}`)
+    };
+
+    // Exams API
+    window.ExamsAPI = {
+        getExams: async () => get('/exams'),
+        addExam: async (course, startTime, duration, room) =>
+            post('/add', {
+                course,
+                start_time: startTime,
+                duration,
+                room
+            })
     };
 
     console.log('[API] Helper loaded with Keycloak authentication');

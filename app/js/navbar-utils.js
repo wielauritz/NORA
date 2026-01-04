@@ -513,7 +513,7 @@ document.addEventListener('click', function(event) {
 });
 
 // Export functions for global use
-window.FriendsAPI = FriendsAPI;
+window.FriendsAPI = window.FriendsAPI || FriendsAPI;
 window.toggleFriendRequestsDropdown = toggleFriendRequestsDropdown;
 window.loadFriendRequests = loadFriendRequests;
 window.renderFriendRequests = renderFriendRequests;
