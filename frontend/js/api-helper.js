@@ -240,7 +240,7 @@
         getProfile: async () => get('/user'),
         getSettings: async () => get('/user_settings'),
         updateSettings: async (settings) => post('/user_settings', settings),
-        setZenturie: async (zenturieId) => post('/zenturie', { zenturie_id: zenturieId }),
+        setZenturie: async (zenturieId) => post('/zenturie', { zenturie: zenturieId }),
         getAllZenturien: async () => get('/all_zenturie')
     };
 
