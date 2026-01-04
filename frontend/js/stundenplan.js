@@ -19,6 +19,35 @@ let isInitializing = false;
 let isInitialized = false;
 
 /**
+ * Format date for API (YYYY-MM-DD format)
+ * @param {Date} date - Date object to format
+ * @returns {string} - Formatted date string
+ */
+function formatDateForAPI(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+/**
+ * Handle API errors
+ * @param {Error} error - Error object
+ * @param {string} message - User-friendly error message
+ */
+function handleAPIError(error, message) {
+    console.error(`[Stundenplan] ${message}:`, error);
+
+    // Show error to user (you can customize this to use a toast/notification system)
+    if (window.showToast) {
+        window.showToast(message, 'error');
+    } else {
+        // Fallback: Simple alert or console log
+        console.error(message, error.message || error);
+    }
+}
+
+/**
  * Get number of days to show based on screen size
  */
 function getDaysToShow() {
