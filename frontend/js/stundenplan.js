@@ -48,6 +48,46 @@ function handleAPIError(error, message) {
 }
 
 /**
+ * Schedule API - Wrapper for schedule-related API calls
+ */
+const ScheduleAPI = {
+    /**
+     * Get events for a date range
+     * @param {string} startDate - Start date in YYYY-MM-DD format
+     * @param {string} endDate - End date in YYYY-MM-DD format
+     * @returns {Promise<Array>} - Array of events
+     */
+    async getEvents(startDate, endDate) {
+        try {
+            const endpoint = `/events?date=${startDate}&end=${endDate}`;
+            const events = await window.API.get(endpoint);
+            return events || [];
+        } catch (error) {
+            console.error('[ScheduleAPI] Failed to get events:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Get friend's schedule for a date range
+     * @param {number} friendId - Friend's user ID
+     * @param {string} startDate - Start date in YYYY-MM-DD format
+     * @param {string} endDate - End date in YYYY-MM-DD format
+     * @returns {Promise<Array>} - Array of events
+     */
+    async getFriendSchedule(friendId, startDate, endDate) {
+        try {
+            const endpoint = `/friends/${friendId}/schedule?date=${startDate}&end=${endDate}`;
+            const events = await window.API.get(endpoint);
+            return events || [];
+        } catch (error) {
+            console.error('[ScheduleAPI] Failed to get friend schedule:', error);
+            throw error;
+        }
+    }
+};
+
+/**
  * Get number of days to show based on screen size
  */
 function getDaysToShow() {
