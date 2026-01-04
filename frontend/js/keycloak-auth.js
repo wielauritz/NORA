@@ -34,8 +34,10 @@
                 console.log('[Keycloak] Detected tokens from backend callback');
                 const authenticated = handleCallbackTokens(hash);
                 if (authenticated) {
-                    // Clean up URL hash
-                    window.location.hash = '';
+                    // Clean up URL hash using replaceState to avoid leaving '#' in URL
+                    const cleanUrl = window.location.pathname + window.location.search;
+                    window.history.replaceState(null, '', cleanUrl);
+                    console.log('[Keycloak] URL hash cleaned, tokens saved to localStorage');
                     return true;
                 }
             }
