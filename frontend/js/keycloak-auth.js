@@ -54,8 +54,9 @@
             keycloak = new Keycloak(keycloakConfig);
 
             try {
+                // Initialize Keycloak WITHOUT automatic login flows
+                // This prevents the unwanted logout when check-sso fails
                 var authenticated = await keycloak.init({
-                    onLoad: 'check-sso',
                     checkLoginIframe: false, // Disable iframe check (causes issues with third-party cookie blocking)
                     pkceMethod: 'S256',
                     enableLogging: true,
@@ -65,7 +66,7 @@
 
                 console.log('[Keycloak] Initialized. Authenticated:', authenticated);
 
-                // If not authenticated via check-sso, try to restore from localStorage
+                // Try to restore from localStorage
                 if (!authenticated) {
                     const restored = await restoreTokenFromStorage();
                     if (restored) {
@@ -90,10 +91,26 @@
             } catch (error) {
                 console.error('[Keycloak] Failed to initialize:', error);
 
-                // If it's a nonce error, clear local storage and try a fresh login
+                // Even if init fails, try to restore from localStorage
+                try {
+                    console.log('[Keycloak] Init failed, attempting to restore from localStorage...');
+                    const restored = await restoreTokenFromStorage();
+                    if (restored) {
+                        console.log('[Keycloak] Token restored from localStorage after init failure');
+
+                        // Setup event handlers and token refresh
+                        setupEventHandlers();
+                        setupTokenRefresh();
+
+                        return true;
+                    }
+                } catch (restoreError) {
+                    console.error('[Keycloak] Failed to restore from localStorage:', restoreError);
+                }
+
+                // If it's a nonce error, clear local storage
                 if (error && (error.toString().includes('nonce') || error.toString().includes('Invalid'))) {
-                    console.warn('[Keycloak] Nonce/validation error detected. Clearing storage and retrying...');
-                    // Clear any stored Keycloak state
+                    console.warn('[Keycloak] Nonce/validation error detected. Clearing storage...');
                     try {
                         Object.keys(localStorage).forEach(key => {
                             if (key.startsWith('kc-') || key.includes('keycloak')) {
