@@ -1778,11 +1778,16 @@ function initStundenplanPage() {
 // Initialize on DOMContentLoaded for BROWSER compatibility
 // In the app, Shell.triggerPageInit() will call initStundenplan() directly
 // The isInitialized guard in initStundenplan() prevents double initialization
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initStundenplanPage);
+// UNLESS window.STUNDENPLAN_MANUAL_INIT is set (for auth-gated initialization)
+if (!window.STUNDENPLAN_MANUAL_INIT) {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initStundenplanPage);
+    } else {
+        // DOM already loaded (script loaded dynamically)
+        initStundenplanPage();
+    }
 } else {
-    // DOM already loaded (script loaded dynamically)
-    initStundenplanPage();
+    console.log('[Stundenplan] Manual init mode - waiting for explicit call to initStundenplanPage()');
 }
 
 // Listen for page reload events (for app navigation)

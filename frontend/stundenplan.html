@@ -1252,16 +1252,11 @@
 <!-- Modals -->
 <script src="js/modals.js"></script>
 
-<!-- Stundenplan Script -->
-<script src="js/stundenplan.js"></script>
-
-<!-- Initialize Navbar -->
+<!-- Auth Check - MUST run before stundenplan.js -->
 <script>
-    initNavbar('stundenplan');
-</script>
+    // Prevent auto-initialization of stundenplan
+    window.STUNDENPLAN_MANUAL_INIT = true;
 
-<!-- Auth Check -->
-<script>
     // Check authentication before loading page
     (async function() {
         console.log('[Stundenplan] Checking Keycloak authentication');
@@ -1276,6 +1271,20 @@
             }
 
             console.log('[Stundenplan] Authentication successful');
+
+            // Initialize navbar after auth is ready
+            initNavbar('stundenplan');
+
+            // Load stundenplan.js AFTER authentication is complete
+            const script = document.createElement('script');
+            script.src = 'js/stundenplan.js';
+            script.onload = function() {
+                console.log('[Stundenplan] Script loaded, initializing...');
+                if (typeof initStundenplanPage === 'function') {
+                    initStundenplanPage();
+                }
+            };
+            document.body.appendChild(script);
 
         } catch (error) {
             console.error('[Stundenplan] Auth check failed:', error);

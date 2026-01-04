@@ -51,6 +51,19 @@
 
             console.log('[Keycloak] Initializing with config:', keycloakConfig);
 
+            // Clear old Keycloak state/nonce data that might cause "Invalid nonce" errors
+            // This is necessary when tokens were saved from a previous session
+            try {
+                Object.keys(sessionStorage).forEach(key => {
+                    if (key.startsWith('kc-') || key.includes('keycloak')) {
+                        sessionStorage.removeItem(key);
+                        console.log('[Keycloak] Cleared old session state:', key);
+                    }
+                });
+            } catch (storageError) {
+                console.warn('[Keycloak] Failed to clear session storage:', storageError);
+            }
+
             keycloak = new Keycloak(keycloakConfig);
 
             try {
