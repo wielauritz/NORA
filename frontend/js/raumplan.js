@@ -3,12 +3,14 @@
  * Zeigt alle Räume mit deren Belegung
  */
 
-// Check authentication (wrapped in async IIFE)
-(async () => {
-    if (!(await checkAuth())) {
-        // Redirects to login
-    }
-})();
+// Check authentication ONLY if not in manual init mode
+if (!window.RAUMPLAN_MANUAL_INIT) {
+    (async () => {
+        if (!(await checkAuth())) {
+            // Redirects to login
+        }
+    })();
+}
 
 /**
  * Helper: Format time
@@ -990,11 +992,16 @@ if (!document.getElementById('spinner-style')) {
 }
 
 // Initialize when page loads (works for both static and dynamic loading)
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initRaumplanPage);
+// UNLESS window.RAUMPLAN_MANUAL_INIT is set (for auth-gated initialization)
+if (!window.RAUMPLAN_MANUAL_INIT) {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initRaumplanPage);
+    } else {
+        // DOM already loaded (script loaded dynamically) - initialize immediately
+        initRaumplanPage();
+    }
 } else {
-    // DOM already loaded (script loaded dynamically) - initialize immediately
-    initRaumplanPage();
+    console.log('[Raumplan] Manual init mode - waiting for explicit call to initRaumplan()');
 }
 
 function initRaumplanPage() {

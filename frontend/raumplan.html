@@ -848,16 +848,11 @@
 
 <!-- Search -->
 <script src="js/search.js"></script>
-<!-- Raumplan Script -->
-<script src="js/raumplan.js"></script>
-
-<!-- Initialize Navbar -->
+<!-- Auth Check - MUST run before raumplan.js -->
 <script>
-    initNavbar('raumplan');
-</script>
+    // Prevent auto-initialization of raumplan
+    window.RAUMPLAN_MANUAL_INIT = true;
 
-<!-- Auth Check -->
-<script>
     // Check authentication before loading page
     (async function() {
         console.log('[Raumplan] Checking Keycloak authentication');
@@ -872,6 +867,20 @@
             }
 
             console.log('[Raumplan] Authentication successful');
+
+            // Initialize navbar after auth is ready
+            initNavbar('raumplan');
+
+            // Load raumplan.js AFTER authentication is complete
+            const script = document.createElement('script');
+            script.src = 'js/raumplan.js';
+            script.onload = function() {
+                console.log('[Raumplan] Script loaded, initializing...');
+                if (typeof initRaumplan === 'function') {
+                    initRaumplan();
+                }
+            };
+            document.body.appendChild(script);
 
         } catch (error) {
             console.error('[Raumplan] Auth check failed:', error);
