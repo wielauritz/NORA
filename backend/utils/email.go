@@ -26,7 +26,7 @@ func (e *EmailService) SendVerificationEmailLegacy(toEmail, firstName, verifyUUI
 	log.Printf("[EMAIL] Sending verification email (legacy)")
 	subject := "NORA - E-Mail Bestätigung"
 	// Link should go to backend API endpoint which handles verification and redirects to frontend
-	apiURL := "https://api.new.nora-nak.de"
+	apiURL := "https://api-new.nora-nak.de"
 	verifyLink := fmt.Sprintf("%s/v1/verify?uuid=%s", apiURL, verifyUUID)
 
 	// Base64 encoded logo
@@ -243,7 +243,7 @@ func (e *EmailService) SendPasswordResetCodeEmail(toEmail, firstName, resetCode 
 func (e *EmailService) SendPasswordResetEmail(toEmail, firstName, resetUUID string) error {
 	subject := "NORA - Passwort zurücksetzen"
 	// Link should go to backend API endpoint which shows reset form
-	apiURL := "https://api.new.nora-nak.de"
+	apiURL := "https://api-new.nora-nak.de"
 	resetLink := fmt.Sprintf("%s/v1/reset-password?uuid=%s", apiURL, resetUUID)
 
 	// Base64 encoded logo

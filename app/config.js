@@ -5,8 +5,8 @@
 const AppConfig = {
     // Server URLs
     SERVER_URL: 'https://new.nora-nak.de',
-    API_BASE_URL: 'https://api.new.nora-nak.de/v1',
-    API_BASE_URL_V2: 'https://api.new.nora-nak.de/v2',
+    API_BASE_URL: 'https://api-new.nora-nak.de/v1',
+    API_BASE_URL_V2: 'https://api-new.nora-nak.de/v2',
 
     // Timeout settings
     TIMEOUT: {

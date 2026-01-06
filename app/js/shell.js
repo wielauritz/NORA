@@ -4,8 +4,8 @@
  */
 
 const API_CONFIG = {
-    BASE_URL: 'https://api.new.nora-nak.de/v1',
-    BASE_URL_V2: 'https://api.new.nora-nak.de/v2',
+    BASE_URL: 'https://api-new.nora-nak.de/v1',
+    BASE_URL_V2: 'https://api-new.nora-nak.de/v2',
     TIMEOUT: 10000 // 10 seconds
 };
 

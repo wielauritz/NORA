@@ -12,7 +12,7 @@ func (e *EmailService) SendVerificationEmail(toEmail, firstName, verifyUUID, ver
 	subject := "NORA - E-Mail Bestätigung"
 
 	// Generate verification link
-	apiURL := "https://api.new.nora-nak.de"
+	apiURL := "https://api-new.nora-nak.de"
 	verifyLink := fmt.Sprintf("%s/v1/verify?uuid=%s", apiURL, verifyUUID)
 
 	var htmlBody string
