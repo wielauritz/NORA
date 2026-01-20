@@ -319,8 +319,9 @@ func ImportEventsToDatabase(eventsMap map[string][]TimetableEvent) (*ImportStati
 			// Create zenturie if not exists
 			year := extractYear(zenturieName)
 			zenturie = models.Zenturie{
-				Name: zenturieName,
-				Year: year,
+				TenantID: 2,
+				Name:     zenturieName,
+				Year:     year,
 			}
 			if err := config.DB.Create(&zenturie).Error; err != nil {
 				log.Printf("ERROR creating zenturie %s: %v", zenturieName, err)
@@ -420,6 +421,7 @@ func ImportEventsToDatabase(eventsMap map[string][]TimetableEvent) (*ImportStati
 			}
 
 			timetable := models.Timetable{
+				TenantID:    2,
 				ZenturienID: zenturie.ID,
 				CourseID:    courseID,
 				RoomID:      roomID,
@@ -535,6 +537,7 @@ func findOrCreateCourse(courseCode, summary, year string) *models.Course {
 
 	// Create new course
 	course = models.Course{
+		TenantID:     2,
 		ModuleNumber: courseCode,
 		Name:         courseName,
 		Year:         year,
@@ -727,6 +730,7 @@ func findOrCreateRoom(location string) (*uint, string) {
 			cleanFloor := strings.TrimSpace(strings.ReplaceAll(floor, "\\", ""))
 
 			room = models.Room{
+				TenantID:   2,
 				RoomNumber: cleanRoomNumber,
 				Building:   cleanBuilding,
 				Floor:      cleanFloor,
